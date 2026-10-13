@@ -427,3 +427,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# シェーダーのビルド結果と Claude の作業用フォルダ
+*.cso
+.claude/
+Claude outputs/

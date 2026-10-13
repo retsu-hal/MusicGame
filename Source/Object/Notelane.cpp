@@ -6,6 +6,7 @@
 #include "Manager.h"
 #include "Settings.h"
 #include "GameSession.h"
+#include "TextureManager.h"
 #include <cmath>
 #include <algorithm>
 
@@ -387,17 +388,16 @@ void Notelane::DrawLane()
 		float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
 		float h    = 14.0f;
 
-		ImVec2 p0 = Project(lane + 0.06f, z + h), p1 = Project(lane + 0.94f, z + h);
-		ImVec2 p2 = Project(lane + 0.94f, z - h), p3 = Project(lane + 0.06f, z - h);
+		ImVec2 p0 = Project(lane + 0.04f, z + h), p1 = Project(lane + 0.96f, z + h);
+		ImVec2 p2 = Project(lane + 0.96f, z - h), p3 = Project(lane + 0.04f, z - h);
 
-		QuadGradient(dl, Project(lane, z + h * 3), Project(lane + 1, z + h * 3),
-			Project(lane + 1, z - h * 3), Project(lane, z - h * 3),
-			Col(80, 220, 255, 0.0f), Col(80, 220, 255, 0.0f),
-			Col(80, 220, 255, 0.25f * fade), Col(80, 220, 255, 0.25f * fade));
-		QuadGradient(dl, p0, p1, p2, p3,
-			Col(120, 230, 255, fade), Col(120, 230, 255, fade),
-			Col(40, 140, 255, fade), Col(40, 140, 255, fade));
-		dl->AddLine(Project(lane + 0.1f, z), Project(lane + 0.9f, z), Col(255, 255, 255, 0.9f * fade), 2.0f);
+		// 白黒のノーツ画像に色を掛けて描く（種類ごとに色を変えられる）
+		static ID3D11ShaderResourceView* noteTex = TextureManager::Load(L"asset\\texture\\tapnote_crop.png");
+		ImU32 tint = (m_Chart.notes[i].type == 1)
+			? Col(255, 210, 90, fade)    // ロング：黄色
+			: Col(110, 225, 255, fade);  // タップ：水色
+		dl->AddImageQuad((ImTextureID)(intptr_t)noteTex, p0, p1, p2, p3,
+			ImVec2(0, 0), ImVec2(1, 0), ImVec2(1, 1), ImVec2(0, 1), tint);
 	}
 
 	// 7. 判定ライン
