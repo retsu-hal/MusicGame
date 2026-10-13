@@ -13,6 +13,7 @@ static const int   SNAP_COUNT    = 6;
 static const int   TICKS_PER_BAR = TICKS_PER_BEAT * 4;   // 1小節（4/4拍子）
 
 static const float LEFT_MARGIN = 56.0f;   // 左側の小節番号を書く幅
+static const size_t MAX_UNDO   = 200;     // Undo できる回数の上限
 
 
 void ChartEditor::Init()
@@ -59,6 +60,8 @@ void ChartEditor::LoadChart()
 		m_Message = "ファイルが無いので新規作成します";
 	}
 	m_Dirty = false;
+	m_UndoStack.clear();   // 別の譜面の履歴が残らないように
+	m_RedoStack.clear();
 }
 
 
@@ -73,6 +76,47 @@ void ChartEditor::SaveChart()
 	{
 		m_Message = "保存に失敗しました";
 	}
+}
+
+
+// ------------------------------------------------------------
+// Undo / Redo
+//   変更する直前の譜面を丸ごとコピーして積んでおく。
+//   Unity の Undo.RecordObject と同じ考え方（「変える前に記録」）。
+// ------------------------------------------------------------
+void ChartEditor::RecordUndo(int mergeId)
+{
+	m_Dirty = true;
+	m_RedoStack.clear();   // 新しく編集したら「やり直し」はできなくなる
+
+	// 同じ入力欄を続けて編集している間は、最初の1回だけ記録する
+	// （BPM に "150" と打っても、Undo 1回で元に戻るように）
+	if (mergeId != 0 && mergeId == m_MergeId) return;
+	m_MergeId = mergeId;
+
+	m_UndoStack.push_back(m_Chart);
+	if (m_UndoStack.size() > MAX_UNDO)
+		m_UndoStack.erase(m_UndoStack.begin());   // 古すぎる履歴は捨てる
+}
+
+void ChartEditor::Undo()
+{
+	if (m_UndoStack.empty()) return;
+	m_RedoStack.push_back(m_Chart);       // 今の状態は「やり直し」用に取っておく
+	m_Chart = m_UndoStack.back();         // 1つ前の状態に戻す
+	m_UndoStack.pop_back();
+	m_Dirty = true;
+	m_MergeId = 0;
+}
+
+void ChartEditor::Redo()
+{
+	if (m_RedoStack.empty()) return;
+	m_UndoStack.push_back(m_Chart);
+	m_Chart = m_RedoStack.back();
+	m_RedoStack.pop_back();
+	m_Dirty = true;
+	m_MergeId = 0;
 }
 
 
@@ -108,6 +152,24 @@ void ChartEditor::Update()
 	ImGui::Separator();
 	DrawTimeline();
 
+	// --- ショートカット（文字を入力中は、その入力欄の操作を優先する） ---
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.WantTextInput)
+	{
+		if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z))
+			io.KeyShift ? Redo() : Undo();                  // Ctrl+Z / Ctrl+Shift+Z
+		if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y))
+			Redo();                                          // Ctrl+Y
+
+		// Esc：保存していなければ確認、保存済みならそのまま戻る
+		if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) && !ImGui::IsPopupOpen("確認"))
+		{
+			if (m_Dirty) m_OpenExitPopup = true;
+			else         m_ExitRequested = true;
+		}
+	}
+	DrawExitPopup();
+
 	ImGui::End();
 }
 
@@ -117,6 +179,9 @@ void ChartEditor::Update()
 // ------------------------------------------------------------
 void ChartEditor::DrawToolbar()
 {
+	// どの入力欄も操作していなければ、連続編集のまとめを解除する
+	if (!ImGui::IsAnyItemActive()) m_MergeId = 0;
+
 	// ファイル
 	ImGui::SetNextItemWidth(260);
 	ImGui::InputText("##path", m_Path, sizeof(m_Path));
@@ -127,12 +192,22 @@ void ChartEditor::DrawToolbar()
 		SaveChart();
 
 	// 曲の設定（BPM 変化は 4-3 で対応。今は最初の BPM だけ）
+	// いったんコピーに入力させ、変わったときだけ「記録してから」本物に反映する
+	double bpm = m_Chart.tempos[0].bpm;
 	ImGui::SetNextItemWidth(100);
-	if (ImGui::InputDouble("BPM", &m_Chart.tempos[0].bpm, 1.0, 10.0, "%.2f")) m_Dirty = true;
+	if (ImGui::InputDouble("BPM", &bpm, 1.0, 10.0, "%.2f") && bpm >= 1.0)   // 0 以下だと割り算で壊れる
+	{
+		RecordUndo(1);
+		m_Chart.tempos[0].bpm = bpm;
+	}
 	ImGui::SameLine();
+	double offset = m_Chart.offset;
 	ImGui::SetNextItemWidth(100);
-	if (ImGui::InputDouble("offset(秒)", &m_Chart.offset, 0.001, 0.01, "%.3f")) m_Dirty = true;
-	if (m_Chart.tempos[0].bpm < 1.0) m_Chart.tempos[0].bpm = 1.0;   // 0 だと割り算で壊れる
+	if (ImGui::InputDouble("offset(秒)", &offset, 0.001, 0.01, "%.3f"))
+	{
+		RecordUndo(2);
+		m_Chart.offset = offset;
+	}
 
 	// 編集の設定
 	ImGui::SetNextItemWidth(80);
@@ -140,6 +215,17 @@ void ChartEditor::DrawToolbar()
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(120);
 	ImGui::SliderFloat("ズーム", &m_PixelsPerBeat, 30.0f, 600.0f, "%.0f");
+
+	// 履歴
+	ImGui::BeginDisabled(m_UndoStack.empty());
+	if (ImGui::Button("元に戻す")) Undo();
+	ImGui::EndDisabled();
+	ImGui::SameLine();
+	ImGui::BeginDisabled(m_RedoStack.empty());
+	if (ImGui::Button("やり直し")) Redo();
+	ImGui::EndDisabled();
+	ImGui::SameLine();
+	ImGui::TextDisabled("(Ctrl+Z / Ctrl+Y)  履歴 %d", (int)m_UndoStack.size());
 
 	// 再生
 	if (ImGui::Button(m_Playing ? "■ 停止 (Space)" : "▶ 再生 (Space)"))
@@ -253,21 +339,21 @@ void ChartEditor::DrawTimeline()
 			// 左クリック：置く ／ 右クリック：消す
 			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && tick >= 0 && FindNote(lane, tick) < 0)
 			{
+				RecordUndo();   // ★ 変更の直前に記録
 				Note n;
 				n.tick = tick;
 				n.lane = lane;
 				m_Chart.notes.push_back(n);
 				std::sort(m_Chart.notes.begin(), m_Chart.notes.end(),
 					[](const Note& a, const Note& b) { return a.tick < b.tick; });
-				m_Dirty = true;
 			}
 			if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 			{
 				int idx = FindNote(lane, tick);
 				if (idx >= 0)
 				{
+					RecordUndo();   // ★ 変更の直前に記録
 					m_Chart.notes.erase(m_Chart.notes.begin() + idx);
-					m_Dirty = true;
 				}
 			}
 		}
@@ -292,4 +378,42 @@ void ChartEditor::DrawTimeline()
 		m_Playing ? StopPlay() : StartPlay();
 
 	dl->PopClipRect();
+}
+
+
+// ------------------------------------------------------------
+// 「保存していない変更があります」の確認ダイアログ
+// ------------------------------------------------------------
+void ChartEditor::DrawExitPopup()
+{
+	if (m_OpenExitPopup)
+	{
+		ImGui::OpenPopup("確認");
+		m_OpenExitPopup = false;
+	}
+
+	// モーダル：開いている間は、ほかのウィンドウを操作できない
+	if (ImGui::BeginPopupModal("確認", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("保存していない変更があります。");
+		ImGui::Spacing();
+
+		if (ImGui::Button("保存して戻る"))
+		{
+			SaveChart();
+			if (!m_Dirty) m_ExitRequested = true;   // 保存に失敗したら戻らない
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("保存せずに戻る"))
+		{
+			m_ExitRequested = true;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("キャンセル"))
+			ImGui::CloseCurrentPopup();
+
+		ImGui::EndPopup();
+	}
 }

@@ -1,17 +1,18 @@
 #include "main.h"
 #include "Manager.h"
-#include "Input.h"
 #include "EditorScene.h"
 #include "TitleScene.h"
 #include "ChartEditor.h"
 
 void EditorScene::Init()
 {
-	Manager::AddGameObject<ChartEditor>();
+	m_Editor = Manager::AddGameObject<ChartEditor>();
 }
 
 void EditorScene::Update()
 {
-	if (Input::GetKeyTrigger(VK_ESCAPE))
+	// Esc の判定と「保存していません」の確認はエディタ側で行い、
+	// シーンは「戻りたい」と言われたら切り替えるだけ
+	if (m_Editor && m_Editor->IsExitRequested())
 		Manager::ChangeScene<TitleScene>();
 }

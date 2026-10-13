@@ -1,12 +1,16 @@
-﻿#pragma once
+#pragma once
 #include "Scene.h"
 
-class GameScene: public Scene
+class Notelane;
+
+class GameScene : public Scene
 {
+private:
+	Notelane* m_Lane = nullptr;
+
 public:
 	void Init() override;
 	void Uninit() override;
 	void Update() override;
 	void Draw() override;
 };
-

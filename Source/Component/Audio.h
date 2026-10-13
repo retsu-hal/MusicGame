@@ -35,6 +35,7 @@ public:
 	void Pause();
 	void Resume();
 	double GetPlaybackTime() const;
+	double GetLength() const { return m_SampleRate ? (double)m_PlayLength / m_SampleRate : 0.0; }   // 曲の長さ（秒）
 
 
 };

@@ -164,6 +164,7 @@
     <ClCompile Include="Source\Object\Notelane.cpp" />
     <ClCompile Include="Source\Object\Polygon2D.cpp" />
     <ClCompile Include="Source\Rhythm\Chart.cpp" />
+    <ClCompile Include="Source\Rhythm\Settings.cpp" />
     <ClCompile Include="Source\Rhythm\Conductor.cpp" />
     <ClCompile Include="Source\Core\Input.cpp" />
     <ClCompile Include="Source\Core\Manager.cpp" />
@@ -199,6 +200,8 @@
     <ClInclude Include="Source\Object\Notelane.h" />
     <ClInclude Include="Source\Object\Polygon2D.h" />
     <ClInclude Include="Source\Rhythm\Chart.h" />
+    <ClInclude Include="Source\Rhythm\Settings.h" />
+    <ClInclude Include="Source\Rhythm\GameSession.h" />
     <ClInclude Include="Source\Core\Component.h" />
     <ClInclude Include="Source\Rhythm\Conductor.h" />
     <ClInclude Include="Source\Core\GameObject.h" />

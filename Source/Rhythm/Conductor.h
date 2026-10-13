@@ -11,6 +11,7 @@ private:
 	static double    m_SongTime;     // なめらかにした曲の時刻（秒）
 	static double    m_Bpm;
 	static double    m_Offset;       // 遅延補正（秒）
+	static bool      m_WaitingAudio; // カウントイン中（曲の 0 秒になるまで音を鳴らさずに待つ）
 
 	static long long m_Freq;         // QPC の 1秒あたりのカウント数
 	static long long m_LastCounter;  // 前のフレームの QPC

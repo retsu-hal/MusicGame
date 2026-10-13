@@ -36,6 +36,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Rhythm\Settings.cpp">
+      <Filter>Rhythm</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Scene\EditorScene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
@@ -137,6 +140,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Rhythm\GameSession.h">
+      <Filter>Rhythm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rhythm\Settings.h">
+      <Filter>Rhythm</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Scene\EditorScene.h">
       <Filter>Scene</Filter>
     </ClInclude>

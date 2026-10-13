@@ -11,6 +11,7 @@
 #include "TextureManager.h"
 #include "Collider.h"
 #include "Conductor.h"
+#include "Settings.h"
 
 
 //staticメンバー変数はcppで定義する必要がある
@@ -27,6 +28,8 @@ void Manager::Init()
 	Renderer::Init();
 	Audio::InitMaster();
 	Conductor::Init();
+	Settings::Load();                                   // 前回の設定（ハイスピード・オフセット）
+	Conductor::SetOffset(Settings::offsetMs / 1000.0);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
