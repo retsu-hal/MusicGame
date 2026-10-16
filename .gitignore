@@ -432,3 +432,6 @@ FodyWeavers.xsd
 *.cso
 .claude/
 Claude outputs/
+
+# プレイヤーの設定（起動時に生成・保存される）
+settings.json
