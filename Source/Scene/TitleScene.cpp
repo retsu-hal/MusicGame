@@ -16,6 +16,7 @@
 #include "Polygon2D.h"
 #include "TitleScene.h"
 #include "GameScene.h"
+#include "SettingsScene.h"
 #include <algorithm>		// std::min
 #include "audio.h"
 //==============================================================================
@@ -53,13 +54,13 @@ void TitleScene::Init()
 	//効果音(表示はしない GameObject に Audio を2つ付ける)
 	GameObject* sound = Manager::AddGameObject<GameObject>();
 	m_SelectSE = sound->AddComponent<Audio>();
-	m_SelectSE->Load("asset\\audio\\se\\se_select.wav");
+	m_SelectSE->Load("asset\\audio\\se\\se_select.wav", Audio::TYPE_SE);
 
 	m_DecideSE = sound->AddComponent<Audio>();
-	m_DecideSE->Load("asset\\audio\\se\\se_click.wav");
+	m_DecideSE->Load("asset\\audio\\se\\se_click.wav", Audio::TYPE_SE);
 
 	m_BGM = sound->AddComponent<Audio>();
-	m_BGM->Load("asset\\audio\\bgm\\bgm_title.wav");
+	m_BGM->Load("asset\\audio\\bgm\\bgm_title.wav", Audio::TYPE_MUSIC);
 	m_BGM->SetVolume(0.3f);
 	m_BGM->Play(true);	// ループ再生
 
@@ -92,8 +93,11 @@ void TitleScene::Init()
 	m_CursorLine->SetColor(COLOR_ACCENT);
 
 	//項目ごとの画像と大きさ(画像の元のピクセル数)
-	const WCHAR* textFile[MENU_MAX] = { L"asset\\texture\\ui\\text\\menu\\start.png", L"asset\\texture\\ui\\text\\menu\\exit.png" };
-	const float textWidth[MENU_MAX] = { 190.0f, 138.0f };
+	const WCHAR* textFile[MENU_MAX] = {
+		L"asset\\texture\\ui\\text\\menu\\start.png",
+		L"asset\\texture\\ui\\text\\menu\\settings.png",	
+		L"asset\\texture\\ui\\text\\menu\\exit.png" };
+	const float textWidth[MENU_MAX] = { 190.0f, 285.0f , 138.0f };
 	const float subWidth[MENU_MAX] = { 96.0f, 70.0f };
 	const float subX[MENU_MAX] = { 367.0f, 329.0f };	// 英語の文字の長さが違うので、日本語の位置も項目ごと
 
@@ -230,6 +234,12 @@ void TitleScene::Update()
 					m_IsLeaving = true;
 					m_FadeTime = 0.0f;							// フェードアウトを 0 秒から始める
 					break;
+
+				case MENU_SETTINGS:								
+					Manager::ChangeScene<SettingsScene>(FADE_TIME);
+					m_IsLeaving = true;
+					m_FadeTime = 0.0f;
+					break;									
 
 				case MENU_EXIT:
 					OpenExitDialog();		// すぐ終了せず、確認を出す

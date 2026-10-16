@@ -9,6 +9,7 @@ protected:
 	enum MENU
 	{
 		MENU_START,
+		MENU_SETTINGS,
 		MENU_EXIT,
 
 		MENU_MAX
@@ -18,7 +19,7 @@ protected:
 public:
 	class Polygon2D* m_Logo;
 
-	class Polygon2D* m_MenuText[MENU_MAX];	// START / EXIT
+	class Polygon2D* m_MenuText[MENU_MAX];
 	class Polygon2D* m_Cursor;				// 選択中の帯
 	class Polygon2D* m_CursorLine;			// 帯の左の水色の線
 	int m_Select;							// 選択中の項目(MENU の値)

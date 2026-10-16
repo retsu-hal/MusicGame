@@ -2,13 +2,15 @@
 #include "main.h"
 #include "Audio.h"
 #include "Conductor.h"
-
+#include "Settings.h"
 
 
 
 
 IXAudio2*				Audio::m_Xaudio = NULL;
 IXAudio2MasteringVoice*	Audio::m_MasteringVoice = NULL;
+IXAudio2SubmixVoice* Audio::m_MusicSubmix = NULL;
+IXAudio2SubmixVoice* Audio::m_SeSubmix = NULL;		
 
 
 void Audio::InitMaster()
@@ -21,25 +23,37 @@ void Audio::InitMaster()
 
 	// マスタリングボイス生成
 	m_Xaudio->CreateMasteringVoice(&m_MasteringVoice);
+
+	// ★ サブミックスボイス生成（チャンネル数とサンプルレートはマスタリングボイスに合わせる）
+	XAUDIO2_VOICE_DETAILS details;
+	m_MasteringVoice->GetVoiceDetails(&details);
+
+	m_Xaudio->CreateSubmixVoice(&m_MusicSubmix, details.InputChannels, details.InputSampleRate);
+	m_Xaudio->CreateSubmixVoice(&m_SeSubmix, details.InputChannels, details.InputSampleRate);
 }
 
 
 void Audio::UninitMaster()
 {
+	m_MusicSubmix->DestroyVoice();		
+	m_SeSubmix->DestroyVoice();			
 	m_MasteringVoice->DestroyVoice();
 	m_Xaudio->Release();
 	CoUninitialize();
+}
+
+void Audio::ApplyVolume()
+{
+	m_MasteringVoice->SetVolume(Settings::masterVolume / 100.0f);
+	m_MusicSubmix->SetVolume(Settings::musicVolume / 100.0f);
+	m_SeSubmix->SetVolume(Settings::seVolume / 100.0f);
 }
 
 
 
 
 
-
-
-
-
-void Audio::Load(const char *FileName)
+void Audio::Load(const char *FileName, TYPE type)
 {
 	// サウンドデータ読込
 	WAVEFORMATEX wfx = { 0 };
@@ -96,9 +110,11 @@ void Audio::Load(const char *FileName)
 		m_SampleRate = wfx.nSamplesPerSec;
 	}
 
+	XAUDIO2_SEND_DESCRIPTOR send = { 0, (type == TYPE_MUSIC) ? m_MusicSubmix : m_SeSubmix };
+	XAUDIO2_VOICE_SENDS     sendList = { 1, &send };
 
 	// サウンドソース生成
-	m_Xaudio->CreateSourceVoice(&m_SourceVoice, &wfx);
+	m_Xaudio->CreateSourceVoice(&m_SourceVoice, &wfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, NULL, &sendList);
 	assert(m_SourceVoice);
 }
 

@@ -41,7 +41,7 @@ bool Notelane::LoadChart(const std::string& path)
 		m_NoteTimes.push_back(m_Chart.TickToSec(n.tick));
 
 	m_Music = AddComponent<Audio>();
-	m_Music->Load(m_Chart.audioPath.c_str());
+	m_Music->Load(m_Chart.audioPath.c_str(), Audio::TYPE_MUSIC);
 
 	// 終了時刻：最後のノーツ + 少し。ノーツが無ければ曲の長さ
 	if (!m_NoteTimes.empty()) m_EndTime = m_NoteTimes.back() + END_WAIT;

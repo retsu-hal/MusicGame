@@ -38,7 +38,7 @@ void Player::Init()
 
 	//SE
 	m_JumpSE = AddComponent<Audio>();
-	m_JumpSE->Load("asset\\audio\\wan.wav");
+	m_JumpSE->Load("asset\\audio\\wan.wav", Audio::TYPE_SE);
 
 }
 

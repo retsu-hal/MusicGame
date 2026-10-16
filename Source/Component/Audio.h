@@ -9,6 +9,8 @@ class Audio : public Component
 private:
 	static IXAudio2*				m_Xaudio;
 	static IXAudio2MasteringVoice*	m_MasteringVoice;
+	static IXAudio2SubmixVoice* m_MusicSubmix;		
+	static IXAudio2SubmixVoice* m_SeSubmix;			
 
 	IXAudio2SourceVoice*	m_SourceVoice{};
 	BYTE*					m_SoundData{};
@@ -22,14 +24,20 @@ private:
 
 
 public:
+	enum TYPE
+	{
+		TYPE_MUSIC,		// 曲・BGM
+		TYPE_SE,		// タップ音・メニュー音
+	};
 	static void InitMaster();
 	static void UninitMaster();
+	static void ApplyVolume();
 
 	using Component::Component;
 
 	void Uninit() override;
 
-	void Load(const char *FileName);
+	void Load(const char* FileName, TYPE type);
 	void Play(bool Loop = false);
 	void PlayFrom(double startSec);
 	void Pause();

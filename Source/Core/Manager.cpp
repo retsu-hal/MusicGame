@@ -29,6 +29,7 @@ void Manager::Init()
 	Audio::InitMaster();
 	Conductor::Init();
 	Settings::Load();                                   // 前回の設定（ハイスピード・オフセット）
+	Audio::ApplyVolume();
 	Conductor::SetOffset(Settings::offsetMs / 1000.0);
 
 	IMGUI_CHECKVERSION();

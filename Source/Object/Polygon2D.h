@@ -7,11 +7,16 @@ class Polygon2D : public GameObject
 {
 private:
 	XMFLOAT4 m_Color = { 1.0f, 1.0f, 1.0f, 1.0f };	
-	VERTEX_3D m_Vertex[4];	// 頂点(あとから色を変えるので覚えておく)
+	VERTEX_3D m_Vertex[4] = {}; // すべてゼロ初期化
 	XMFLOAT4 m_Param = { 0.0f, 0.0f, 0.0f, 0.0f };	// シェーダーに渡す数値(時間など)
 
-
 public:
+	Polygon2D()
+		: m_Vertex() // std::vector や POD をデフォルト初期化
+	{
+		// コンストラクタ本体
+	}
+
 	void Init() override {}
 	void Init(float x, float y, float width, float height, const WCHAR* TextureName);
 	void Uninit() override;
@@ -25,4 +30,7 @@ public:
 
 	void SetPixelShader(const char* FileName);		// ピクセルシェーダーを差し替える
 	void SetParam(const XMFLOAT4& param) { m_Param = param; }
+
+	void SetRect(float x, float y, float width, float height);	//  位置と大きさを変える(Init と同じ指定のしかた)
+	void SetUV(float u, float v, float width, float height);	//  画像のどの範囲を貼るか(0.0〜1.0)
 };

@@ -125,3 +125,25 @@ void Polygon2D::SetPixelShader(const char* FileName)
 	if (m_PixelShader) m_PixelShader->Release();		// Init で作った unlitTexturePS を捨てる
 	Renderer::CreatePixelShader(&m_PixelShader, FileName);
 }
+
+void Polygon2D::SetRect(float x, float y, float width, float height)
+{
+	m_Vertex[0].Position = XMFLOAT3(x, y, 0.0f);	// 左上
+	m_Vertex[1].Position = XMFLOAT3(x + width, y, 0.0f);	// 右上
+	m_Vertex[2].Position = XMFLOAT3(x, y + height, 0.0f);	// 左下
+	m_Vertex[3].Position = XMFLOAT3(x + width, y + height, 0.0f);	// 右下
+
+	// 書き換えた頂点を GPU のバッファへ送り直す
+	Renderer::GetDeviceContext()->UpdateSubresource(m_vertexBuffer, 0, nullptr, m_Vertex, 0, 0);
+}
+
+void Polygon2D::SetUV(float u, float v, float width, float height)
+{
+	m_Vertex[0].TexCoord = XMFLOAT2(u, v);			// 左上
+	m_Vertex[1].TexCoord = XMFLOAT2(u + width, v);			// 右上
+	m_Vertex[2].TexCoord = XMFLOAT2(u, v + height);	// 左下
+	m_Vertex[3].TexCoord = XMFLOAT2(u + width, v + height);	// 右下
+
+	// 書き換えた頂点を GPU のバッファへ送り直す
+	Renderer::GetDeviceContext()->UpdateSubresource(m_vertexBuffer, 0, nullptr, m_Vertex, 0, 0);
+}

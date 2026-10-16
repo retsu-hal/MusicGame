@@ -186,6 +186,7 @@
     <ClCompile Include="Source\Object\Score.cpp" />
     <ClCompile Include="Source\Scene\GameScene.cpp" />
     <ClCompile Include="Source\Scene\ResultScene.cpp" />
+    <ClCompile Include="Source\Scene\SettingsScene.cpp" />
     <ClCompile Include="Source\Scene\TitleScene.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="ThirdParty\imgui\imgui.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="Source\Object\Score.h" />
     <ClInclude Include="Source\Scene\GameScene.h" />
     <ClInclude Include="Source\Scene\ResultScene.h" />
+    <ClInclude Include="Source\Scene\SettingsScene.h" />
     <ClInclude Include="Source\Scene\TitleScene.h" />
     <ClInclude Include="Source\main.h" />
     <ClInclude Include="ThirdParty\imgui\imconfig.h" />
