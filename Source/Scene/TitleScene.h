@@ -1,5 +1,7 @@
 ﻿#pragma once
 #include "Scene.h"
+#include <vector>
+#include "ExitDialog.h"
 class TitleScene :public Scene
 {
 protected:
@@ -32,6 +34,10 @@ public:
 	class Audio* m_DecideSE;				// 決定したときの音
 	class Audio* m_BGM;						// タイトルのBGM
 
+	ExitDialog m_ExitDialog;				// 終了確認
+	class Polygon2D* m_GuideEscExit;		// キーガイド「Esc 終了」
+	class Polygon2D* m_GuideEscCancel;		// キーガイド「Esc キャンセル」
+
 	void Init() override;
 	void Uninit() override;
 	void Update() override;
@@ -39,4 +45,7 @@ public:
 
 	void UpdateMenuLook();					// 選択に合わせて色と帯の位置を変える
 	int  HitMenu(int x, int y);				// (x, y) にある項目の番号。どれにも当たらなければ -1
+
+	void OpenExitDialog();					// 終了確認を開いて、キーガイドを切り替える
+	void SetEscGuide(bool cancel);			// true:「Esc キャンセル」 false:「Esc 終了」
 };

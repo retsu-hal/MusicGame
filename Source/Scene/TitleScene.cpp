@@ -27,10 +27,6 @@
 #define MENU_Y     (540.0f)		// 1つ目の項目の上端
 #define MENU_PITCH (84.0f)		// 項目の間隔
 
-#define MENU_X     (208.0f)		// メニューの文字の左端
-#define MENU_Y     (540.0f)		// 1つ目の項目の上端
-#define MENU_PITCH (84.0f)		// 項目の間隔
-
 // 選択中の帯(=クリックの当たり範囲)。1つ目の項目の行の四角
 #define CURSOR_X   (168.0f)
 #define CURSOR_Y   (MENU_Y - 9.0f)
@@ -54,16 +50,30 @@ static const XMFLOAT4 COLOR_CURSOR = { 0.486f, 0.424f, 1.0f,   0.25f };	// 帯�
 //==============================================================================
 void TitleScene::Init()
 {
+	//効果音(表示はしない GameObject に Audio を2つ付ける)
+	GameObject* sound = Manager::AddGameObject<GameObject>();
+	m_SelectSE = sound->AddComponent<Audio>();
+	m_SelectSE->Load("asset\\audio\\se\\se_select.wav");
+
+	m_DecideSE = sound->AddComponent<Audio>();
+	m_DecideSE->Load("asset\\audio\\se\\se_click.wav");
+
+	m_BGM = sound->AddComponent<Audio>();
+	m_BGM->Load("asset\\audio\\bgm\\bgm_title.wav");
+	m_BGM->SetVolume(0.3f);
+	m_BGM->Play(true);	// ループ再生
+
 	//背景
 	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\TitleBG.png");
+	
 
 	//エンブレム(ロゴの左の丸い印)
 	Polygon2D* emblem = Manager::AddGameObject<Polygon2D>();
-	emblem->Init(127.0f, 228.0f, 1107.0f * 0.19f, 896.0f * 0.19f, L"asset\\texture\\logo.png");
-
+	emblem->Init(350.0f, 170.0f, 1107.0f * 0.3f, 896.0f * 0.3f, L"asset\\texture\\logo.png");
+	
 	//タイトルロゴ「Re:sonare」
 	m_Logo = Manager::AddGameObject<Polygon2D>();
-	m_Logo->Init(343.0f, 203.0f, 866.0f * UI_SCALE, 238.0f * UI_SCALE, L"asset\\texture\\ui\\text\\title\\resonare.png");
+	m_Logo->Init(200.0f, 203.0f, 866.0f * UI_SCALE, 238.0f * UI_SCALE, L"asset\\texture\\ui\\text\\title\\resonare.png");
 	m_Logo->SetColor(XMFLOAT4(0.949f, 0.941f, 0.980f, 1.0f));	
 	m_Logo->SetPixelShader("shader\\logoPS.cso");	// 縁を光が走るシェーダー
 	m_Time = 0.0f;
@@ -97,6 +107,9 @@ void TitleScene::Init()
 
 	UpdateMenuLook();
 
+	//終了確認(メニューより後・キーガイドより前に足す。キーガイドだけは暗くしないため)
+	m_ExitDialog.Init(m_SelectSE, m_DecideSE);
+
 	//キーガイド(画面下)
 //区切り線
 	Polygon2D* guideLine = Manager::AddGameObject<Polygon2D>();
@@ -109,14 +122,28 @@ void TitleScene::Init()
 	const float guideWidth[GUIDE_NUM] = { 200.0f, 182.0f };
 
 	float guideX = 66.0f;
+	float escX = 0.0f;			// 「Esc 終了」を置いた x
 	for (int i = 0; i < GUIDE_NUM; i++)
 	{
 		Polygon2D* guide = Manager::AddGameObject<Polygon2D>();
 		guide->Init(guideX, 1005.0f, guideWidth[i] * UI_SCALE, 104.0f * UI_SCALE, guideFile[i]);
 		guide->SetColor(COLOR_NORMAL);
 
+		if (i == GUIDE_NUM - 1)	// 最後の1つが「Esc 終了」
+		{
+			m_GuideEscExit = guide;
+			escX = guideX;
+		}
+
 		guideX += guideWidth[i] * UI_SCALE + 30.0f;	// 次の画像は、今の画像の右端 + 30
 	}
+
+	//「Esc キャンセル」(終了確認を開いている間だけ「Esc 終了」と入れ替える)
+	m_GuideEscCancel = Manager::AddGameObject<Polygon2D>();
+	m_GuideEscCancel->Init(escX, 1005.0f, 272.0f * UI_SCALE, 104.0f * UI_SCALE, L"asset\\texture\\ui\\keyguide\\kg_esc_cancel.png");
+	m_GuideEscCancel->SetColor(COLOR_NORMAL);
+
+	SetEscGuide(false);			// 最初は「Esc 終了」
 
 	//フェード用の黒い板(一番最後に足して、全部の上に描く)
 	m_Fade = Manager::AddGameObject<Polygon2D>();
@@ -126,18 +153,7 @@ void TitleScene::Init()
 	m_IsLeaving = false;
 
 
-	//効果音(表示はしない GameObject に Audio を2つ付ける)
-	GameObject* sound = Manager::AddGameObject<GameObject>();
-	m_SelectSE = sound->AddComponent<Audio>();
-	m_SelectSE->Load("asset\\audio\\se\\se_select.wav");
-
-	m_DecideSE = sound->AddComponent<Audio>();
-	m_DecideSE->Load("asset\\audio\\se\\se_click.wav");
-
-	m_BGM = sound->AddComponent<Audio>();
-	m_BGM->Load("asset\\audio\\bgm\\bgm_title.wav");
-	m_BGM->SetVolume(0.3f);	
-	m_BGM->Play(true);	// ループ再生
+	
 
 
 }
@@ -167,6 +183,24 @@ void TitleScene::Update()
 	if (m_IsLeaving)
 	{
 		return;		// 出ていく途中は操作を受け付けない(2回押し・ホバーの色変えを防ぐ)
+
+		
+	}
+
+	//終了確認を開いている間は、そちらだけ動かす
+	if (m_ExitDialog.IsOpen())
+	{
+		ExitDialog::RESULT result = m_ExitDialog.Update();
+
+		if (result == ExitDialog::RESULT_YES)
+		{
+			PostQuitMessage(0);		// ゲームを終了する
+		}
+		else if (result == ExitDialog::RESULT_NO)
+		{
+			SetEscGuide(false);		// キーガイドを「Esc 終了」に戻す
+		}
+		return;
 	}
 
 	//メニューの選択(マウスが乗っている行を選択中にする)
@@ -198,16 +232,16 @@ void TitleScene::Update()
 					break;
 
 				case MENU_EXIT:
-					PostQuitMessage(0);					// ゲームを終了する
+					OpenExitDialog();		// すぐ終了せず、確認を出す
 					break;
 			}
 		}
 	}
 
-	//Esc でも終了(キーガイドの「Esc 終了」)
+	//Esc で終了確認を開く
 	if (Input::GetKeyTrigger(VK_ESCAPE))
 	{
-		PostQuitMessage(0);
+		OpenExitDialog();
 	}
 
 }
@@ -256,4 +290,22 @@ int TitleScene::HitMenu(int x, int y)
 	}
 
 	return -1;			// どれにも当たらなかった
+}
+
+//==============================================================================
+//終了確認を開く
+//==============================================================================
+void TitleScene::OpenExitDialog()
+{
+	m_ExitDialog.Open();
+	SetEscGuide(true);		// キーガイドを「Esc キャンセル」に
+}
+
+//==============================================================================
+//キーガイドの Esc を切り替える
+//==============================================================================
+void TitleScene::SetEscGuide(bool cancel)
+{
+	m_GuideEscExit->SetAlpha(cancel ? 0.0f : 1.0f);
+	m_GuideEscCancel->SetAlpha(cancel ? 1.0f : 0.0f);
 }

@@ -161,6 +161,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Object\Camera.cpp" />
+    <ClCompile Include="Source\Object\ExitDialog.cpp" />
     <ClCompile Include="Source\Object\Notelane.cpp" />
     <ClCompile Include="Source\Object\Lane.cpp" />
     <ClCompile Include="Source\Object\TapNote.cpp" />
@@ -197,6 +198,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Object\Camera.h" />
+    <ClInclude Include="Source\Object\ExitDialog.h" />
     <ClInclude Include="Source\Object\Notelane.h" />
     <ClInclude Include="Source\Object\Lane.h" />
     <ClInclude Include="Source\Object\LaneDraw.h" />

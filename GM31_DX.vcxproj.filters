@@ -135,6 +135,9 @@
     <ClCompile Include="Source\Object\Polygon2D.cpp">
       <Filter>Object</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Object\ExitDialog.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Rhythm\GameSession.h">
@@ -258,6 +261,9 @@
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\Polygon2D.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\ExitDialog.h">
       <Filter>Object</Filter>
     </ClInclude>
   </ItemGroup>
