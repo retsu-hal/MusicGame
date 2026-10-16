@@ -18,12 +18,14 @@
 //==============================================================================
 //マクロ宣言
 //==============================================================================
-#define TEXTURE_NUM_WIDTH 5
-#define TEXTURE_NUM_HEIGHT 5
-#define SCORE_MAX 999999
-#define DIGIT_WIDTH  50.0f   // 1桁の横幅
-#define DIGIT_HEIGHT 50.0f   // 1桁の高さ
-#define DIGIT_STEP   30.0f   // 次の桁までの送り幅（詰める/空けるを調整）
+#define TEXTURE_NUM_WIDTH 4    // number_atlas は 4x4 マス（0〜9 は左上から順に並んでいる）
+#define TEXTURE_NUM_HEIGHT 4
+#define SCORE_MAX 9999999
+#define DIGIT_WIDTH  64.0f   // 1桁の横幅（アトラスの1マス分。数字はマスの中央に小さめに入っている）
+#define DIGIT_HEIGHT 64.0f   // 1桁の高さ
+#define DIGIT_STEP   38.0f   // 次の桁までの送り幅（詰める/空けるを調整）
+#define SCORE_RIGHT  (SCREEN_WIDTH - 20.0f)   // 右端の位置（画面右上に表示）
+#define SCORE_TOP    40.0f
 
 //==============================================================================
 //プロトタイプ宣言
@@ -39,6 +41,9 @@
 void Score::Init()
 {
 	m_Layer = 3;
+
+	// 画面右上（「SCORE」の文字の下）に置く
+	m_Position = Vector3(SCORE_RIGHT - (DIGIT_STEP * (DIGIT_NUM - 1) + DIGIT_WIDTH), SCORE_TOP, 0.0f);
 
 	VERTEX_3D vertex[4 * DIGIT_NUM];
 
@@ -86,7 +91,7 @@ void Score::Init()
 	//テクスチャ読み込み
 	TexMetadata metadata;
 	ScratchImage image;
-	LoadFromWICFile(L"asset\\texture\\number.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\number_atlas_512.png", WIC_FLAGS_NONE, &metadata, image);	// 背景が透明な数字アトラス
 	CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(),
 		image.GetImageCount(), metadata, &m_Texture);
 	assert(m_Texture);
@@ -166,7 +171,11 @@ void Score::Draw()
 
 	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix, PopScaleMatrix;
 	ScaleMatrix = XMMatrixScaling(m_Scale.x, m_Scale.y, m_Scale.z);
-	PopScaleMatrix = XMMatrixScaling(popScale, popScale, 1.0f);
+	// 右端・上下中央を中心に膨らませる（画面の右からはみ出さないように）
+	const float scoreW = DIGIT_STEP * (DIGIT_NUM - 1) + DIGIT_WIDTH;
+	PopScaleMatrix = XMMatrixTranslation(-scoreW, -DIGIT_HEIGHT * 0.5f, 0.0f)
+		* XMMatrixScaling(popScale, popScale, 1.0f)
+		* XMMatrixTranslation(scoreW, DIGIT_HEIGHT * 0.5f, 0.0f);
 	RotMatrix = XMMatrixRotationRollPitchYaw(m_Rotation.x, m_Rotation.y, m_Rotation.z);
 	TransMatrix = XMMatrixTranslation(m_Position.x, m_Position.y, m_Position.z);
 	WorldMatrix = ScaleMatrix * PopScaleMatrix * RotMatrix * TransMatrix;

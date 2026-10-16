@@ -162,6 +162,8 @@
   <ItemGroup>
     <ClCompile Include="Source\Object\Camera.cpp" />
     <ClCompile Include="Source\Object\Notelane.cpp" />
+    <ClCompile Include="Source\Object\Lane.cpp" />
+    <ClCompile Include="Source\Object\TapNote.cpp" />
     <ClCompile Include="Source\Object\Polygon2D.cpp" />
     <ClCompile Include="Source\Rhythm\Chart.cpp" />
     <ClCompile Include="Source\Rhythm\Settings.cpp" />
@@ -185,8 +187,6 @@
     <ClCompile Include="Source\Scene\ResultScene.cpp" />
     <ClCompile Include="Source\Scene\TitleScene.cpp" />
     <ClCompile Include="Source\main.cpp" />
-    <ClCompile Include="Source\Editor\ChartEditor.cpp" />
-    <ClCompile Include="Source\Scene\EditorScene.cpp" />
     <ClCompile Include="ThirdParty\imgui\imgui.cpp" />
     <ClCompile Include="ThirdParty\imgui\imgui_demo.cpp" />
     <ClCompile Include="ThirdParty\imgui\imgui_draw.cpp" />
@@ -198,6 +198,9 @@
   <ItemGroup>
     <ClInclude Include="Source\Object\Camera.h" />
     <ClInclude Include="Source\Object\Notelane.h" />
+    <ClInclude Include="Source\Object\Lane.h" />
+    <ClInclude Include="Source\Object\LaneDraw.h" />
+    <ClInclude Include="Source\Object\TapNote.h" />
     <ClInclude Include="Source\Object\Polygon2D.h" />
     <ClInclude Include="Source\Rhythm\Chart.h" />
     <ClInclude Include="Source\Rhythm\Settings.h" />
@@ -226,8 +229,6 @@
     <ClInclude Include="Source\Scene\ResultScene.h" />
     <ClInclude Include="Source\Scene\TitleScene.h" />
     <ClInclude Include="Source\main.h" />
-    <ClInclude Include="Source\Editor\ChartEditor.h" />
-    <ClInclude Include="Source\Scene\EditorScene.h" />
     <ClInclude Include="ThirdParty\imgui\imconfig.h" />
     <ClInclude Include="ThirdParty\imgui\imgui.h" />
     <ClInclude Include="ThirdParty\imgui\imgui_internal.h" />
@@ -263,6 +264,20 @@
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shader\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="shader\logoPS.hlsl">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">shader\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shader\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shader\%(Filename).cso</ObjectFileOutput>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shader\SkinVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>

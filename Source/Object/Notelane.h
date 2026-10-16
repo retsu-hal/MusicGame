@@ -1,11 +1,12 @@
 #pragma once
 #include "GameObject.h"
 #include "Chart.h"
+#include "Lane.h"
+#include "TapNote.h"
 #include <vector>
 #include <string>
 
 class Audio;
-struct ImVec2;
 
 // 判定の種類
 enum class Judge
@@ -34,10 +35,10 @@ private:
 	std::vector<double> m_NoteTimes;   // 各ノーツの時刻（秒）
 	std::vector<Judge>  m_Judges;      // 各ノーツの判定結果
 
-	// 見た目の設定
-	int   m_LaneCount  = 4;
-	float m_LaneWidth  = 120.0f;       // 判定ライン上でのレーン幅（ピクセル）
-	float m_JudgeLineY = 600.0f;       // 判定ラインの高さ
+	// 見た目
+	LaneDraw::Layout m_Layout;         // レーンの本数・幅・判定ラインの高さ
+	Lane             m_Lane;           // レーンの描画（Lane.cpp）
+	TapNote          m_TapNote;        // タップノーツの描画（TapNote.cpp）
 
 	// 判定の結果
 	int    m_Count[6] = {};            // Judge ごとの個数
@@ -56,15 +57,13 @@ private:
 	bool   m_Finished  = false;
 
 	// 演出
-	float m_LaneGlow[4] = {};
 	std::vector<HitEffect> m_Effects;
 
 	void JudgeLane(int lane, double now);
 	void SetJudge(size_t index, Judge judge, double diff);
 	void Finish();
 
-	ImVec2 Project(float laneX, float z) const;
-	void DrawLane();
+	void DrawEffects();
 	void DrawHUD();
 
 public:

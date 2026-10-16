@@ -35,11 +35,15 @@ using namespace DirectX;
 #pragma comment (lib, "winmm.lib")
 
 
-#define SCREEN_WIDTH	(1280)
-#define SCREEN_HEIGHT	(720)
+#define SCREEN_WIDTH	(1920)
+#define SCREEN_HEIGHT	(1080)
 
 
 HWND GetWindow();
+
+void SetFullscreen(bool Fullscreen);	// ボーダーレスのフルスクリーン ⇔ ウィンドウ
+void ToggleFullscreen();				// F11 / Alt+Enter で切り替え（設定に保存する）
+bool IsFullscreen();
 
 void Invoke(std::function<void()> Function, int Time);
 

@@ -6,28 +6,27 @@ void Polygon2D::Init(float x, float y, float width, float height,const WCHAR* Te
 {
 	m_Layer = 3;
 
-	VERTEX_3D vertex[4];
 
 	{
-		vertex[0].Position = XMFLOAT3(x, y, 0.0f);
-		vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[0].TexCoord = XMFLOAT2(0.0f, 0.0f);
+		m_Vertex[0].Position = XMFLOAT3(x, y, 0.0f);
+		m_Vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		m_Vertex[0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Vertex[0].TexCoord = XMFLOAT2(0.0f, 0.0f);
 
-		vertex[1].Position = XMFLOAT3(x + width, y, 0.0f);
-		vertex[1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[1].TexCoord = XMFLOAT2(1.0f, 0.0f);
+		m_Vertex[1].Position = XMFLOAT3(x + width, y, 0.0f);
+		m_Vertex[1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		m_Vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Vertex[1].TexCoord = XMFLOAT2(1.0f, 0.0f);
 
-		vertex[2].Position = XMFLOAT3(x, y + height, 0.0f);
-		vertex[2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[2].TexCoord = XMFLOAT2(0.0f, 1.0f);
+		m_Vertex[2].Position = XMFLOAT3(x, y + height, 0.0f);
+		m_Vertex[2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		m_Vertex[2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Vertex[2].TexCoord = XMFLOAT2(0.0f, 1.0f);
 
-		vertex[3].Position = XMFLOAT3(x + width, y + height, 0.0f);
-		vertex[3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[3].TexCoord = XMFLOAT2(1.0f, 1.0f);
+		m_Vertex[3].Position = XMFLOAT3(x + width, y + height, 0.0f);
+		m_Vertex[3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		m_Vertex[3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		m_Vertex[3].TexCoord = XMFLOAT2(1.0f, 1.0f);
 	}
 
 	// 頂点バッファ生成
@@ -38,7 +37,7 @@ void Polygon2D::Init(float x, float y, float width, float height,const WCHAR* Te
 	bd.CPUAccessFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA sd{};
-	sd.pSysMem = vertex;
+	sd.pSysMem = m_Vertex;
 
 	Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
 	//シェーダー読み込み
@@ -90,7 +89,8 @@ void Polygon2D::Draw()
 
 	//マテリアル設定
 	MATERIAL material{};
-	material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	material.Diffuse = m_Color;
+	material.Emission = m_Param;			
 	material.TextureEnable = true;			//true:テクスチャを使用する、false:テクスチャを使用しない
 	Renderer::SetMaterial(material);
 
@@ -107,4 +107,21 @@ void Polygon2D::Draw()
 
 	//描画
 	Renderer::GetDeviceContext()->Draw(4, 0);
+}
+
+void Polygon2D::SetGradientAlpha(float leftAlpha, float rightAlpha)
+{
+	m_Vertex[0].Diffuse.w = leftAlpha;		// 左上
+	m_Vertex[2].Diffuse.w = leftAlpha;		// 左下
+	m_Vertex[1].Diffuse.w = rightAlpha;		// 右上
+	m_Vertex[3].Diffuse.w = rightAlpha;		// 右下
+
+	// 書き換えた頂点を GPU のバッファへ送り直す
+	Renderer::GetDeviceContext()->UpdateSubresource(m_vertexBuffer, 0, nullptr, m_Vertex, 0, 0);
+}
+
+void Polygon2D::SetPixelShader(const char* FileName)
+{
+	if (m_PixelShader) m_PixelShader->Release();		// Init で作った unlitTexturePS を捨てる
+	Renderer::CreatePixelShader(&m_PixelShader, FileName);
 }

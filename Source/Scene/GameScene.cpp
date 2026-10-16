@@ -15,6 +15,7 @@
 #include "Input.h"
 #include "Notelane.h"
 #include "GameSession.h"
+#include "score.h"
 
 #include "GameScene.h"
 #include "ResultScene.h"
@@ -30,6 +31,8 @@ void GameScene::Init()
 	// 選曲画面などで決めた譜面を読み込んで、カウントイン付きで開始
 	if (m_Lane->LoadChart(GameSession::chartPath))
 		m_Lane->PlayFromStart();
+
+	m_Score = Manager::AddGameObject<Score>();
 }
 
 //==============================================================================
@@ -44,6 +47,10 @@ void GameScene::Uninit()
 //==============================================================================
 void GameScene::Update()
 {
+	// 画面右上のスコア（数字画像）に、判定で増えたスコアを渡す
+	if (m_Lane && m_Score)
+		m_Score->SetTargetScore(m_Lane->GetScore());
+
 	// 曲が終わったらリザルトへ（結果は Notelane が GameSession に書いてある）
 	if (m_Lane && m_Lane->IsFinished())
 		Manager::ChangeScene<ResultScene>();

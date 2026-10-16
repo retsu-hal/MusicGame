@@ -77,6 +77,8 @@ void Manager::Update()
 {
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
+	// ImGui もゲーム画面（SCREEN_WIDTH x SCREEN_HEIGHT）の座標で描く。ウィンドウの大きさは Renderer::End で合わせる
+	ImGui::GetIO().DisplaySize = ImVec2((float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
 	ImGui::NewFrame();
 
 	float  dt =GetDeltaTime();

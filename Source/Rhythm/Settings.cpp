@@ -14,6 +14,7 @@ void Settings::Load()
 
 	noteSpeed = j.value("noteSpeed", noteSpeed);
 	offsetMs  = j.value("offsetMs",  offsetMs);
+	fullscreen = j.value("fullscreen", fullscreen);
 }
 
 void Settings::Save()
@@ -21,6 +22,7 @@ void Settings::Save()
 	nlohmann::json j;
 	j["noteSpeed"] = noteSpeed;
 	j["offsetMs"]  = offsetMs;
+	j["fullscreen"] = fullscreen;
 
 	std::ofstream ofs(SETTINGS_PATH);
 	if (ofs) ofs << j.dump(2);

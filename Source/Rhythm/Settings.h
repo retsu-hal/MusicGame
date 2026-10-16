@@ -6,6 +6,7 @@ class Settings
 public:
 	static inline float noteSpeed = 800.0f;   // ハイスピード（1秒で進む奥行き）
 	static inline float offsetMs  = 0.0f;     // 判定・表示のずれ補正（ミリ秒）
+	static inline bool  fullscreen = true;    // フルスクリーンで表示するか（F11 / Alt+Enter で切り替え）
 
 	static void Load();
 	static void Save();
