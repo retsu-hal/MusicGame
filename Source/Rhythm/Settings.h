@@ -11,6 +11,7 @@ public:
 	static inline float visualOffsetMs = 0.0f;   // ノーツを描く位置のずれ補正（ミリ秒）。まだゲームでは使っていない
 	static inline bool  layerGuide = true;   //  反対の段にノーツが来たら矢印で知らせる。まだ使っていない
 	static inline bool  fastSlow = true;   //  PERFECT 以外のときに FAST / SLOW を出す。まだ使っていない
+	static inline bool  showFps = false;   // 右上に FPS を出すか
 
 	static inline int   masterVolume = 80;    // 全体の音量（0〜100）
 	static inline int   musicVolume = 90;    //  曲・BGM の音量（0〜100）

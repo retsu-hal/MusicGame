@@ -12,7 +12,8 @@
 #include "Collider.h"
 #include "Conductor.h"
 #include "Settings.h"
-
+#include "LaneDraw.h"	
+#include <cmath>		
 
 //staticメンバー変数はcppで定義する必要がある
 std::list<GameObject* > Manager::m_GameObjects;
@@ -21,6 +22,10 @@ Scene* Manager::m_NextScene=nullptr;
 float Manager::m_ChangeSceneTime = 5.0f;
 
 float Manager::m_DeltaTime = 1.0f / 60.0f;
+
+int Manager::m_FpsFrames = 0;
+DWORD Manager::m_FpsLastTime = 0;
+int Manager::m_Fps = 0;
 
 void Manager::Init()
 {
@@ -43,6 +48,8 @@ void Manager::Init()
 
 	ImGui_ImplWin32_Init(GetWindow());
 	ImGui_ImplDX11_Init(Renderer::GetDevice(), Renderer::GetDeviceContext());
+
+	m_FpsLastTime = timeGetTime();
 
 	ChangeScene<TitleScene>();
 }
@@ -182,6 +189,8 @@ void Manager::Draw()
 	
 	//デバッグ表示（ImGui::Render より前に線をためる）
 
+	DrawFps();
+
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
@@ -197,4 +206,41 @@ GameObject* Manager::FindGameObjectByID(unsigned int id)
 		if (object->GetID() == id && !object->IsDestroyed()) return object;
 	}
 	return nullptr;
+}
+
+//==============================================================================
+//FPS を数えて、SHOW FPS が ON なら右上に描く
+//==============================================================================
+void Manager::DrawFps()
+{
+	//数える(OFF のときも数えておくと、ON にした瞬間から正しい値が出る)
+	m_FpsFrames++;
+
+	DWORD now = timeGetTime();
+	DWORD elapsed = now - m_FpsLastTime;		// 数え始めてから何ミリ秒たったか
+
+	if (elapsed >= 1000)						// 1秒たったら
+	{
+		m_Fps = (int)std::lround(m_FpsFrames * 1000.0 / elapsed);	// 1秒あたりに直す
+		m_FpsFrames = 0;						// 次の1秒を数え直す
+		m_FpsLastTime = now;
+	}
+
+	if (!Settings::showFps)
+	{
+		return;
+	}
+
+	//右上に置く。プレイ画面だけ、右上の「SCORE」と重ならないように左にずらす
+	float right = SCREEN_WIDTH - 30.0f;
+	if (dynamic_cast<GameScene*>(m_Scene) != nullptr)
+	{
+		right = SCREEN_WIDTH - 110.0f;
+	}
+
+	char text[16];
+	snprintf(text, sizeof(text), "%d FPS", m_Fps);
+
+	LaneDraw::TextRight(ImGui::GetForegroundDrawList(), 16.0f, ImVec2(right, 20.0f),
+		LaneDraw::Col(255, 255, 255, 0.6f), text);
 }

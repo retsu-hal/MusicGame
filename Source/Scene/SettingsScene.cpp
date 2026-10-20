@@ -75,6 +75,9 @@
 #define ARROW_HIT_H        (40.0f)				// 矢印をクリックできる範囲の高さ
 #define HI_SPEED_STEP      (10.0f)				// HI-SPEED が A / D 1回で変わる量(表示では 0.1)
 
+#define WINDOW_W     (200.0f * UI_SCALE)	// 「WINDOW」の画像の幅
+#define FULLSCREEN_W (298.0f * UI_SCALE)	// 「FULLSCREEN」の画像の幅
+
 // スプライトの番号
 static int AtlasCell(char c)
 {
@@ -320,6 +323,21 @@ void SettingsScene::Init()
 
 	m_ArrowLeftX = 0.0f;
 
+	//DISPLAY の値(今は SCREEN MODE だけ。WINDOW と FULLSCREEN の両方を作って、片方を隠す)
+	m_ScreenWindow = Manager::AddGameObject<Polygon2D>();
+	m_ScreenWindow->Init(0.0f, 0.0f, WINDOW_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\window.png");
+
+	m_ScreenFull = Manager::AddGameObject<Polygon2D>();
+	m_ScreenFull->Init(0.0f, 0.0f, FULLSCREEN_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\fullscreen.png");
+
+	m_ShownFullscreen = IsFullscreen();
+
+	m_FpsOn = Manager::AddGameObject<Polygon2D>();		
+	m_FpsOn->Init(0.0f, 0.0f, ON_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\on.png");
+
+	m_FpsOff = Manager::AddGameObject<Polygon2D>();	
+	m_FpsOff->Init(0.0f, 0.0f, OFF_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\off.png");
+
 	UpdateLook();
 
 	//キーガイド(画面下)
@@ -375,6 +393,12 @@ void SettingsScene::Update()
 	if (m_IsLeaving)
 	{
 		return;		// 出ていく途中は操作を受け付けない
+	}
+
+	// F11 / Alt+Enter で切り替えられたときも、SCREEN MODE の表示を合わせる
+	if (m_ShownFullscreen != IsFullscreen())
+	{
+		UpdateLook();
 	}
 
 	int mouseX = Input::GetMouseX();
@@ -462,7 +486,7 @@ void SettingsScene::Update()
 			m_SelectSE->Play();
 		}
 
-		// ★ 行の選択(ホイール)
+		// 行の選択(ホイール)
 		int wheel = Input::GetMouseWheel();
 		if (wheel != 0)
 		{
@@ -505,13 +529,25 @@ void SettingsScene::Update()
 			}
 		}
 
-		//  GAMEPLAY の矢印をクリック
-		if (m_Tab == TAB_GAMEPLAY && Input::GetMouseTrigger(Input::MOUSE_LEFT))
+		if (dir != 0 && m_Tab == TAB_DISPLAY)
 		{
-			int arrow = HitArrow(mouseX, mouseY);		// ◀ なら -1、▶ なら +1
-			if (arrow != 0 && ChangeGameplay(m_Row, arrow))
+			if (ChangeDisplay(m_Row, dir))
 			{
 				m_SelectSE->Play();
+			}
+		}
+
+		//  矢印をクリック(GAMEPLAY と DISPLAY)
+		if ((m_Tab == TAB_GAMEPLAY || m_Tab == TAB_DISPLAY) && Input::GetMouseTrigger(Input::MOUSE_LEFT))
+		{
+			int arrow = HitArrow(mouseX, mouseY);		// ◀ なら -1、▶ なら +1
+			if (arrow != 0)
+			{
+				bool changed = (m_Tab == TAB_GAMEPLAY) ? ChangeGameplay(m_Row, arrow) : ChangeDisplay(m_Row, arrow);
+				if (changed)
+				{
+					m_SelectSE->Play();
+				}
 			}
 		}
 	}
@@ -688,19 +724,67 @@ void SettingsScene::UpdateLook()
 				}
 		}
 
-		//選択中の行なら、値の左右に矢印を置く
 		if (selected)
 		{
-			m_ArrowLeftX = left - ARROW_GAP - ARROW_SIZE;
-			m_ArrowLeft->SetRect(m_ArrowLeftX, centerY - ARROW_SIZE * 0.5f, ARROW_SIZE, ARROW_SIZE);
-			m_ArrowLeft->SetColor(COLOR_ACCENT);
+			PlaceArrows(left, centerY);
+		}
+	}
 
-			m_ArrowRight->SetRect(VALUE_RIGHT - ARROW_SIZE, centerY - ARROW_SIZE * 0.5f, ARROW_SIZE, ARROW_SIZE);
-			m_ArrowRight->SetColor(COLOR_ACCENT);
+	bool showDisplay = (m_Tab == TAB_DISPLAY);
+
+	//DISPLAY の値(今は SCREEN MODE だけ)
+	{
+		bool  selected = showDisplay && (m_Row == DP_SCREEN_MODE);
+		float centerY = ROW_Y + ROW_H * DP_SCREEN_MODE + VALUE_OFFSET_Y;
+		float right = selected ? VALUE_RIGHT - ARROW_SIZE - ARROW_GAP : VALUE_RIGHT;
+
+		XMFLOAT4 color = selected ? COLOR_SELECTED : COLOR_NORMAL;
+		color.w = showDisplay ? 1.0f : 0.0f;
+
+		bool full = IsFullscreen();
+		m_ShownFullscreen = full;									// 描いた状態を覚えておく
+
+		Polygon2D* show = full ? m_ScreenFull : m_ScreenWindow;	// 出す方
+		Polygon2D* hide = full ? m_ScreenWindow : m_ScreenFull;		// 隠す方
+		float width = full ? FULLSCREEN_W : WINDOW_W;
+
+		float left = right - width;
+		show->SetRect(left, centerY - VALUE_IMAGE_CENTER, width, VALUE_IMAGE_H);
+		show->SetColor(color);
+		hide->SetAlpha(0.0f);
+
+		if (selected)
+		{
+			PlaceArrows(left, centerY);
+		}
+	}
+
+	//SHOW FPS
+	{
+		bool  selected = showDisplay && (m_Row == DP_SHOW_FPS);
+		float centerY = ROW_Y + ROW_H * DP_SHOW_FPS + VALUE_OFFSET_Y;
+		float right = selected ? VALUE_RIGHT - ARROW_SIZE - ARROW_GAP : VALUE_RIGHT;
+
+		XMFLOAT4 color = selected ? COLOR_SELECTED : COLOR_NORMAL;
+		color.w = showDisplay ? 1.0f : 0.0f;
+
+		bool on = Settings::showFps;
+
+		Polygon2D* show = on ? m_FpsOn : m_FpsOff;		// 出す方
+		Polygon2D* hide = on ? m_FpsOff : m_FpsOn;		// 隠す方
+		float width = on ? ON_W : OFF_W;
+
+		float left = right - width;
+		show->SetRect(left, centerY - VALUE_IMAGE_CENTER, width, VALUE_IMAGE_H);
+		show->SetColor(color);
+		hide->SetAlpha(0.0f);
+
+		if (selected)
+		{
+			PlaceArrows(left, centerY);
 		}
 	}
 }
-
 //==============================================================================
 //今のタブの項目の数
 //==============================================================================
@@ -909,4 +993,40 @@ float SettingsScene::SetValueText(int row, const char* text, float right, float 
 	}
 
 	return x;		// 一番左の文字の左端
+}
+
+//==============================================================================
+//DISPLAY の row 行目の値を変える。変わったら true
+//==============================================================================
+bool SettingsScene::ChangeDisplay(int row, int dir)
+{
+	switch (row)
+	{
+		case DP_SCREEN_MODE:
+			ToggleFullscreen();		// main.cpp の関数。切り替えて、Settings::fullscreen を更新して保存までする
+			break;					// WINDOW と FULLSCREEN の2つしかないので、dir(向き)は関係ない
+
+		case DP_SHOW_FPS:						
+			Settings::showFps = !Settings::showFps;	// A でも D でも ON ⇔ OFF
+			break;
+
+		default:
+			return false;			// ほかの項目はまだ作っていない
+	}
+
+	UpdateLook();
+	return true;
+}
+
+//==============================================================================
+//値の左端 left の左と、行の右端に ◀ ▶ を置く
+//==============================================================================
+void SettingsScene::PlaceArrows(float left, float centerY)
+{
+	m_ArrowLeftX = left - ARROW_GAP - ARROW_SIZE;
+	m_ArrowLeft->SetRect(m_ArrowLeftX, centerY - ARROW_SIZE * 0.5f, ARROW_SIZE, ARROW_SIZE);
+	m_ArrowLeft->SetColor(COLOR_ACCENT);
+
+	m_ArrowRight->SetRect(VALUE_RIGHT - ARROW_SIZE, centerY - ARROW_SIZE * 0.5f, ARROW_SIZE, ARROW_SIZE);
+	m_ArrowRight->SetColor(COLOR_ACCENT);
 }

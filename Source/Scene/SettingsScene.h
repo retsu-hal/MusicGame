@@ -14,11 +14,6 @@ public:
 		TAB_MAX
 	};
 
-	static const int ROW_MAX = 5;					// 1つのタブに並ぶ項目の最大数(GAMEPLAY と DISPLAY が5つ)
-	static const int VOLUME_NUM = 3;				// AUDIO タブの行数(MASTER / MUSIC / SE)
-	static const int DIGIT_MAX = 3;					// 音量の数字の桁数(最大 100 なので3桁)
-	static const int VALUE_CHAR_MAX = 4;			//  GAMEPLAY の値の文字数の最大("+200" "20.0" で4文字)
-
 	//  GAMEPLAY タブの行(上から。ITEM_IMAGE の GAMEPLAY と同じ並び)
 	enum GAMEPLAY_ROW
 	{
@@ -28,6 +23,21 @@ public:
 		GP_LAYER_GUIDE,
 		GP_FAST_SLOW,
 	};
+
+	// ★ DISPLAY タブの行(上から。ITEM_IMAGE の DISPLAY と同じ並び)
+	enum DISPLAY_ROW
+	{
+		DP_SCREEN_MODE,
+		DP_RESOLUTION,
+		DP_V_SYNC,
+		DP_BG_BRIGHTNESS,
+		DP_SHOW_FPS,
+	};
+
+	static const int ROW_MAX = 5;					// 1つのタブに並ぶ項目の最大数(GAMEPLAY と DISPLAY が5つ)
+	static const int VOLUME_NUM = 3;				// AUDIO タブの行数(MASTER / MUSIC / SE)
+	static const int DIGIT_MAX = 3;					// 音量の数字の桁数(最大 100 なので3桁)
+	static const int VALUE_CHAR_MAX = 4;			//  GAMEPLAY の値の文字数の最大("+200" "20.0" で4文字)
 
 	class Polygon2D* m_TabText[TAB_MAX];			// GAMEPLAY / AUDIO / DISPLAY
 	class Polygon2D* m_TabCursor;					//  選択中のタブの帯
@@ -48,7 +58,14 @@ public:
 	class Polygon2D* m_ValueOff[ROW_MAX];						// 「OFF」(同じ2行だけ)
 	class Polygon2D* m_ArrowLeft;								//  選択中の行の ◀
 	class Polygon2D* m_ArrowRight;								//  選択中の行の ▶
-	float m_ArrowLeftX;											//  ◀ を置いた x(クリックの当たり判定に使う)
+	float m_ArrowLeftX;											// ◀ を置いた x(クリックの当たり判定に使う)
+
+	class Polygon2D* m_ScreenWindow;							//  SCREEN MODE の「WINDOW」
+	class Polygon2D* m_ScreenFull;								//  SCREEN MODE の「FULLSCREEN」
+	class Polygon2D* m_FpsOn;									// SHOW FPS の「ON」
+	class Polygon2D* m_FpsOff;									//  SHOW FPS の「OFF」
+	bool m_ShownFullscreen;										// 今の表示がフルスクリーンのつもりで描いているか(F11 との食い違いに気づくため)
+
 
 	class Polygon2D* m_ItemName[TAB_MAX][ROW_MAX];	// 項目名(HI-SPEED など)。項目が無いところは nullptr
 	class Polygon2D* m_ItemDesc[TAB_MAX][ROW_MAX];	// 項目の説明(日本語)
@@ -57,6 +74,9 @@ public:
 	class Polygon2D* m_RowCursorLine;				// 行の帯の左の水色の線
 	int m_Row;										//  選択中の行(上から 0, 1, 2 …)
 	int m_HoverRow;									//  前のフレームでマウスが乗っていた行(-1: どれにも乗っていない)
+
+
+
 
 	class Polygon2D* m_Fade;		// フェード用の黒い板
 	float m_FadeTime;				// フェードが始まってからの時間(秒)
@@ -83,4 +103,6 @@ public:
 	bool ChangeGameplay(int row, int dir);	//  GAMEPLAY の row 行目の値を dir(-1 / +1)の向きに変える。変わったら true
 	int  HitArrow(int x, int y);			// (x, y) が ◀ なら -1、▶ なら +1、どちらでもなければ 0
 	float SetValueText(int row, const char* text, float right, float centerY, const XMFLOAT4& color);	// 文字を右揃えで並べる。左端の x を返す
+	bool ChangeDisplay(int row, int dir);	//  DISPLAY の row 行目の値を変える。変わったら true
+	void PlaceArrows(float left, float centerY);	//  値の左端 left の左と、行の右端に ◀ ▶ を置く
 };

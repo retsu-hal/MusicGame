@@ -17,7 +17,7 @@
 #include "TitleScene.h"
 #include "GameScene.h"
 #include "SettingsScene.h"
-#include <algorithm>		// std::min
+#include <algorithm>		
 #include "audio.h"
 //==============================================================================
 //マクロ宣言

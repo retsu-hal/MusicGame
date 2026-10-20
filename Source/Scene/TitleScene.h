@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include <vector>
 #include "ExitDialog.h"
+
 class TitleScene :public Scene
 {
 protected:

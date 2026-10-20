@@ -16,9 +16,15 @@ void Settings::Load()
 	noteSpeed = j.value("noteSpeed", noteSpeed);
 	offsetMs  = j.value("offsetMs",  offsetMs);
 	fullscreen = j.value("fullscreen", fullscreen);
+
 	masterVolume = std::clamp(j.value("masterVolume", masterVolume), 0, 100);
 	musicVolume = std::clamp(j.value("musicVolume", musicVolume), 0, 100);
 	seVolume = std::clamp(j.value("seVolume", seVolume), 0, 100);
+
+	visualOffsetMs = j.value("visualOffsetMs", visualOffsetMs);
+	layerGuide = j.value("layerGuide", layerGuide);
+	fastSlow = j.value("fastSlow", fastSlow);
+	showFps = j.value("showFps", showFps);
 }
 
 void Settings::Save()
@@ -35,6 +41,7 @@ void Settings::Save()
 	j["visualOffsetMs"] = visualOffsetMs;
 	j["layerGuide"] = layerGuide;
 	j["fastSlow"] = fastSlow;
+	j["showFps"] = showFps;
 
 	std::ofstream ofs(SETTINGS_PATH);
 	if (ofs) ofs << j.dump(2);

@@ -20,12 +20,17 @@ private:
 	static Scene* m_NextScene;
 	static float m_ChangeSceneTime;
 
+	static int   m_FpsFrames;		//  今の1秒のあいだに描いたフレーム数
+	static DWORD m_FpsLastTime;	//  数え始めた時刻(ミリ秒)
+	static int   m_Fps;				//  表示する FPS(1秒ごとに更新)
+
 public:
 	static void Init();
 	static void Uninit();
 	static void Update();
 	static void Draw();
 	static float GetDeltaTime() { return m_DeltaTime; }
+	static void DrawFps();			//  FPS を数えて、ON なら右上に描く
 
 	static const std::list<GameObject*>& GetAllGameObjects() { return m_GameObjects; }
 	static GameObject* FindGameObjectByID(unsigned int id);
