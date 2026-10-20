@@ -184,8 +184,10 @@
     <ClCompile Include="Source\Component\SpriteAnimation.cpp" />
     <ClCompile Include="Source\Object\Player.cpp" />
     <ClCompile Include="Source\Object\Score.cpp" />
+    <ClCompile Include="Source\Rhythm\SongList.cpp" />
     <ClCompile Include="Source\Scene\GameScene.cpp" />
     <ClCompile Include="Source\Scene\ResultScene.cpp" />
+    <ClCompile Include="Source\Scene\SelectScene.cpp" />
     <ClCompile Include="Source\Scene\SettingsScene.cpp" />
     <ClCompile Include="Source\Scene\TitleScene.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -228,8 +230,10 @@
     <ClInclude Include="Source\Component\SpriteAnimation.h" />
     <ClInclude Include="Source\Object\Player.h" />
     <ClInclude Include="Source\Object\Score.h" />
+    <ClInclude Include="Source\Rhythm\SongList.h" />
     <ClInclude Include="Source\Scene\GameScene.h" />
     <ClInclude Include="Source\Scene\ResultScene.h" />
+    <ClInclude Include="Source\Scene\SelectScene.h" />
     <ClInclude Include="Source\Scene\SettingsScene.h" />
     <ClInclude Include="Source\Scene\TitleScene.h" />
     <ClInclude Include="Source\main.h" />

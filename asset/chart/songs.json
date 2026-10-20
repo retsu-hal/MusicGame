@@ -1,0 +1,52 @@
+{
+  "songs": [
+    {
+      "easy": "asset\\chart\\test.json",
+      "hard": "asset\\chart\\test.json",
+      "titleImage": "asset\\texture\\ui\\text\\menu\\start.png",
+      "titleWidth": 190,
+      "titleHeight": 80,
+      "artistImage": "asset\\texture\\ui\\text\\label\\settings.png",
+      "artistWidth": 166,
+      "artistHeight": 48,
+      "jacket": "asset\\texture\\jacket\\chartreuse_green.jpg",
+      "previewStart": 0.0
+    },
+    {
+      "easy": "asset\\chart\\test.json",
+      "hard": "asset\\chart\\test.json",
+      "titleImage": "asset\\texture\\ui\\text\\menu\\settings.png",
+      "titleWidth": 285,
+      "titleHeight": 80,
+      "artistImage": "asset\\texture\\ui\\text\\label\\settings.png",
+      "artistWidth": 166,
+      "artistHeight": 48,
+      "jacket": "asset\\texture\\jacket\\chartreuse_green.jpg",
+      "previewStart": 0.0
+    },
+    {
+      "easy": "asset\\chart\\test.json",
+      "hard": "asset\\chart\\test.json",
+      "titleImage": "asset\\texture\\ui\\text\\menu\\exit.png",
+      "titleWidth": 138,
+      "titleHeight": 80,
+      "artistImage": "asset\\texture\\ui\\text\\label\\settings.png",
+      "artistWidth": 166,
+      "artistHeight": 48,
+      "jacket": "asset\\texture\\jacket\\chartreuse_green.jpg",
+      "previewStart": 0.0
+    },
+    {
+      "easy": "asset\\chart\\test.json",
+      "hard": "asset\\chart\\test.json",
+      "titleImage": "asset\\texture\\ui\\text\\menu\\gameplay.png",
+      "titleWidth": 312,
+      "titleHeight": 80,
+      "artistImage": "asset\\texture\\ui\\text\\label\\settings.png",
+      "artistWidth": 166,
+      "artistHeight": 48,
+      "jacket": "asset\\texture\\jacket\\chartreuse_green.jpg",
+      "previewStart": 0.0
+    }
+  ]
+}

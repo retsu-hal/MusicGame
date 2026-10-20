@@ -15,7 +15,7 @@
 #include "Input.h"
 #include "Polygon2D.h"
 #include "TitleScene.h"
-#include "GameScene.h"
+#include "SelectScene.h"
 #include "SettingsScene.h"
 #include <algorithm>		
 #include "audio.h"
@@ -155,11 +155,6 @@ void TitleScene::Init()
 	m_Fade->SetColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));	// 真っ黒・不透明から始める
 	m_FadeTime = 0.0f;
 	m_IsLeaving = false;
-
-
-	
-
-
 }
 
 //==============================================================================
@@ -230,7 +225,7 @@ void TitleScene::Update()
 			switch (m_Select)
 			{
 				case MENU_START:
-					Manager::ChangeScene<GameScene>(FADE_TIME);	// 黒くなりきってから切り替える
+					Manager::ChangeScene<SelectScene>(FADE_TIME);	// 黒くなりきってから切り替える
 					m_IsLeaving = true;
 					m_FadeTime = 0.0f;							// フェードアウトを 0 秒から始める
 					break;

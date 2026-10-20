@@ -20,7 +20,7 @@
 #include "GameScene.h"
 #include "ResultScene.h"
 #include "TitleScene.h"
-
+#include "SelectScene.h"		
 //==============================================================================
 //初期化処理
 //==============================================================================
@@ -55,9 +55,9 @@ void GameScene::Update()
 	if (m_Lane && m_Lane->IsFinished())
 		Manager::ChangeScene<ResultScene>();
 
-	// Esc：途中でやめてタイトルへ
+	// Esc：途中でやめて選曲へ(ポーズを作ったらポーズを開くように変える)
 	if (Input::GetKeyTrigger(VK_ESCAPE))
-		Manager::ChangeScene<TitleScene>();
+		Manager::ChangeScene<SelectScene>();
 }
 
 //==============================================================================

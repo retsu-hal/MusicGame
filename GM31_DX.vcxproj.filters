@@ -141,6 +141,12 @@
     <ClCompile Include="Source\Rhythm\Settings.cpp">
       <Filter>Rhythm</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Scene\SelectScene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rhythm\SongList.cpp">
+      <Filter>Rhythm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Rhythm\GameSession.h">
@@ -270,6 +276,12 @@
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Source\Rhythm\Settings.h">
+      <Filter>Rhythm</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\SelectScene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rhythm\SongList.h">
       <Filter>Rhythm</Filter>
     </ClInclude>
   </ItemGroup>
