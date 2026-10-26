@@ -14,10 +14,11 @@ struct TempoEvent
 // ノーツ1つ
 struct Note
 {
-	int tick = 0;        // 位置
-	int lane = 0;        // レーン番号（0〜）
-	int type = 0;    // 0:タップ 1:ロング など（あとで増やす）
-	int length = 0;  // ロングノーツの長さ（tick）
+	int tick = 0;   // 位置
+	int lane = 0;   // レーン番号(0〜)
+	int type = 0;   // 0:タップ 1:ロング など
+	int length = 0;   // ロングノーツの長さ(tick)
+	int layer = 0;   // 0:下段 1:上段
 };
 
 class Chart

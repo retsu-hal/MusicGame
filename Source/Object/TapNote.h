@@ -1,15 +1,36 @@
 #pragma once
-#include "LaneDraw.h"
+#include "NoteBase.h"
+#include "Judge.h"
+#include "Lane.h"
 #include <vector>
 
-class Chart;
-enum class Judge;
-
-// タップノーツ（画像に種類ごとの色を掛けて描く）
-class TapNote
+// タップノーツ1個ぶんのデータ
+struct TapData
 {
+	double time = 0.0;           // 叩く時刻(秒)
+	int    lane = 0;
+	int    layer = 0;             // 0:下段 1:上段
+	Judge  judge = Judge::None;   // 判定の結果(None = まだ)
+};
+
+// タップノーツ全部。レイヤー2(床と判定ラインの間)
+class TapNote : public NoteBase
+{
+private:
+	std::vector<TapData>      m_Notes;          // 時刻の順に並んでいる
+	LaneDraw::Layout          m_Layout;
+	ID3D11ShaderResourceView* m_Texture = nullptr;
+
+	void JudgeLane(int lane, int layer, double hitTime);   // キーが押されたレーンを判定
+	void SetJudge(TapData& note, Judge judge, double diff);
+
 public:
-	// まだ判定されていないノーツを描く
-	void Draw(ImDrawList* dl, const LaneDraw::Layout& layout, const Chart& chart,
-		const std::vector<double>& noteTimes, const std::vector<Judge>& judges, float now, float speed) const;
+	void Init() override;
+	void Update() override;
+	void Draw() override;
+
+	void   Load(const Chart& chart) override;
+	void   Reset(double startSec) override;
+	int    GetJudgeCount() const override { return (int)m_Notes.size(); }
+	double GetLastTime() const override { return m_Notes.empty() ? 0.0 : m_Notes.back().time; }
 };

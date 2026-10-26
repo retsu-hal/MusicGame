@@ -12,7 +12,7 @@
 #include "Collider.h"
 #include "Conductor.h"
 #include "Settings.h"
-#include "LaneDraw.h"	
+#include "QuadBatch.h"
 #include <cmath>		
 
 //staticメンバー変数はcppで定義する必要がある
@@ -31,6 +31,7 @@ void Manager::Init()
 {
 	Input::Init();
 	Renderer::Init();
+	QuadBatch::Init(4096);
 	Audio::InitMaster();
 	Conductor::Init();
 	Settings::Load();                                   // 前回の設定（ハイスピード・オフセット）
@@ -73,6 +74,7 @@ void Manager::Uninit()
 	}
 
 	ModelRenderer::UnloadAll();	
+	QuadBatch::Uninit();
 	ShaderManager::Unload();
 	TextureManager::Unload();
 
@@ -240,7 +242,4 @@ void Manager::DrawFps()
 
 	char text[16];
 	snprintf(text, sizeof(text), "%d FPS", m_Fps);
-
-	LaneDraw::TextRight(ImGui::GetForegroundDrawList(), 16.0f, ImVec2(right, 20.0f),
-		LaneDraw::Col(255, 255, 255, 0.6f), text);
 }

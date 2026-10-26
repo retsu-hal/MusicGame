@@ -4,8 +4,6 @@
 
 void Polygon2D::Init(float x, float y, float width, float height,const WCHAR* TextureName)
 {
-	m_Layer = 3;
-
 	{
 		m_Vertex[0].Position = XMFLOAT3(x, y, 0.0f);
 		m_Vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);

@@ -6,7 +6,7 @@
 using json = nlohmann::json;
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(TempoEvent, tick, bpm)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Note, tick, lane, type, length)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Note, tick, lane, type, length, layer) 
 
 double Chart::TickToSec(int tick) const
 {

@@ -1,94 +1,216 @@
 #include "main.h"
+#include "Manager.h"
+#include "Renderer.h"
+#include "Input.h"
 #include "Lane.h"
 #include "Chart.h"
-#include "Input.h"
+#include "Camera.h"
+#include "Conductor.h"
+#include "Settings.h"
+#include "NoteManager.h"
+#include "QuadBatch.h"
+#include "TextureManager.h"
 #include <cmath>
+#include <algorithm>
 
 using namespace LaneDraw;
 
-static const char* KEY_NAMES[4] = { "D", "F", "J", "K" };
+// ===============================================================
+// Lane と JudgeLine で共通して使うもの
+// ===============================================================
 
-
-void Lane::Update(const Layout& layout, float dt)
+// 3D で描く準備(各 Draw の頭で呼ぶ)
+static void Begin3D()
 {
-	for (int lane = 0; lane < layout.laneCount; lane++)
+	Renderer::ClearDepth();            // 背景(2D)が書いた深度を消す
+	Renderer::SetDepthEnable(false);   // 奥から順に描くので、深度は書かない
+	if (CAMERA* camera = Manager::GetGameObject<CAMERA>())
+		camera->Draw();
+}
+
+// 3D で描いたあとの後片付け
+static void End3D()
+{
+	Renderer::SetDepthEnable(true);
+}
+
+// 押しているレーンを光らせる(押したら 1、離したらだんだん 0 へ)
+static void UpdateGlow(float glow[], int count, float dt)
+{
+	for (int i = 0; i < count; i++)
 	{
-		if (Input::GetKeyPress(KEYS[lane])) m_Glow[lane] = 1.0f;
-		else m_Glow[lane] = std::max(0.0f, m_Glow[lane] - dt * 6.0f);
+		if (Input::GetKeyPress(Lane::KEYS[i])) glow[i] = 1.0f;
+		else glow[i] = std::max(0.0f, glow[i] - dt * 6.0f);
 	}
 }
 
-
-void Lane::DrawBack(ImDrawList* dl, const Layout& layout, const Chart& chart, float now, float speed) const
+// 奥行き方向の線(区切り線・両端)。床に寝た細長い四角形。奥で消える
+static void DepthLine(const Layout& L, float laneX, float width, const XMFLOAT4& nearColor)
 {
-	const int N = layout.laneCount;
+	float    w = width / L.laneWidth * 0.5f;   // ピクセルの太さ → レーン単位の半分
+	XMFLOAT4 farColor = nearColor;
+	farColor.w = 0.0f;
+	QuadBatch::Quad(L.World(laneX - w, Z_FAR), L.World(laneX + w, Z_FAR),
+					L.World(laneX + w, Z_NEAR), L.World(laneX - w, Z_NEAR),
+					farColor, nearColor);
+}
 
-	// 1. 床
-	QuadGradient(dl,
-		layout.Project(0, Z_FAR), layout.Project((float)N, Z_FAR), layout.Project((float)N, Z_NEAR), layout.Project(0, Z_NEAR),
-		Col(20, 10, 40, 0.0f), Col(20, 10, 40, 0.0f), Col(20, 15, 45, 0.95f), Col(20, 15, 45, 0.95f));
+// 横方向の線(拍の線・判定ライン)。奥行き方向に width の太さを持つ
+static void WidthLine(const Layout& L, float z, float width, const XMFLOAT4& color)
+{
+	float h = width * 0.5f;
+	float N = (float)L.laneCount;
+	QuadBatch::Quad(L.World(0, z + h), L.World(N, z + h),
+					L.World(N, z - h), L.World(0, z - h),
+					color, color);
+}
+
+
+// ===============================================================
+// Lane(床)
+// ===============================================================
+void Lane::Init()
+{
+	m_Layer = 1;   // ノーツより奥
+	m_White = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
+}
+
+void Lane::Update()
+{
+	UpdateGlow(m_Glow, m_Layout.laneCount, Manager::GetDeltaTime());
+}
+
+void Lane::Draw()
+{
+	// 拍の線を引くのに譜面がいる。NoteManager がいなければ何も描かない
+	NoteManager* noteManager = Manager::GetGameObject<NoteManager>();
+	if (!noteManager) return;
+
+	const Chart& chart = noteManager->GetChart();
+	const float  now = (float)Conductor::GetSongTime();
+	const float  speed = Settings::noteSpeed;
+
+	Layout lower = m_Layout;                                // 下段
+	Layout upper = m_Layout; upper.height = UPPER_HEIGHT;   // 上段
+
+	Begin3D();
+
+	// 床・拍の線・区切り線・つなぎの線(普通の合成)。下段 → 上段の順で、上段が手前に重なる
+	DrawFloor(lower, chart, now, speed);
+	DrawFloor(upper, chart, now, speed);
+	DrawFrame(lower, upper);
+	QuadBatch::Flush(m_White);
+
+	// 両端のネオン(加算)
+	DrawNeon(lower);
+	DrawNeon(upper);
+	QuadBatch::Flush(m_White, true);
+
+	End3D();
+}
+
+void Lane::DrawFloor(const Layout& L, const Chart& chart, float now, float speed)
+{
+	const float N = (float)L.laneCount;
+
+	// 1. 床(奥は透明、手前は濃い)
+	QuadBatch::Quad(L.World(0, Z_FAR), L.World(N, Z_FAR),
+					L.World(N, Z_NEAR), L.World(0, Z_NEAR),
+					Rgba(20, 10, 40, 0.0f), Rgba(20, 15, 45, 0.95f));
 
 	// 2. 押しているレーンの光
-	for (int i = 0; i < N; i++)
+	for (int i = 0; i < L.laneCount; i++)
 	{
-		if (m_Glow[i] <= 0.0f) continue;
 		float g = m_Glow[i];
-		QuadGradient(dl,
-			layout.Project((float)i, Z_FAR * 0.6f), layout.Project((float)i + 1, Z_FAR * 0.6f),
-			layout.Project((float)i + 1, 0), layout.Project((float)i, 0),
-			Col(120, 90, 255, 0.0f), Col(120, 90, 255, 0.0f),
-			Col(150, 120, 255, 0.45f * g), Col(150, 120, 255, 0.45f * g));
+		if (g <= 0.0f) continue;
+		QuadBatch::Quad(L.World((float)i, Z_FAR * 0.6f), L.World(i + 1.0f, Z_FAR * 0.6f),
+						L.World(i + 1.0f, 0.0f), L.World((float)i, 0.0f),
+						Rgba(120, 90, 255, 0.0f), Rgba(150, 120, 255, 0.45f * g));
 	}
 
-	// 3. 拍の線
+	// 3. 拍の線(計算は前と同じ。描き方だけ変える)
+	int beat = (int)std::floor(chart.SecToTick(now) / TICKS_PER_BEAT);
+	for (int k = 0; k < 64; k++, beat++)      // 念のため本数に上限を付ける
 	{
-		int beat = (int)std::floor(chart.SecToTick(now) / TICKS_PER_BEAT);
-		for (int k = 0; k < 64; k++, beat++)      // 念のため本数に上限を付ける
-		{
-			float z = ((float)chart.TickToSec(beat * TICKS_PER_BEAT) - now) * speed;
-			if (z > Z_FAR) break;
-			if (z < 0.0f) continue;
-			bool  bar  = (beat % 4 == 0);
-			float fade = 1.0f - z / Z_FAR;
-			dl->AddLine(layout.Project(0, z), layout.Project((float)N, z),
-				Col(170, 150, 255, (bar ? 0.35f : 0.12f) * fade), bar ? 2.0f : 1.0f);
-		}
+		float z = ((float)chart.TickToSec(beat * TICKS_PER_BEAT) - now) * speed;
+		if (z > Z_FAR) break;
+		if (z < 0.0f) continue;
+		bool  bar = (beat % 4 == 0);
+		float fade = 1.0f - z / Z_FAR;
+		WidthLine(L, z, bar ? 4.0f : 2.0f, Rgba(170, 150, 255, (bar ? 0.35f : 0.12f) * fade));
 	}
 
-	// 4・5. 区切り線と両端のネオン（奥ほど薄く）
-	const int SEG = 24;
-	for (int k = 0; k < SEG; k++)
+	// 4. 区切り線
+	for (int i = 1; i < L.laneCount; i++)
+		DepthLine(L, (float)i, 1.5f, Rgba(160, 140, 230, 0.25f));
+}
+
+void Lane::DrawFrame(const Layout& lower, const Layout& upper)
+{
+	// 上段と下段をつなぐ縦の線(両端)。縦に立った細い四角形
+	// 画面で見て「上 = 上段、下 = 下段」なので、左上 → 右上 → 右下 → 左下 の順がそのまま守れる
+	const float w = 1.0f / lower.laneWidth;   // 2 ピクセルぶん(レーン単位の半分)
+	for (float x : { 0.0f, (float)lower.laneCount })
 	{
-		float z0 = Z_NEAR + (Z_FAR - Z_NEAR) * k / SEG;
-		float z1 = Z_NEAR + (Z_FAR - Z_NEAR) * (k + 1) / SEG;
-		float fade = 1.0f - std::max(0.0f, z0) / Z_FAR;
-		fade = fade * fade;
-
-		for (int i = 1; i < N; i++)
-			dl->AddLine(layout.Project((float)i, z0), layout.Project((float)i, z1), Col(160, 140, 230, 0.25f * fade), 1.0f);
-
-		GlowLine(dl, layout.Project(0, z0), layout.Project(0, z1), 190, 90, 255, fade, 2.0f);
-		GlowLine(dl, layout.Project((float)N, z0), layout.Project((float)N, z1), 255, 70, 190, fade, 2.0f);
+		QuadBatch::Quad(upper.World(x - w, 0.0f), upper.World(x + w, 0.0f),
+						lower.World(x + w, 0.0f), lower.World(x - w, 0.0f),
+						Rgba(200, 180, 255, 0.5f), Rgba(200, 180, 255, 0.5f));
 	}
 }
 
-
-void Lane::DrawFront(ImDrawList* dl, const Layout& layout) const
+void Lane::DrawNeon(const Layout& L)
 {
-	const int N = layout.laneCount;
+	const float N = (float)L.laneCount;
 
-	// 7. 判定ライン
-	GlowLine(dl, layout.Project(0, 0), layout.Project((float)N, 0), 255, 120, 230, 1.0f, 3.0f);
-
-	// 8. キーの枠
-	for (int i = 0; i < N; i++)
+	// 太い線から順に重ねて、にじんだ光にする(加算なので重なるほど明るい)
+	for (float w : { 16.0f, 8.0f, 4.0f })
 	{
-		ImVec2 a = layout.Project(i + 0.12f, -20.0f);
-		ImVec2 b = layout.Project(i + 0.88f, -80.0f);
-		float  g = m_Glow[i];
-		dl->AddRectFilled(a, b, Col(150, 120, 255, 0.10f + 0.35f * g), 6.0f);
-		dl->AddRect(a, b, Col(200, 190, 255, 0.6f + 0.4f * g), 6.0f, 0, 2.0f);
-		TextCenter(dl, 26.0f, ImVec2((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f),
-			Col(255, 255, 255, 0.8f + 0.2f * g), KEY_NAMES[i]);
+		DepthLine(L, 0.0f, w, Rgba(190, 90, 255, 0.15f));
+		DepthLine(L, N, w, Rgba(255, 70, 190, 0.15f));
 	}
+	// 芯の白い線
+	DepthLine(L, 0.0f, 2.0f, Rgba(255, 255, 255, 0.8f));
+	DepthLine(L, N, 2.0f, Rgba(255, 255, 255, 0.8f));
+}
+
+
+// ===============================================================
+// JudgeLine(判定ライン・キー枠)
+// ===============================================================
+void JudgeLine::Init()
+{
+	m_Layer = 3;   // ノーツより手前
+	m_White = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
+}
+
+void JudgeLine::Update()
+{
+	UpdateGlow(m_Glow, m_Layout.laneCount, Manager::GetDeltaTime());
+}
+
+void JudgeLine::Draw()
+{
+	// 今いる段の高さ(切り替えのアニメ込み)
+	Layout L = m_Layout;
+	if (NoteManager* noteManager = Manager::GetGameObject<NoteManager>())
+		L.height = UPPER_HEIGHT * noteManager->GetPlayLayerAnim();
+
+	Begin3D();
+
+	// 1. 判定ライン
+	WidthLine(L, 0.0f, 6.0f, Rgba(255, 200, 245, 1.0f));
+
+	// 2. キーの枠(床に寝た四角形)
+	for (int i = 0; i < L.laneCount; i++)
+	{
+		XMFLOAT4 c = Rgba(150, 120, 255, 0.10f + 0.35f * m_Glow[i]);
+		QuadBatch::Quad(L.World(i + 0.12f, -20.0f), L.World(i + 0.88f, -20.0f),
+						L.World(i + 0.88f, -80.0f), L.World(i + 0.12f, -80.0f),
+						c, c);
+	}
+	QuadBatch::Flush(m_White);
+
+	End3D();
+
+	// キーの文字は UI のステップでスプライトにして描く
 }

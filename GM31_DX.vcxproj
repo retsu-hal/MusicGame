@@ -160,9 +160,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Object\Combo.cpp" />
+    <ClCompile Include="Source\Core\QuadBatch.cpp" />
     <ClCompile Include="Source\Object\Camera.cpp" />
     <ClCompile Include="Source\Object\ExitDialog.cpp" />
-    <ClCompile Include="Source\Object\Notelane.cpp" />
+    <ClCompile Include="Source\Object\NoteManager.cpp" />
     <ClCompile Include="Source\Object\Lane.cpp" />
     <ClCompile Include="Source\Object\TapNote.cpp" />
     <ClCompile Include="Source\Object\Polygon2D.cpp" />
@@ -200,14 +202,17 @@
     <ClCompile Include="ThirdParty\imgui\backends\imgui_impl_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Object\NoteBase.h" />
+    <ClInclude Include="Source\Object\Combo.h" />
+    <ClInclude Include="Source\Core\QuadBatch.h" />
     <ClInclude Include="Source\Object\Camera.h" />
     <ClInclude Include="Source\Object\ExitDialog.h" />
-    <ClInclude Include="Source\Object\Notelane.h" />
+    <ClInclude Include="Source\Object\NoteManager.h" />
     <ClInclude Include="Source\Object\Lane.h" />
-    <ClInclude Include="Source\Object\LaneDraw.h" />
     <ClInclude Include="Source\Object\TapNote.h" />
     <ClInclude Include="Source\Object\Polygon2D.h" />
     <ClInclude Include="Source\Rhythm\Chart.h" />
+    <ClInclude Include="Source\Rhythm\Judge.h" />
     <ClInclude Include="Source\Rhythm\Settings.h" />
     <ClInclude Include="Source\Rhythm\GameSession.h" />
     <ClInclude Include="Source\Core\Component.h" />

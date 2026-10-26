@@ -117,7 +117,7 @@
     <ClCompile Include="ThirdParty\imgui\backends\imgui_impl_win32.cpp">
       <Filter>ThirdParty\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Object\Notelane.cpp">
+    <ClCompile Include="Source\Object\NoteManager.cpp">
       <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Source\Object\Lane.cpp">
@@ -147,6 +147,8 @@
     <ClCompile Include="Source\Rhythm\SongList.cpp">
       <Filter>Rhythm</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Core\QuadBatch.cpp" />
+    <ClCompile Include="Source\Object\Combo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Rhythm\GameSession.h">
@@ -251,13 +253,10 @@
     <ClInclude Include="ThirdParty\imgui\backends\imgui_impl_win32.h">
       <Filter>ThirdParty\imgui\backends</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Object\Notelane.h">
+    <ClInclude Include="Source\Object\NoteManager.h">
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\Lane.h">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Object\LaneDraw.h">
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\TapNote.h">
@@ -284,6 +283,10 @@
     <ClInclude Include="Source\Rhythm\SongList.h">
       <Filter>Rhythm</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Rhythm\Judge.h" />
+    <ClInclude Include="Source\Core\QuadBatch.h" />
+    <ClInclude Include="Source\Object\Combo.h" />
+    <ClInclude Include="Source\Object\NoteBase.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\common.hlsl">

@@ -7,17 +7,17 @@
 class CAMERA : public GameObject
 {
 private:
+	Vector3  m_Target{ 0.0f, 0.0f, 1.0f };     // 注視点
+	float    m_FocalLength = 600.0f;           // 焦点距離(ピクセル)。大きいほど望遠で、奥行きの縮みが弱い
+	XMFLOAT2 m_LensCenter{ SCREEN_WIDTH * 0.5f, SCREEN_HEIGHT * 0.5f };  // 真正面が映る画面の位置
+	float    m_Near = 10.0f;                   // これより近いものは描かない
+	float    m_Far = 10000.0f;                // これより遠いものは描かない
 
-	Vector3 m_Shake{ 0.0f, 0.0f, 0.0f };
-	float m_ShakeTime = 0.0f;
+	XMMATRIX m_ViewMatrix = XMMatrixIdentity();
+	XMMATRIX m_ProjectionMatrix = XMMatrixIdentity();
+
 
 public:
-	Vector3 m_Target;		// 注視点
-	Vector3 m_Angle;			// カメラの角度
-	float  m_Fov;					// カメラの視野角
-	float m_MoveSpeed;
-	XMMATRIX m_ViewMatrix;		// ビュー行列
-	XMMATRIX m_ProjectionMatrix;	// 射影行列
 
 public:
 	void Init() override;
@@ -25,17 +25,14 @@ public:
 	void Update() override;
 	void Draw() override;
 
-	void SetPosition(Vector3 position) { m_Position = position; }
-	Vector3 GetPosition() { return m_Position; }
+	void    SetTarget(const Vector3& target) { m_Target = target; }
+	Vector3 GetTarget() const { return m_Target; }
 
-	void SetTarget(Vector3 target) { m_Target = target; }
-	Vector3 GetTarget() { return m_Target; }
+	void SetFocalLength(float pixel) { m_FocalLength = pixel; }
+	void SetLensCenter(float x, float y) { m_LensCenter = XMFLOAT2(x, y); }
+	void SetClip(float nearZ, float farZ) { m_Near = nearZ; m_Far = farZ; }
 
-	void SetAngle(Vector3 angle) { m_Angle = angle; }
-	Vector3 GetAngle() { return m_Angle; }
 
-	void SetFov(float fov) { m_Fov = fov; }
-	float GetFov() { return m_Fov; }
 
 	XMMATRIX GetViewMatrix() { return m_ViewMatrix; }
 	XMMATRIX GetProjectionMatrix() const { return m_ProjectionMatrix; }
@@ -57,11 +54,4 @@ public:
 
 		return right;
 	}
-
-	void Shake(Vector3 Shake)
-	{
-		m_Shake = Shake;
-		m_ShakeTime = 0.0f;
-	}
-
 };

@@ -563,6 +563,11 @@ void Renderer::SetCameraPosition(Vector3 CameraPosition)
 	m_DeviceContext->UpdateSubresource(m_CameraBuffer, 0, NULL, &CameraPos, 0, 0);
 }
 
+void Renderer::ClearDepth()
+{// 深度をいちばん奥(1.0)に戻す。2D のあとに 3D を描くときに使う
+	m_DeviceContext->ClearDepthStencilView(m_DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
 
 void Renderer::CreateVertexShader( ID3D11VertexShader** VertexShader, ID3D11InputLayout** VertexLayout, const char* FileName )
 {

@@ -14,17 +14,18 @@
 #include "Renderer.h"
 #include "Manager.h"
 #include "Score.h"
+#include <cmath>
 
 //==============================================================================
 //マクロ宣言
 //==============================================================================
-#define TEXTURE_NUM_WIDTH 4    // number_atlas は 4x4 マス（0〜9 は左上から順に並んでいる）
+#define TEXTURE_NUM_WIDTH 4      // 数字のスプライトは 4x4 マス
 #define TEXTURE_NUM_HEIGHT 4
-#define SCORE_MAX 9999999
-#define DIGIT_WIDTH  64.0f   // 1桁の横幅（アトラスの1マス分。数字はマスの中央に小さめに入っている）
-#define DIGIT_HEIGHT 64.0f   // 1桁の高さ
-#define DIGIT_STEP   38.0f   // 次の桁までの送り幅（詰める/空けるを調整）
-#define SCORE_RIGHT  (SCREEN_WIDTH - 20.0f)   // 右端の位置（画面右上に表示）
+#define DIGIT_WIDTH  64.0f       // 1文字の横幅(スプライトの1マス分)
+#define DIGIT_HEIGHT 64.0f       // 1文字の高さ
+#define DIGIT_STEP   38.0f       // 次の文字までの送り幅
+#define NARROW_STEP  18.0f       // 「.」の送り幅(細い)
+#define SCORE_RIGHT  (SCREEN_WIDTH - 20.0f)   // 右端の位置
 #define SCORE_TOP    40.0f
 
 //==============================================================================
@@ -34,7 +35,20 @@
 //==============================================================================
 //グローバル変数
 //==============================================================================
-
+// 四角形1枚ぶんの頂点(左上・右上・左下・右下。TRIANGLESTRIP の順)
+static void SetQuad(VERTEX_3D* v, float x, float y, float w, float h,
+					float u, float vv, float uw, float vh)
+{
+	XMFLOAT3 pos[4] = { {x, y, 0.0f}, {x + w, y, 0.0f}, {x, y + h, 0.0f}, {x + w, y + h, 0.0f} };
+	XMFLOAT2 uv[4] = { {u, vv}, {u + uw, vv}, {u, vv + vh}, {u + uw, vv + vh} };
+	for (int i = 0; i < 4; i++)
+	{
+		v[i].Position = pos[i];
+		v[i].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		v[i].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		v[i].TexCoord = uv[i];
+	}
+}
 //==============================================================================
 //初期化処理
 //==============================================================================
@@ -42,35 +56,11 @@ void Score::Init()
 {
 	m_Layer = 3;
 
-	// 画面右上（「SCORE」の文字の下）に置く
-	m_Position = Vector3(SCORE_RIGHT - (DIGIT_STEP * (DIGIT_NUM - 1) + DIGIT_WIDTH), SCORE_TOP, 0.0f);
+	// 位置 = 右端・上端。文字は右端(x = 0)から左へ並べる
+	m_Position = Vector3(SCORE_RIGHT, SCORE_TOP, 0.0f);
 
-	VERTEX_3D vertex[4 * DIGIT_NUM];
-
-	for (int i = 0; i < DIGIT_NUM; i++)
-	{
-		float offsetX = DIGIT_STEP * i;
-
-		vertex[i * 4 + 0].Position = XMFLOAT3(offsetX, 0.0f, 0.0f);
-		vertex[i * 4 + 0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 0].TexCoord = XMFLOAT2(0.0f, 0.0f);
-
-		vertex[i * 4 + 1].Position = XMFLOAT3(offsetX + DIGIT_WIDTH, 0.0f, 0.0f);
-		vertex[i * 4 + 1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 1].TexCoord = XMFLOAT2(1.0f, 0.0f);
-
-		vertex[i * 4 + 2].Position = XMFLOAT3(offsetX, DIGIT_HEIGHT, 0.0f);
-		vertex[i * 4 + 2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 2].TexCoord = XMFLOAT2(0.0f, 1.0f);
-
-		vertex[i * 4 + 3].Position = XMFLOAT3(offsetX + DIGIT_WIDTH, DIGIT_HEIGHT, 0.0f);
-		vertex[i * 4 + 3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 3].TexCoord = XMFLOAT2(1.0f, 1.0f);
-	}
+	// 中身は Draw で毎回書くので、ここでは全部 0 でいい
+	VERTEX_3D vertex[4 * DIGIT_NUM] = {};
 
 	// 頂点バッファ生成
 	D3D11_BUFFER_DESC bd{};
@@ -120,30 +110,14 @@ void Score::Update()
 	//カウントアップ処理
 	if (m_Score < m_TargetScore)
 	{
-		m_CountTimer += dt;
 
 		int diff = m_TargetScore - m_Score;
 		int step = (diff / 10 > 1) ? diff / 10 : 1;
 
-		const float COUNT_INTERVAL = 0.02f; // 1カウントあたりの間隔（秒）
-		if (m_CountTimer >= COUNT_INTERVAL)
-		{
-			m_CountTimer = 0.0f;
 			m_Score += step;
 			if (m_Score > m_TargetScore) m_Score = m_TargetScore;
-
-			m_PopTimer = 0.15f; // カウントするたびにポップさせる
-		}
 	}
 
-	if (m_PopTimer > 0.0f)
-	{
-		m_PopTimer -= dt;
-		if (m_PopTimer < 0.0f) m_PopTimer = 0.0f;
-	}
-
-	//上限
-	if (m_Score > SCORE_MAX) m_Score = SCORE_MAX;
 }
 
 //==============================================================================
@@ -161,21 +135,13 @@ void Score::Draw()
 	//マトリックス設定
 	Renderer::SetWorldViewProjection2D();
 
-	//ポップ演出のスケール計算
-	float popScale = 1.0f;
-	if (m_PopTimer > 0.0f)
-	{
-		float t = m_PopTimer / 0.15f; // 1.0→0.0で減衰
-		popScale = 1.0f + 0.2f * t;   // 最大1.2倍まで膨らむ
-	}
-
 	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix, PopScaleMatrix;
 	ScaleMatrix = XMMatrixScaling(m_Scale.x, m_Scale.y, m_Scale.z);
 	// 右端・上下中央を中心に膨らませる（画面の右からはみ出さないように）
 	const float scoreW = DIGIT_STEP * (DIGIT_NUM - 1) + DIGIT_WIDTH;
-	PopScaleMatrix = XMMatrixTranslation(-scoreW, -DIGIT_HEIGHT * 0.5f, 0.0f)
-		* XMMatrixScaling(popScale, popScale, 1.0f)
-		* XMMatrixTranslation(scoreW, DIGIT_HEIGHT * 0.5f, 0.0f);
+	PopScaleMatrix = XMMatrixTranslation(0.0f, -DIGIT_HEIGHT * 0.5f, 0.0f)
+		* XMMatrixScaling(1.0f, 1.0f, 1.0f)
+		* XMMatrixTranslation(0.0f, DIGIT_HEIGHT * 0.5f, 0.0f);
 	RotMatrix = XMMatrixRotationRollPitchYaw(m_Rotation.x, m_Rotation.y, m_Rotation.z);
 	TransMatrix = XMMatrixTranslation(m_Position.x, m_Position.y, m_Position.z);
 	WorldMatrix = ScaleMatrix * PopScaleMatrix * RotMatrix * TransMatrix;
@@ -199,57 +165,69 @@ void Score::Draw()
 	//プリミティブトポロジ設定
 	Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
+	// 表示するマスを、右から順に決める(授業と同じく % 10 で1桁ずつ取り出す)
+	// 10100 → 「%」「0」「0」「.」「1」「0」「1」
+	int cell[DIGIT_NUM];
+	int length = 0;
+	int value = m_Score;                       // 0.01% 単位
+
+	cell[length++] = 11;                        // 「%」はスプライトの 11 番目のマス
+	cell[length++] = value % 10; value /= 10;   // 小数第2位
+	cell[length++] = value % 10; value /= 10;   // 小数第1位
+	cell[length++] = 10;                        // 「.」はスプライトの 10 番目のマス
+	do
+	{
+		cell[length++] = value % 10;            // 整数の部分を1桁ずつ
+		value /= 10;
+	} while (value > 0 && length < DIGIT_NUM);
+
 	D3D11_MAPPED_SUBRESOURCE msr;
 	Renderer::GetDeviceContext()->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
-
 	VERTEX_3D* vertex = (VERTEX_3D*)msr.pData;
 
-	float sizeX = 1.0f / TEXTURE_NUM_WIDTH;
-	float sizeY = 1.0f / TEXTURE_NUM_HEIGHT;
+	const float sizeX = 1.0f / TEXTURE_NUM_WIDTH;
+	const float sizeY = 1.0f / TEXTURE_NUM_HEIGHT;
 
-	// スコアを桁に分解（上位桁から順に取り出す）
-	int digit[DIGIT_NUM];
-	int score = m_Score;
-	for (int i = DIGIT_NUM - 1; i >= 0; i--)
+	// 右そろえ:右端(x = 0)から左へ、1文字ずつ置いていく
+	float x = 0.0f;
+	for (int i = 0; i < length; i++)
 	{
-		digit[i] = score % 10;
-		score /= 10;
-	}
+		int   num = cell[i];
+		float step = (num == 10) ? NARROW_STEP : DIGIT_STEP;   // 「.」だけ細い
+		x -= step;                                             // この文字の送り幅の左端
 
-	for (int i = 0; i < DIGIT_NUM; i++)
-	{
-		float offsetX = DIGIT_STEP * i;
-		int num = digit[i];
-		float u = sizeX * (num % TEXTURE_NUM_WIDTH);
-		float v = sizeY * (num / TEXTURE_NUM_WIDTH);
-
-		// ★Position/Normal/Diffuseも毎回すべて設定する
-		vertex[i * 4 + 0].Position = XMFLOAT3(offsetX, 0.0f, 0.0f);
-		vertex[i * 4 + 0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 0].TexCoord = XMFLOAT2(u, v);
-
-		vertex[i * 4 + 1].Position = XMFLOAT3(offsetX + DIGIT_WIDTH, 0.0f, 0.0f);
-		vertex[i * 4 + 1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 1].TexCoord = XMFLOAT2(u + sizeX, v);
-
-		vertex[i * 4 + 2].Position = XMFLOAT3(offsetX, DIGIT_HEIGHT, 0.0f);
-		vertex[i * 4 + 2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 2].TexCoord = XMFLOAT2(u, v + sizeY);
-
-		vertex[i * 4 + 3].Position = XMFLOAT3(offsetX + DIGIT_WIDTH, DIGIT_HEIGHT, 0.0f);
-		vertex[i * 4 + 3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		vertex[i * 4 + 3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		vertex[i * 4 + 3].TexCoord = XMFLOAT2(u + sizeX, v + sizeY);
+		// 送り幅の真ん中に、1マス分の四角形を置く
+		float left = x + step * 0.5f - DIGIT_WIDTH * 0.5f;
+		SetQuad(&vertex[i * 4], left, 0.0f, DIGIT_WIDTH, DIGIT_HEIGHT,
+				sizeX * (num % TEXTURE_NUM_WIDTH), sizeY * (num / TEXTURE_NUM_WIDTH), sizeX, sizeY);
 	}
 
 	Renderer::GetDeviceContext()->Unmap(m_vertexBuffer, 0);
 
-	//描画
-	for (int i = 0; i < DIGIT_NUM; i++)
-	{
+	// 描画(使う文字の数だけ)
+	for (int i = 0; i < length; i++)
 		Renderer::GetDeviceContext()->Draw(4, i * 4);
-	}
+}
+
+void Score::Reset()
+{
+	m_RateSum = 0.0;
+	m_Score = 0;
+	m_TargetScore = 0;
+}
+
+double Score::GetAchievement() const
+{
+	if (m_TotalJudges <= 0) return 0.0;
+	return m_RateSum / m_TotalJudges * 101.0;   // 全部 PERFECT で 101%
+}
+
+void Score::AddScore(double rate)
+{
+	m_RateSum += rate;
+
+	// 0.01% 単位の整数にする。
+	// ほんの少し足してから切り捨てるのは、101.00 が計算の誤差で 100.9999… になって
+	// 100.99 と表示されるのを防ぐため
+	m_TargetScore = (int)std::floor(GetAchievement() * 100.0 + 1e-6);
 }
