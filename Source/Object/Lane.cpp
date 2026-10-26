@@ -82,7 +82,6 @@ void Lane::Update()
 
 void Lane::Draw()
 {
-	// 拍の線を引くのに譜面がいる。NoteManager がいなければ何も描かない
 	NoteManager* noteManager = Manager::GetGameObject<NoteManager>();
 	if (!noteManager) return;
 
@@ -90,43 +89,45 @@ void Lane::Draw()
 	const float  now = (float)Conductor::GetSongTime();
 	const float  speed = Settings::noteSpeed;
 
-	Layout lower = m_Layout;                                // 下段
-	Layout upper = m_Layout; upper.height = UPPER_HEIGHT;   // 上段
+	const float anim = noteManager->GetPlayLayerAnim();      // 0 = 下段、1 = 上段
+
+	Layout play = m_Layout; play.height = UPPER_HEIGHT * anim;   // 今いる面(上下する)
+	Layout upper = m_Layout; upper.height = UPPER_HEIGHT;          // 上段の枠(動かない)
 
 	Begin3D();
 
-	// 床・拍の線・区切り線・つなぎの線(普通の合成)。下段 → 上段の順で、上段が手前に重なる
-	DrawFloor(lower, chart, now, speed);
-	DrawFloor(upper, chart, now, speed);
-	DrawFrame(lower, upper);
+	// 上段を先、今いる面を後に描く。後のほうが手前に重なるので、今いる面が隠れない
+	DrawFloor(upper, chart, now, speed, 0.0f);   // 薄い床だけ
+	DrawFloor(play, chart, now, speed, 1.0f);   // 濃い床・光・区切り線
 	QuadBatch::Flush(m_White);
 
-	// 両端のネオン(加算)
-	DrawNeon(lower);
 	DrawNeon(upper);
+	DrawNeon(play);
 	QuadBatch::Flush(m_White, true);
 
 	End3D();
 }
 
-void Lane::DrawFloor(const Layout& L, const Chart& chart, float now, float speed)
+void Lane::DrawFloor(const Layout& L, const Chart& chart, float now, float speed, float active)
 {
+
 	const float N = (float)L.laneCount;
 
-	// 1. 床(奥は透明、手前は濃い)
+	// 1. 床。いない段は薄く(0.2)、今いる段は濃く(0.95)
+	float floorA = 0.2f + 0.75f * active;
 	QuadBatch::Quad(L.World(0, Z_FAR), L.World(N, Z_FAR),
 					L.World(N, Z_NEAR), L.World(0, Z_NEAR),
-					Rgba(20, 10, 40, 0.0f), Rgba(20, 15, 45, 0.95f));
+					Rgba(20, 10, 40, 0.0f), Rgba(20, 15, 45, floorA));
 
-	// 2. 押しているレーンの光
+	// 2. 押しているレーンの光。今いる段だけ(active を掛ける)
 	for (int i = 0; i < L.laneCount; i++)
 	{
-		float g = m_Glow[i];
+		float g = m_Glow[i] * active;
 		if (g <= 0.0f) continue;
-		QuadBatch::Quad(L.World((float)i, Z_FAR * 0.6f), L.World(i + 1.0f, Z_FAR * 0.6f),
-						L.World(i + 1.0f, 0.0f), L.World((float)i, 0.0f),
-						Rgba(120, 90, 255, 0.0f), Rgba(150, 120, 255, 0.45f * g));
-	}
+			QuadBatch::Quad(L.World((float)i, Z_FAR * 0.6f), L.World(i + 1.0f, Z_FAR * 0.6f),
+							L.World(i + 1.0f, 0.0f), L.World((float)i, 0.0f),
+							Rgba(120, 90, 255, 0.0f), Rgba(150, 120, 255, 0.45f * g));
+		}
 
 	// 3. 拍の線(計算は前と同じ。描き方だけ変える)
 	int beat = (int)std::floor(chart.SecToTick(now) / TICKS_PER_BEAT);
@@ -140,9 +141,12 @@ void Lane::DrawFloor(const Layout& L, const Chart& chart, float now, float speed
 		WidthLine(L, z, bar ? 4.0f : 2.0f, Rgba(170, 150, 255, (bar ? 0.35f : 0.12f) * fade));
 	}
 
-	// 4. 区切り線
-	for (int i = 1; i < L.laneCount; i++)
-		DepthLine(L, (float)i, 1.5f, Rgba(160, 140, 230, 0.25f));
+	// 4. 区切り線(今いる面だけ)
+	if (active > 0.0f)
+	{
+		for (int i = 1; i < L.laneCount; i++)
+			DepthLine(L, (float)i, 1.5f, Rgba(160, 140, 230, 0.25f));
+	}
 }
 
 void Lane::DrawFrame(const Layout& lower, const Layout& upper)
@@ -190,27 +194,26 @@ void JudgeLine::Update()
 
 void JudgeLine::Draw()
 {
-	// 今いる段の高さ(切り替えのアニメ込み)
-	Layout L = m_Layout;
+	Layout upper = m_Layout; upper.height = UPPER_HEIGHT;   // 上段の判定ライン(動かない)
+	Layout play = m_Layout;                                // 今いる面(上下する)
 	if (NoteManager* noteManager = Manager::GetGameObject<NoteManager>())
-		L.height = UPPER_HEIGHT * noteManager->GetPlayLayerAnim();
+		play.height = UPPER_HEIGHT * noteManager->GetPlayLayerAnim();
 
 	Begin3D();
 
-	// 1. 判定ライン
-	WidthLine(L, 0.0f, 6.0f, Rgba(255, 200, 245, 1.0f));
+	// 1. 判定ライン(上段の固定と、今いる面)
+	WidthLine(upper, 0.0f, 6.0f, Rgba(255, 200, 245, 1.0f));
+	WidthLine(play, 0.0f, 6.0f, Rgba(255, 200, 245, 1.0f));
 
-	// 2. キーの枠(床に寝た四角形)
-	for (int i = 0; i < L.laneCount; i++)
+	// 2. キーの枠(今いる面)
+	for (int i = 0; i < play.laneCount; i++)
 	{
 		XMFLOAT4 c = Rgba(150, 120, 255, 0.10f + 0.35f * m_Glow[i]);
-		QuadBatch::Quad(L.World(i + 0.12f, -20.0f), L.World(i + 0.88f, -20.0f),
-						L.World(i + 0.88f, -80.0f), L.World(i + 0.12f, -80.0f),
+		QuadBatch::Quad(play.World(i + 0.12f, -20.0f), play.World(i + 0.88f, -20.0f),
+						play.World(i + 0.88f, -80.0f), play.World(i + 0.12f, -80.0f),
 						c, c);
 	}
 	QuadBatch::Flush(m_White);
 
 	End3D();
-
-	// キーの文字は UI のステップでスプライトにして描く
 }

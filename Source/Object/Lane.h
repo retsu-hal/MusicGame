@@ -54,7 +54,7 @@ private:
 	ID3D11ShaderResourceView* m_White = nullptr;           // 色を付けるための真っ白な画像
 	float                     m_Glow[LaneDraw::LANE_COUNT] = {};
 
-	void DrawFloor(const LaneDraw::Layout& layout, const Chart& chart, float now, float speed);  // 1段ぶん
+	void DrawFloor(const LaneDraw::Layout& layout, const Chart& chart, float now, float speed, float active);  // active:0〜1。1 = 今いる段	
 	void DrawFrame(const LaneDraw::Layout& lower, const LaneDraw::Layout& upper);              // 2段をつなぐ縦の線
 	void DrawNeon(const LaneDraw::Layout& layout);                                            // 1段ぶんの両端のネオン
 };
