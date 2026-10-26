@@ -27,7 +27,6 @@
 //==============================================================================
 //マクロ宣言
 //==============================================================================
-#define UI_SCALE   (0.75f)		// UIのスケール倍率
 #define FADE_TIME  (0.5f)		// フェードにかける時間(秒)
 
 // 曲リスト(選択中の行の位置。ほかの行はここから LIST_PITCH ずつずらす)
@@ -53,7 +52,7 @@
 #define INFO_X           (1185.0f)	// 曲名・アーティスト名の左端
 #define INFO_TITLE_Y     (183.0f)
 #define INFO_ARTIST_Y    (249.0f)
-#define INFO_SCALE       (1.35f)	// 右の文字の倍率(リストは UI_SCALE = 0.75)
+#define INFO_SCALE       (1.8f)	// 右の文字の倍率(リストは等倍)
 
 // BPM / LENGTH / NOTES
 #define LABEL_Y          (305.0f)	// 見出しの上端
@@ -137,11 +136,11 @@ void SelectScene::Init()
 	for (const SongInfo& song : SongList::songs)
 	{
 		Polygon2D* title = Manager::AddGameObject<Polygon2D>();
-		title->Init(LIST_X, LIST_TITLE_Y, song.titleWidth * UI_SCALE, song.titleHeight * UI_SCALE, song.titleImage.c_str());
+		title->Init(LIST_X, LIST_TITLE_Y, song.titleWidth, song.titleHeight, song.titleImage.c_str());
 		m_SongTitle.push_back(title);
 
 		Polygon2D* artist = Manager::AddGameObject<Polygon2D>();
-		artist->Init(LIST_X, LIST_ARTIST_Y, song.artistWidth * UI_SCALE, song.artistHeight * UI_SCALE, song.artistImage.c_str());
+		artist->Init(LIST_X, LIST_ARTIST_Y, song.artistWidth, song.artistHeight, song.artistImage.c_str());
 		m_SongArtist.push_back(artist);
 	}
 
@@ -178,13 +177,13 @@ void SelectScene::Init()
 		L"asset\\texture\\ui\\text\\label\\length.png",
 		L"asset\\texture\\ui\\text\\label\\notes.png" };
 	const float labelX[3] = { BPM_X, LENGTH_X, NOTES_X };
-	const float labelW[3] = { 78.0f, 134.0f, 114.0f };
-	const float labelH[3] = { 48.0f, 50.0f, 50.0f };
+	const float labelW[3] = { 59.0f, 101.0f, 86.0f };
+	const float labelH[3] = { 36.0f, 38.0f, 38.0f };
 
 	for (int i = 0; i < 3; i++)
 	{
 		Polygon2D* label = Manager::AddGameObject<Polygon2D>();
-		label->Init(labelX[i], LABEL_Y, labelW[i] * UI_SCALE, labelH[i] * UI_SCALE, labelFile[i]);
+		label->Init(labelX[i], LABEL_Y, labelW[i], labelH[i], labelFile[i]);
 		label->SetColor(COLOR_NORMAL);
 	}
 
@@ -212,14 +211,14 @@ void SelectScene::Init()
 		L"asset\\texture\\ui\\keyguide\\kg_wheel_song.png",
 		L"asset\\texture\\ui\\keyguide\\kg_enter_decide.png",
 		L"asset\\texture\\ui\\keyguide\\kg_esc_exit.png" };
-	const float guideWidth[GUIDE_NUM] = { 216.0f, 208.0f, 182.0f };
+	const float guideWidth[GUIDE_NUM] = { 162.0f, 156.0f, 137.0f };
 
 	float guideX = 66.0f;
 	float escX = 0.0f;			// 「Esc 終了」を置いた x
 	for (int i = 0; i < GUIDE_NUM; i++)
 	{
 		Polygon2D* guide = Manager::AddGameObject<Polygon2D>();
-		guide->Init(guideX, 1005.0f, guideWidth[i] * UI_SCALE, 104.0f * UI_SCALE, guideFile[i]);
+		guide->Init(guideX, 1005.0f, guideWidth[i], 78.0f, guideFile[i]);
 		guide->SetColor(COLOR_NORMAL);
 
 		if (i == GUIDE_NUM - 1)	// 最後の1つが「Esc 終了」
@@ -228,12 +227,12 @@ void SelectScene::Init()
 			escX = guideX;
 		}
 
-		guideX += guideWidth[i] * UI_SCALE + 30.0f;
+		guideX += guideWidth[i] + 30.0f;
 	}
 
 	//「Esc キャンセル」(終了確認を開いている間だけ「Esc 終了」と入れ替える)
 	m_GuideEscCancel = Manager::AddGameObject<Polygon2D>();
-	m_GuideEscCancel->Init(escX, 1005.0f, 272.0f * UI_SCALE, 104.0f * UI_SCALE, L"asset\\texture\\ui\\keyguide\\kg_esc_cancel.png");
+	m_GuideEscCancel->Init(escX, 1005.0f, 204.0f, 78.0f, L"asset\\texture\\ui\\keyguide\\kg_esc_cancel.png");
 	m_GuideEscCancel->SetColor(COLOR_NORMAL);
 
 	SetEscGuide(false);

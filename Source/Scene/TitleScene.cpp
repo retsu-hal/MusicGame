@@ -22,7 +22,6 @@
 //==============================================================================
 //マクロ宣言
 //==============================================================================
-#define UI_SCALE 0.75f	//UIのスケール倍率
 
 #define MENU_X     (208.0f)		// メニューの文字の左端
 #define MENU_Y     (540.0f)		// 1つ目の項目の上端
@@ -74,7 +73,7 @@ void TitleScene::Init()
 	
 	//タイトルロゴ「Re:sonare」
 	m_Logo = Manager::AddGameObject<Polygon2D>();
-	m_Logo->Init(200.0f, 203.0f, 866.0f * UI_SCALE, 238.0f * UI_SCALE, L"asset\\texture\\ui\\text\\title\\resonare.png");
+	m_Logo->Init(200.0f, 203.0f, 650.0f, 179.0f, L"asset\\texture\\ui\\text\\title\\resonare.png");
 	m_Logo->SetColor(XMFLOAT4(0.949f, 0.941f, 0.980f, 1.0f));	
 	m_Logo->SetPixelShader("shader\\logoPS.cso");	// 縁を光が走るシェーダー
 	m_Time = 0.0f;
@@ -97,7 +96,7 @@ void TitleScene::Init()
 		L"asset\\texture\\ui\\text\\menu\\start.png",
 		L"asset\\texture\\ui\\text\\menu\\settings.png",	
 		L"asset\\texture\\ui\\text\\menu\\exit.png" };
-	const float textWidth[MENU_MAX] = { 190.0f, 285.0f , 138.0f };
+	const float textWidth[MENU_MAX] = { 143.0f, 214.0f, 104.0f };
 	const float subWidth[MENU_MAX] = { 96.0f, 70.0f };
 	const float subX[MENU_MAX] = { 367.0f, 329.0f };	// 英語の文字の長さが違うので、日本語の位置も項目ごと
 
@@ -106,7 +105,7 @@ void TitleScene::Init()
 		float y = MENU_Y + MENU_PITCH * i;
 
 		m_MenuText[i] = Manager::AddGameObject<Polygon2D>();
-		m_MenuText[i]->Init(MENU_X, y, textWidth[i] * UI_SCALE, 80.0f * UI_SCALE, textFile[i]);
+		m_MenuText[i]->Init(MENU_X, y, textWidth[i], 60.0f, textFile[i]);
 	}
 
 	UpdateMenuLook();
@@ -123,14 +122,14 @@ void TitleScene::Init()
 	//キーの画像を左から順に並べる
 	const int GUIDE_NUM = 2;
 	const WCHAR* guideFile[GUIDE_NUM] = { L"asset\\texture\\ui\\keyguide\\kg_click_decide.png", L"asset\\texture\\ui\\keyguide\\kg_esc_exit.png" };
-	const float guideWidth[GUIDE_NUM] = { 200.0f, 182.0f };
+	const float guideWidth[GUIDE_NUM] = { 150.0f, 137.0f };
 
 	float guideX = 66.0f;
 	float escX = 0.0f;			// 「Esc 終了」を置いた x
 	for (int i = 0; i < GUIDE_NUM; i++)
 	{
 		Polygon2D* guide = Manager::AddGameObject<Polygon2D>();
-		guide->Init(guideX, 1005.0f, guideWidth[i] * UI_SCALE, 104.0f * UI_SCALE, guideFile[i]);
+		guide->Init(guideX, 1005.0f, guideWidth[i], 78.0f, guideFile[i]);
 		guide->SetColor(COLOR_NORMAL);
 
 		if (i == GUIDE_NUM - 1)	// 最後の1つが「Esc 終了」
@@ -139,12 +138,12 @@ void TitleScene::Init()
 			escX = guideX;
 		}
 
-		guideX += guideWidth[i] * UI_SCALE + 30.0f;	// 次の画像は、今の画像の右端 + 30
+		guideX += guideWidth[i] + 30.0f;	// 次の画像は、今の画像の右端 + 30
 	}
 
 	//「Esc キャンセル」(終了確認を開いている間だけ「Esc 終了」と入れ替える)
 	m_GuideEscCancel = Manager::AddGameObject<Polygon2D>();
-	m_GuideEscCancel->Init(escX, 1005.0f, 272.0f * UI_SCALE, 104.0f * UI_SCALE, L"asset\\texture\\ui\\keyguide\\kg_esc_cancel.png");
+	m_GuideEscCancel->Init(escX, 1005.0f, 204.0f, 78.0f, L"asset\\texture\\ui\\keyguide\\kg_esc_cancel.png");
 	m_GuideEscCancel->SetColor(COLOR_NORMAL);
 
 	SetEscGuide(false);			// 最初は「Esc 終了」

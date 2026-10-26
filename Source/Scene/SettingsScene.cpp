@@ -26,7 +26,6 @@
 //==============================================================================
 //マクロ宣言
 //==============================================================================
-#define UI_SCALE  (0.75f)	// UIのスケール倍率(画像は2倍で作ってある × 画面は 1280→1920 で1.5倍)
 #define FADE_TIME (0.5f)	// フェードにかける時間(秒)
 
 // タブ(1つ目のタブの帯の位置。2つ目からは TAB_PITCH ずつ下)
@@ -64,19 +63,19 @@
 //  GAMEPLAY の値
 #define VALUE_RIGHT        (1230.0f)			// 値の右端(選択中の行は ▶ の右端)
 #define VALUE_OFFSET_Y     (56.0f)				// 行の上端から、値の真ん中まで(スライダーと同じ高さ)
-#define VALUE_IMAGE_H      (76.0f * UI_SCALE)	// ON / OFF / ms の画像の高さ
+#define VALUE_IMAGE_H      (57.0f)				// ON / OFF / ms の画像の高さ
 #define VALUE_IMAGE_CENTER (26.0f)				// 上の画像の上端から、文字の真ん中まで
-#define ON_W               (78.0f * UI_SCALE)	// 「ON」の画像の幅
-#define OFF_W              (98.0f * UI_SCALE)	// 「OFF」の画像の幅
-#define MS_W               (78.0f * UI_SCALE)	// 「ms」の画像の幅
+#define ON_W               (59.0f)				// 「ON」の画像の幅
+#define OFF_W              (74.0f)				// 「OFF」の画像の幅
+#define MS_W               (59.0f)				// 「ms」の画像の幅
 #define DOT_STEP           (14.0f)				// 「.」の送り幅(数字より細いので詰める)
 #define ARROW_SIZE         (24.0f)				// ◀ ▶ の大きさ
 #define ARROW_GAP          (12.0f)				// 矢印と値のすき間
 #define ARROW_HIT_H        (40.0f)				// 矢印をクリックできる範囲の高さ
 #define HI_SPEED_STEP      (10.0f)				// HI-SPEED が A / D 1回で変わる量(表示では 0.1)
 
-#define WINDOW_W     (200.0f * UI_SCALE)	// 「WINDOW」の画像の幅
-#define FULLSCREEN_W (298.0f * UI_SCALE)	// 「FULLSCREEN」の画像の幅
+#define WINDOW_W     (150.0f)	// 「WINDOW」の画像の幅
+#define FULLSCREEN_W (224.0f)	// 「FULLSCREEN」の画像の幅
 
 // スプライトの番号
 static int AtlasCell(char c)
@@ -119,25 +118,25 @@ static const ItemImage ITEM_IMAGE[SettingsScene::TAB_MAX][SettingsScene::ROW_MAX
 {
 	// GAMEPLAY
 	{
-		{ L"asset\\texture\\ui\\text\\setting_item\\hi_speed.png",      180.0f, L"asset\\texture\\ui\\text\\jp_desc\\hi_speed.png",      282.0f, 48.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\judge_offset.png",  274.0f, L"asset\\texture\\ui\\text\\jp_desc\\judge_offset.png",  444.0f, 50.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\visual_offset.png", 282.0f, L"asset\\texture\\ui\\text\\jp_desc\\visual_offset.png", 468.0f, 50.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\layer_guide.png",   240.0f, L"asset\\texture\\ui\\text\\jp_desc\\layer_guide.png",   474.0f, 48.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\fast_slow.png",     236.0f, L"asset\\texture\\ui\\text\\jp_desc\\fast_slow.png",     470.0f, 50.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\hi_speed.png",      135.0f, L"asset\\texture\\ui\\text\\jp_desc\\hi_speed.png",      212.0f, 36.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\judge_offset.png",  206.0f, L"asset\\texture\\ui\\text\\jp_desc\\judge_offset.png",  333.0f, 38.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\visual_offset.png", 212.0f, L"asset\\texture\\ui\\text\\jp_desc\\visual_offset.png", 351.0f, 38.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\layer_guide.png",   180.0f, L"asset\\texture\\ui\\text\\jp_desc\\layer_guide.png",   356.0f, 36.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\fast_slow.png",     177.0f, L"asset\\texture\\ui\\text\\jp_desc\\fast_slow.png",     353.0f, 38.0f },
 	},
 	// AUDIO
 	{
-		{ L"asset\\texture\\ui\\text\\setting_item\\master.png",        156.0f, L"asset\\texture\\ui\\text\\jp_desc\\master.png",        138.0f, 48.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\music.png",         126.0f, L"asset\\texture\\ui\\text\\jp_desc\\music.png",         138.0f, 50.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\se.png",             60.0f, L"asset\\texture\\ui\\text\\jp_desc\\se.png",            330.0f, 50.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\master.png",        117.0f, L"asset\\texture\\ui\\text\\jp_desc\\master.png",        104.0f, 36.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\music.png",          95.0f, L"asset\\texture\\ui\\text\\jp_desc\\music.png",         104.0f, 38.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\se.png",             45.0f, L"asset\\texture\\ui\\text\\jp_desc\\se.png",            248.0f, 38.0f },
 	},
 	// DISPLAY
 	{
-		{ L"asset\\texture\\ui\\text\\setting_item\\screen_mode.png",   264.0f, L"asset\\texture\\ui\\text\\jp_desc\\screen_mode.png",   330.0f, 48.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\resolution.png",    236.0f, L"asset\\texture\\ui\\text\\jp_desc\\resolution.png",    306.0f, 50.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\v_sync.png",        144.0f, L"asset\\texture\\ui\\text\\jp_desc\\v_sync.png",        354.0f, 48.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\bg_brightness.png", 294.0f, L"asset\\texture\\ui\\text\\jp_desc\\bg_brightness.png", 282.0f, 50.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\show_fps.png",      196.0f, L"asset\\texture\\ui\\text\\jp_desc\\show_fps.png",      330.0f, 48.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\screen_mode.png",   198.0f, L"asset\\texture\\ui\\text\\jp_desc\\screen_mode.png",   248.0f, 36.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\resolution.png",    177.0f, L"asset\\texture\\ui\\text\\jp_desc\\resolution.png",    230.0f, 38.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\v_sync.png",        108.0f, L"asset\\texture\\ui\\text\\jp_desc\\v_sync.png",        266.0f, 36.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\bg_brightness.png", 221.0f, L"asset\\texture\\ui\\text\\jp_desc\\bg_brightness.png", 212.0f, 38.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\show_fps.png",      147.0f, L"asset\\texture\\ui\\text\\jp_desc\\show_fps.png",      248.0f, 36.0f },
 	},
 };
 
@@ -173,7 +172,7 @@ void SettingsScene::Init()
 
 	//左上の見出し「SETTINGS」
 	Polygon2D* heading = Manager::AddGameObject<Polygon2D>();
-	heading->Init(72.0f, 50.0f, 166.0f * UI_SCALE, 48.0f * UI_SCALE, L"asset\\texture\\ui\\text\\label\\settings.png");
+	heading->Init(72.0f, 50.0f, 125.0f, 36.0f, L"asset\\texture\\ui\\text\\label\\settings.png");
 	heading->SetColor(COLOR_NORMAL);
 
 	
@@ -199,12 +198,12 @@ void SettingsScene::Init()
 		L"asset\\texture\\ui\\text\\menu\\gameplay.png",
 		L"asset\\texture\\ui\\text\\menu\\audio.png",
 		L"asset\\texture\\ui\\text\\menu\\display.png" };
-	const float tabWidth[TAB_MAX] = { 312.0f, 188.0f, 252.0f };
+	const float tabWidth[TAB_MAX] = { 234.0f, 141.0f, 189.0f };
 
 	for (int i = 0; i < TAB_MAX; i++)
 	{
 		m_TabText[i] = Manager::AddGameObject<Polygon2D>();
-		m_TabText[i]->Init(TAB_TEXT_X, TAB_Y + 4.0f + TAB_PITCH * i, tabWidth[i] * UI_SCALE, 80.0f * UI_SCALE, tabFile[i]);
+		m_TabText[i]->Init(TAB_TEXT_X, TAB_Y + 4.0f + TAB_PITCH * i, tabWidth[i], 60.0f, tabFile[i]);
 	}
 
 	//項目の行
@@ -236,10 +235,10 @@ void SettingsScene::Init()
 			float y = ROW_Y + ROW_H * r;	// r 行目の上端
 
 			m_ItemName[t][r] = Manager::AddGameObject<Polygon2D>();
-			m_ItemName[t][r]->Init(ITEM_X, y + NAME_OFFSET_Y, image.nameWidth * UI_SCALE, 62.0f * UI_SCALE, image.name);
+			m_ItemName[t][r]->Init(ITEM_X, y + NAME_OFFSET_Y, image.nameWidth, 47.0f, image.name);
 
 			m_ItemDesc[t][r] = Manager::AddGameObject<Polygon2D>();
-			m_ItemDesc[t][r]->Init(ITEM_X, y + DESC_OFFSET_Y, image.descWidth * UI_SCALE, image.descHeight * UI_SCALE, image.desc);
+			m_ItemDesc[t][r]->Init(ITEM_X, y + DESC_OFFSET_Y, image.descWidth, image.descHeight, image.desc);
 		}
 	}
 
@@ -352,16 +351,16 @@ void SettingsScene::Init()
 		L"asset\\texture\\ui\\keyguide\\kg_ad_value.png",
 		L"asset\\texture\\ui\\keyguide\\kg_tab_switch.png",
 		L"asset\\texture\\ui\\keyguide\\kg_esc_save.png" };
-	const float guideWidth[GUIDE_NUM] = { 288.0f, 240.0f, 302.0f };
+	const float guideWidth[GUIDE_NUM] = { 216.0f, 180.0f, 227.0f };
 
 	float guideX = 66.0f;
 	for (int i = 0; i < GUIDE_NUM; i++)
 	{
 		Polygon2D* guide = Manager::AddGameObject<Polygon2D>();
-		guide->Init(guideX, 1005.0f, guideWidth[i] * UI_SCALE, 104.0f * UI_SCALE, guideFile[i]);
+		guide->Init(guideX, 1005.0f, guideWidth[i], 78.0f, guideFile[i]);
 		guide->SetColor(COLOR_NORMAL);
 
-		guideX += guideWidth[i] * UI_SCALE + 30.0f;	// 次の画像は、今の画像の右端 + 30
+		guideX += guideWidth[i] + 30.0f;	// 次の画像は、今の画像の右端 + 30
 	}
 
 	//フェード用の黒い板(一番最後に足して、全部の上に描く)

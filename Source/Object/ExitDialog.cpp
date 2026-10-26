@@ -20,7 +20,6 @@
 //==============================================================================
 //マクロ宣言
 //==============================================================================
-#define UI_SCALE   (0.75f)		// UI 画像は 1280 基準の 2 倍で作ってあるので 0.75 倍で描く
 
 // ボタンの枠の四角(光の余白は含まない)
 #define BTN_Y      (552.0f)
@@ -52,14 +51,14 @@ void ExitDialog::Init(Audio* selectSE, Audio* decideSE)
 
 	//枠・見出し・質問
 	Polygon2D* panel = Manager::AddGameObject<Polygon2D>();
-	panel->Init(585.0f, 327.0f, 1000.0f * UI_SCALE, 504.0f * UI_SCALE, L"asset\\texture\\ui\\assets\\exit_panel.png");
+	panel->Init(585.0f, 327.0f, 750.0f, 378.0f, L"asset\\texture\\ui\\assets\\exit_panel.png");
 
 	Polygon2D* label = Manager::AddGameObject<Polygon2D>();
-	label->Init(621.0f, 355.0f, 380.0f * UI_SCALE, 48.0f * UI_SCALE, L"asset\\texture\\ui\\text\\label\\terminate_session.png");
+	label->Init(621.0f, 355.0f, 285.0f, 36.0f, L"asset\\texture\\ui\\text\\label\\terminate_session.png");
 	label->SetColor(COLOR_ACCENT);
 
 	Polygon2D* question = Manager::AddGameObject<Polygon2D>();
-	question->Init(743.0f, 427.5f, 574.0f * UI_SCALE, 86.0f * UI_SCALE, L"asset\\texture\\ui\\text\\jp\\confirm_exit.png");
+	question->Init(743.0f, 427.5f, 431.0f, 65.0f, L"asset\\texture\\ui\\text\\jp\\confirm_exit.png");
 	question->SetColor(COLOR_SELECTED);
 
 	m_Parts = { panel, label, question };
@@ -68,18 +67,18 @@ void ExitDialog::Init(Audio* selectSE, Audio* decideSE)
 	for (int i = 0; i < BUTTON_MAX; i++)
 	{
 		m_BtnNormal[i] = Manager::AddGameObject<Polygon2D>();
-		m_BtnNormal[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 440.0f * UI_SCALE, 160.0f * UI_SCALE, L"asset\\texture\\ui\\assets\\btn_normal.png");
+		m_BtnNormal[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 330.0f, 120.0f, L"asset\\texture\\ui\\assets\\btn_normal.png");
 
 		m_BtnSelected[i] = Manager::AddGameObject<Polygon2D>();
-		m_BtnSelected[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 440.0f * UI_SCALE, 160.0f * UI_SCALE, L"asset\\texture\\ui\\assets\\btn_selected.png");
+		m_BtnSelected[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 330.0f, 120.0f, L"asset\\texture\\ui\\assets\\btn_selected.png");
 	}
 
 	//ボタンの文字(枠より後に足して、枠の上に描く)
 	m_BtnText[BUTTON_YES] = Manager::AddGameObject<Polygon2D>();
-	m_BtnText[BUTTON_YES]->Init(750.0f, 568.5f, 120.0f * UI_SCALE, 80.0f * UI_SCALE, L"asset\\texture\\ui\\text\\menu\\yes.png");
+	m_BtnText[BUTTON_YES]->Init(750.0f, 568.5f, 90.0f, 60.0f, L"asset\\texture\\ui\\text\\menu\\yes.png");
 
 	m_BtnText[BUTTON_NO] = Manager::AddGameObject<Polygon2D>();
-	m_BtnText[BUTTON_NO]->Init(1092.0f, 567.0f, 90.0f * UI_SCALE, 80.0f * UI_SCALE, L"asset\\texture\\ui\\text\\menu\\no.png");
+	m_BtnText[BUTTON_NO]->Init(1092.0f, 567.0f, 68.0f, 60.0f, L"asset\\texture\\ui\\text\\menu\\no.png");
 
 	//最初は隠しておく
 	Close();
