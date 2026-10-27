@@ -6,7 +6,9 @@
 using json = nlohmann::json;
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(TempoEvent, tick, bpm)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Note, tick, lane, type, length, layer) 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Note, tick, lane, type, length, layer)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ArcPoint, tick, x, ease)   
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ArcLine, layer, points) 
 
 double Chart::TickToSec(int tick) const
 {
@@ -68,6 +70,7 @@ bool Chart::Save(const std::string& path) const
 	j["resolution"] = TICKS_PER_BEAT;
 	j["tempos"] = tempos;         // vector もマクロのおかげでそのまま入る
 	j["notes"] = notes;
+	j["arcs"] = arcs;
 
 	std::ofstream ofs(path);
 	if (!ofs) return false;           // ファイルを作れなかった
@@ -90,12 +93,20 @@ bool Chart::Load(const std::string& path)
 	offset = j.value("offset", 0.0);
 	tempos = j.value("tempos", std::vector<TempoEvent>{});
 	notes = j.value("notes", std::vector<Note>{});
+	arcs = j.value("arcs", std::vector<ArcLine>{});
 
 	// 手で編集されて順番がバラバラでも大丈夫なように tick 順に並べ直す
 	std::sort(tempos.begin(), tempos.end(),
 		[](const TempoEvent& a, const TempoEvent& b) { return a.tick < b.tick; });
 	std::sort(notes.begin(), notes.end(),
 		[](const Note& a, const Note& b) { return a.tick < b.tick; });
+	for (ArcLine& arc : arcs)
+	{
+		std::sort(arc.points.begin(), arc.points.end(),
+			[](const ArcPoint& a, const ArcPoint& b) { return a.tick < b.tick; });
+	}
+	arcs.erase(std::remove_if(arcs.begin(), arcs.end(),
+		[](const ArcLine& a) { return a.points.size() < 2; }), arcs.end());
 
 	// TickToSec は「先頭は tick 0」が前提なので、なければ補う
 	if (tempos.empty() || tempos[0].tick != 0)

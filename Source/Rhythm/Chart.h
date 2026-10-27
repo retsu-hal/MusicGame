@@ -21,6 +21,21 @@ struct Note
 	int layer = 0;   // 0:下段 1:上段
 };
 
+// アークの点1個
+struct ArcPoint
+{
+	int   tick = 0;      // 位置
+	float x = 0.0f;   // 横の位置(レーン単位。0 = 左端、レーン i の真ん中 = i + 0.5)
+	int   ease = 0;      // 次の点までのつなぎ方 0:まっすぐ 1:だんだん速く 2:だんだん遅く 3:S字
+};
+
+// アーク1本
+struct ArcLine	
+{
+	int                   layer = 0;   // 見た目の高さ 0:下段 1:上段
+	std::vector<ArcPoint> points;      // tick の順
+};
+
 class Chart
 {
 public:
@@ -30,6 +45,7 @@ public:
 
 	std::vector<TempoEvent> tempos;   // tick 順に並べる。先頭は必ず tick 0
 	std::vector<Note>       notes;
+	std::vector<ArcLine>        arcs;
 
 	double TickToSec(int tick) const;  // tick → 秒
 	double SecToTick(double sec) const;// 秒 → tick（小数あり。ノーツ移動用）

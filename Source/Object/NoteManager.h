@@ -26,6 +26,9 @@ private:
 	int   m_PlayLayer = 0;      // 今いる段 0:下段 1:上段(判定はこっちを見る)
 	float m_PlayLayerAnim = 0.0f;   // 見た目用。0〜1 をなめらかに動く
 
+	//カーソル
+	float m_CursorX = 0.0f;
+
 	// 集計(リザルト用)
 	int m_Count[(int)Judge::Max] = {};   // 判定ごとの回数
 	int m_TotalJudges = 0;                  // 判定の回数の合計(達成率の分母)
@@ -35,6 +38,7 @@ private:
 	bool   m_Finished = false;
 
 	void UpdateLayer(float dt);
+	void UpdateCursor();
 	void Finish();
 
 public:
@@ -52,4 +56,5 @@ public:
 	int          GetPlayLayer() const { return m_PlayLayer; }
 	float        GetPlayLayerAnim() const { return m_PlayLayerAnim; }
 	bool         IsFinished() const { return m_Finished; }
+	float        GetCursorX() const { return m_CursorX; } 
 };

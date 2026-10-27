@@ -1,7 +1,5 @@
 #include "main.h"
 #include "NoteManager.h"
-#include "NoteBase.h"
-#include "TapNote.h"
 #include "Score.h"
 #include "Combo.h"
 #include "Audio.h"
@@ -10,6 +8,12 @@
 #include "Manager.h"
 #include "Settings.h"
 #include "GameSession.h"
+#include "NoteBase.h"
+#include "TapNote.h"
+#include "LongNote.h"
+#include "ArcNote.h"
+#include "Lane.h"       
+#include "Settings.h"   
 #include <algorithm>
 
 // 達成率の割合(OnJudge の switch で使う)
@@ -42,6 +46,7 @@ void NoteManager::Update()
 
 	// 段の切り替え(ノーツの判定より先。NoteManager は TapNote より先に足してあるので、先に Update される)
 	UpdateLayer(dt);
+	UpdateCursor();
 
 	// 判定は各ノーツが自分の Update でやる
 
@@ -59,6 +64,8 @@ bool NoteManager::LoadChart(const std::string& path)
 
 	// ノーツの種類を足す(種類が増えたら、ここに1行足す)
 	m_Notes.push_back(Manager::AddGameObject<TapNote>());
+	m_Notes.push_back(Manager::AddGameObject<LongNote>());
+	m_Notes.push_back(Manager::AddGameObject<ArcNote>());
 
 	// 各種類に、自分の分を拾ってもらう
 	double lastTime = 0.0;
@@ -87,6 +94,7 @@ void NoteManager::Play(double startSec)
 	m_Finished = false;
 	m_PlayLayer = 0;      // 下段から始める
 	m_PlayLayerAnim = 0.0f;
+	m_CursorX = LaneDraw::LANE_COUNT * 0.5f;
 
 	// 各種類をやり直して、判定の回数を数える
 	m_TotalJudges = 0;
@@ -146,4 +154,11 @@ void NoteManager::Finish()
 	r.totalNotes = m_TotalJudges;   // ノーツの数ではなく判定の回数
 
 	m_Finished = true;   // シーン切り替えは GameScene が行う
+}
+
+// マウスの横の移動量で、カーソルを動かす(レーンの幅の中で止める)
+void NoteManager::UpdateCursor()
+{
+	m_CursorX += Input::GetMouseMoveX() * Settings::mouseSensitivity;
+	m_CursorX = std::clamp(m_CursorX, 0.0f, (float)LaneDraw::LANE_COUNT);
 }

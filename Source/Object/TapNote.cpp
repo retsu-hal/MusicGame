@@ -11,23 +11,9 @@
 #include "NoteManager.h"
 #include "TapNote.h"
 #include <cmath>
+#include <algorithm>   
 
 using namespace LaneDraw;
-
-// 3D で描く準備と後片付け(Lane.cpp と同じ。各 .cpp に置く決まり)
-static void Begin3D()
-{
-	Renderer::ClearDepth();
-	Renderer::SetDepthEnable(false);
-	if (CAMERA* camera = Manager::GetGameObject<CAMERA>())
-		camera->Draw();
-}
-
-static void End3D()
-{
-	Renderer::SetDepthEnable(true);
-}
-
 
 // ===============================================================
 // 初期化・読み込み・やり直し
@@ -144,9 +130,9 @@ void TapNote::Draw()
 		// 奥から出てくるときにふわっと出す
 		float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
 
-		// 段ごとの色(仮。色は未決定 ★)
-		XMFLOAT4 tint = (n.layer == 1) ? Rgba(200, 150, 255, fade)    // 上段:紫
-			: Rgba(110, 225, 255, fade);   // 下段:水色
+		// 段ごとの色
+		XMFLOAT4 tint = (n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, fade)    // 上段:紫 (200, 150, 255)
+			: XMFLOAT4(0.43f, 0.88f, 1.0f, fade);   // 下段:水色 (110, 225, 255)
 
 		float lane = (float)n.lane;
 		QuadBatch::Quad(L.World(lane + 0.04f, z + h), L.World(lane + 0.96f, z + h),

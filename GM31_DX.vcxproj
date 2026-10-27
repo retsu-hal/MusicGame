@@ -160,6 +160,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Object\ArcNote.cpp" />
+    <ClCompile Include="Source\Object\LongNote.cpp" />
     <ClCompile Include="Source\Object\Combo.cpp" />
     <ClCompile Include="Source\Core\QuadBatch.cpp" />
     <ClCompile Include="Source\Object\Camera.cpp" />
@@ -202,6 +204,8 @@
     <ClCompile Include="ThirdParty\imgui\backends\imgui_impl_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Object\ArcNote.h" />
+    <ClInclude Include="Source\Object\LongNote.h" />
     <ClInclude Include="Source\Object\NoteBase.h" />
     <ClInclude Include="Source\Object\Combo.h" />
     <ClInclude Include="Source\Core\QuadBatch.h" />

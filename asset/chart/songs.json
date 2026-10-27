@@ -1,15 +1,15 @@
 {
   "songs": [
     {
-      "easy": "asset\\chart\\test.json",
-      "hard": "asset\\chart\\test.json",
-      "titleImage": "asset\\texture\\ui\\text\\menu\\start.png",
+      "easy": "asset\\chart\\tutorial.json",
+      "hard": "asset\\chart\\tutorial.json",
+      "titleImage": "asset\\texture\\ui\\text\\song\\tutorial.png",
       "titleWidth": 143,
       "titleHeight": 60,
-      "artistImage": "asset\\texture\\ui\\text\\label\\settings.png",
+      "artistImage": "asset\\texture\\ui\\text\\song\\tutorial.png",
       "artistWidth": 125,
       "artistHeight": 36,
-      "jacket": "asset\\texture\\jacket\\chartreuse_green.jpg",
+      "jacket": "asset\\texture\\jacket\\tutorial.jpg",
       "previewStart": 0.0
     },
     {

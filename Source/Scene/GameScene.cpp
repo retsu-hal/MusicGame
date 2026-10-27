@@ -20,6 +20,7 @@
 #include "Camera.h"
 #include "Polygon2D.h"
 #include "Lane.h"
+#include "Conductor.h"
 
 #include "GameScene.h"
 #include "ResultScene.h"
@@ -30,6 +31,8 @@
 //==============================================================================
 void GameScene::Init()
 {
+	Input::SetMouseMode(Input::MOUSE_MODE_RELATIVE);   // カーソルを消して、移動量だけ取る
+
 	// 背景(ほかの 2D より先に足す)
 	Polygon2D* bg = Manager::AddGameObject<Polygon2D>();
 	bg->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\backGround.png");
@@ -61,6 +64,8 @@ void GameScene::Init()
 //==============================================================================
 void GameScene::Uninit()
 {
+	Conductor::Stop();
+	Input::SetMouseMode(Input::MOUSE_MODE_ABSOLUTE);   // ← 追加。ほかの画面ではふつうのマウスに戻す
 }
 
 //==============================================================================
