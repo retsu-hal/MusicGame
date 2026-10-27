@@ -48,21 +48,21 @@
     },
     {
       "tick": 6240,
-      "lane": 5,
+      "lane": 3,
       "type": 0,
       "length": 0,
       "layer": 0
     },
     {
       "tick": 6720,
-      "lane": 5,
+      "lane": 2,
       "type": 0,
       "length": 0,
       "layer": 0
     },
     {
       "tick": 7200,
-      "lane": 4,
+      "lane": 1,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -76,7 +76,7 @@
     },
     {
       "tick": 7920,
-      "lane": 5,
+      "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -90,7 +90,7 @@
     },
     {
       "tick": 8400,
-      "lane": 4,
+      "lane": 3,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -104,7 +104,7 @@
     },
     {
       "tick": 8880,
-      "lane": 3,
+      "lane": 1,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -132,7 +132,7 @@
     },
     {
       "tick": 14400,
-      "lane": 4,
+      "lane": 3,
       "type": 1,
       "length": 960,
       "layer": 0
@@ -153,14 +153,14 @@
     },
     {
       "tick": 18240,
-      "lane": 5,
+      "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 0
     },
     {
       "tick": 18720,
-      "lane": 5,
+      "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -195,28 +195,28 @@
     },
     {
       "tick": 24960,
-      "lane": 5,
-      "type": 0,
-      "length": 0,
-      "layer": 1
-    },
-    {
-      "tick": 25440,
       "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 1
     },
     {
-      "tick": 25920,
+      "tick": 25440,
       "lane": 3,
       "type": 0,
       "length": 0,
       "layer": 1
     },
     {
-      "tick": 26400,
+      "tick": 25920,
       "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 26400,
+      "lane": 1,
       "type": 0,
       "length": 0,
       "layer": 1
@@ -265,7 +265,7 @@
     },
     {
       "tick": 30240,
-      "lane": 5,
+      "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 1
@@ -279,7 +279,7 @@
     },
     {
       "tick": 31200,
-      "lane": 5,
+      "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -319,21 +319,21 @@
     },
     {
       "tick": 36960,
-      "lane": 4,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 37440,
       "lane": 3,
       "type": 0,
       "length": 0,
       "layer": 0
     },
     {
-      "tick": 37920,
+      "tick": 37440,
       "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 37920,
+      "lane": 1,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -353,7 +353,7 @@
     },
     {
       "tick": 39840,
-      "lane": 5,
+      "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 1
@@ -366,7 +366,7 @@
     },
     {
       "tick": 40800,
-      "lane": 2,
+      "lane": 1,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -380,7 +380,7 @@
     },
     {
       "tick": 55680,
-      "lane": 2,
+      "lane": 1,
       "type": 3,
       "width": 2,
       "dir": 1,
@@ -404,7 +404,7 @@
     },
     {
       "tick": 58080,
-      "lane": 5,
+      "lane": 4,
       "type": 3,
       "width": 1,
       "dir": -1,
@@ -420,7 +420,7 @@
     },
     {
       "tick": 59040,
-      "lane": 4,
+      "lane": 3,
       "type": 3,
       "width": 2,
       "dir": -1,
@@ -430,7 +430,7 @@
       "tick": 59520,
       "lane": 0,
       "type": 3,
-      "width": 6,
+      "width": 5,
       "dir": 1,
       "layer": 0
     },
@@ -438,7 +438,7 @@
       "tick": 60480,
       "lane": 0,
       "type": 3,
-      "width": 6,
+      "width": 5,
       "dir": -1,
       "layer": 0
     },
@@ -451,7 +451,7 @@
     },
     {
       "tick": 63360,
-      "lane": 5,
+      "lane": 4,
       "type": 0,
       "length": 0,
       "layer": 0
@@ -463,12 +463,12 @@
       "points": [
         {
           "tick": 44160,
-          "x": 3.0,
+          "x": 2.5,
           "ease": 0
         },
         {
           "tick": 46080,
-          "x": 3.0,
+          "x": 2.5,
           "ease": 0
         }
       ]
@@ -478,12 +478,12 @@
       "points": [
         {
           "tick": 47040,
-          "x": 1.0,
+          "x": 0.5,
           "ease": 3
         },
         {
           "tick": 48960,
-          "x": 5.0,
+          "x": 4.5,
           "ease": 0
         }
       ]
@@ -493,27 +493,27 @@
       "points": [
         {
           "tick": 49920,
-          "x": 5.0,
+          "x": 4.5,
           "ease": 0
         },
         {
           "tick": 50400,
-          "x": 1.0,
+          "x": 0.5,
           "ease": 0
         },
         {
           "tick": 50880,
-          "x": 5.0,
+          "x": 4.5,
           "ease": 0
         },
         {
           "tick": 51360,
-          "x": 1.0,
+          "x": 0.5,
           "ease": 0
         },
         {
           "tick": 51840,
-          "x": 3.0,
+          "x": 2.5,
           "ease": 0
         }
       ]
