@@ -1,0 +1,556 @@
+{
+  "version": 1,
+  "title": "チュートリアル",
+  "audio": "asset\\audio\\click120.wav",
+  "offset": 0.0,
+  "resolution": 480,
+  "tempos": [
+    {
+      "tick": 0,
+      "bpm": 120.0
+    }
+  ],
+  "notes": [
+    {
+      "tick": 3840,
+      "lane": 0,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 4320,
+      "lane": 1,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 4800,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 5280,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 5760,
+      "lane": 4,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 6240,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 6720,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 7200,
+      "lane": 4,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 7680,
+      "lane": 0,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 7920,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 8160,
+      "lane": 1,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 8400,
+      "lane": 4,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 8640,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 8880,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 9120,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 9360,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 13440,
+      "lane": 1,
+      "type": 1,
+      "length": 960,
+      "layer": 0
+    },
+    {
+      "tick": 14400,
+      "lane": 4,
+      "type": 1,
+      "length": 960,
+      "layer": 0
+    },
+    {
+      "tick": 15360,
+      "lane": 2,
+      "type": 1,
+      "length": 1920,
+      "layer": 0
+    },
+    {
+      "tick": 17280,
+      "lane": 0,
+      "type": 1,
+      "length": 960,
+      "layer": 0
+    },
+    {
+      "tick": 18240,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 18720,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 23040,
+      "lane": 0,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 23520,
+      "lane": 1,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 24000,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 24480,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 24960,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 25440,
+      "lane": 4,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 25920,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 26400,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 26880,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 27360,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 27840,
+      "lane": 1,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 28320,
+      "lane": 4,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 28800,
+      "lane": 2,
+      "type": 1,
+      "length": 960,
+      "layer": 1
+    },
+    {
+      "tick": 29760,
+      "lane": 0,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 30240,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 30720,
+      "lane": 0,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 31200,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 34560,
+      "lane": 0,
+      "type": 2,
+      "dir": 1
+    },
+    {
+      "tick": 35040,
+      "lane": 1,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 35520,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 36000,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 36480,
+      "lane": 0,
+      "type": 2,
+      "dir": -1
+    },
+    {
+      "tick": 36960,
+      "lane": 4,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 37440,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 37920,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 38400,
+      "lane": 0,
+      "type": 2,
+      "dir": 1
+    },
+    {
+      "tick": 38880,
+      "lane": 0,
+      "type": 1,
+      "length": 960,
+      "layer": 1
+    },
+    {
+      "tick": 39840,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 40320,
+      "lane": 0,
+      "type": 2,
+      "dir": -1
+    },
+    {
+      "tick": 40800,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 41280,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 55680,
+      "lane": 2,
+      "type": 3,
+      "width": 2,
+      "dir": 1,
+      "layer": 0
+    },
+    {
+      "tick": 56640,
+      "lane": 2,
+      "type": 3,
+      "width": 2,
+      "dir": -1,
+      "layer": 0
+    },
+    {
+      "tick": 57600,
+      "lane": 0,
+      "type": 3,
+      "width": 1,
+      "dir": 1,
+      "layer": 0
+    },
+    {
+      "tick": 58080,
+      "lane": 5,
+      "type": 3,
+      "width": 1,
+      "dir": -1,
+      "layer": 0
+    },
+    {
+      "tick": 58560,
+      "lane": 0,
+      "type": 3,
+      "width": 2,
+      "dir": 1,
+      "layer": 0
+    },
+    {
+      "tick": 59040,
+      "lane": 4,
+      "type": 3,
+      "width": 2,
+      "dir": -1,
+      "layer": 0
+    },
+    {
+      "tick": 59520,
+      "lane": 0,
+      "type": 3,
+      "width": 6,
+      "dir": 1,
+      "layer": 0
+    },
+    {
+      "tick": 60480,
+      "lane": 0,
+      "type": 3,
+      "width": 6,
+      "dir": -1,
+      "layer": 0
+    },
+    {
+      "tick": 63360,
+      "lane": 0,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 63360,
+      "lane": 5,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    }
+  ],
+  "arcs": [
+    {
+      "layer": 0,
+      "points": [
+        {
+          "tick": 44160,
+          "x": 3.0,
+          "ease": 0
+        },
+        {
+          "tick": 46080,
+          "x": 3.0,
+          "ease": 0
+        }
+      ]
+    },
+    {
+      "layer": 0,
+      "points": [
+        {
+          "tick": 47040,
+          "x": 1.0,
+          "ease": 3
+        },
+        {
+          "tick": 48960,
+          "x": 5.0,
+          "ease": 0
+        }
+      ]
+    },
+    {
+      "layer": 0,
+      "points": [
+        {
+          "tick": 49920,
+          "x": 5.0,
+          "ease": 0
+        },
+        {
+          "tick": 50400,
+          "x": 1.0,
+          "ease": 0
+        },
+        {
+          "tick": 50880,
+          "x": 5.0,
+          "ease": 0
+        },
+        {
+          "tick": 51360,
+          "x": 1.0,
+          "ease": 0
+        },
+        {
+          "tick": 51840,
+          "x": 3.0,
+          "ease": 0
+        }
+      ]
+    }
+  ],
+  "tutorial": [
+    {
+      "tick": 0,
+      "page": 0
+    },
+    {
+      "tick": 1920,
+      "page": 1
+    },
+    {
+      "tick": 11520,
+      "page": 2
+    },
+    {
+      "tick": 21120,
+      "page": 3
+    },
+    {
+      "tick": 32640,
+      "page": 4
+    },
+    {
+      "tick": 42240,
+      "page": 5
+    },
+    {
+      "tick": 53760,
+      "page": 6
+    },
+    {
+      "tick": 61440,
+      "page": 7
+    }
+  ]
+}
