@@ -12,6 +12,7 @@
 #include "TapNote.h"
 #include "LongNote.h"
 #include "ArcNote.h"
+#include "WheelNote.h"
 #include "Lane.h"       
 #include <algorithm>
 
@@ -72,6 +73,7 @@ bool NoteManager::LoadChart(const std::string& path)
 
 	// ノーツの種類を足す(種類が増えたら、ここに1行足す)
     m_Notes.push_back(Manager::AddGameObject<ArcNote>());
+	m_Notes.push_back(Manager::AddGameObject<WheelNote>());
 	m_Notes.push_back(Manager::AddGameObject<TapNote>());
 	m_Notes.push_back(Manager::AddGameObject<LongNote>());
 
