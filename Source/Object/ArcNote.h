@@ -26,7 +26,7 @@ class ArcNote : public NoteBase
 {
 private:
 	std::vector<ArcData>      m_Arcs;
-	LaneDraw::Layout          m_Layout;
+	Layout m_Layout;
 	ID3D11ShaderResourceView* m_BandTex = nullptr;
 	ID3D11ShaderResourceView* m_HeadTex = nullptr;
 

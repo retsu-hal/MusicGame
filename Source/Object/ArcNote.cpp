@@ -8,10 +8,10 @@
 #include "ArcNote.h"
 #include "Judge.h"
 #include "NoteManager.h"
+#include "Renderer.h"
+#include "Camera.h"
 #include <algorithm>
 #include <cmath>
-
-using namespace LaneDraw;
 
 static constexpr int   TICK_STEP = TICKS_PER_BEAT / 2;   // 中継点の間隔(8分音符)
 static constexpr float ON_WIDTH = 0.5f;                 // 線の上とみなす幅(中心から。レーン単位)★
@@ -69,7 +69,9 @@ void ArcNote::Draw()
 	const float speed = Settings::noteSpeed;
 	const float W = 0.3f;   // 帯の幅の半分(レーン単位。0.6 レーンぶん)
 
-	Begin3D();
+	Renderer::ClearDepth();            // 背景(2D)が書いた深度を消す
+	Renderer::SetDepthEnable(false);   // 奥から順に描くので、深度は書かない
+	if (CAMERA* camera = Manager::GetGameObject<CAMERA>())	camera->Draw();    // 背景の 2D で上書きされた行列を送り直す
 
 	// 1. 帯
 	for (const ArcData& arc : m_Arcs)
@@ -122,7 +124,7 @@ void ArcNote::Draw()
 	}
 	QuadBatch::Flush(m_HeadTex);
 
-	End3D();
+    Renderer::SetDepthEnable(true);
 }
 
 void ArcNote::Load(const Chart& chart)
