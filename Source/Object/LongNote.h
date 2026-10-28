@@ -22,11 +22,11 @@ struct LongData
 class LongNote : public NoteBase
 {
 private:
+	Layout m_Layout;
 	std::vector<LongData>     m_Notes;              // 始点の時刻の順
-	LaneDraw::Layout          m_Layout;
 	ID3D11ShaderResourceView* m_BodyTex = nullptr;  // 帯(longnote.png)
 	ID3D11ShaderResourceView* m_CapTex = nullptr;  // 始点・終点(tapnote.png)
-	bool m_WasHeld[LaneDraw::LANE_COUNT] = {};
+	bool m_WasHeld[LANE_COUNT] = {};
 
 	void JudgeStart(int lane, int layer, double hitTime);                   // 押した瞬間:始点
 	void JudgeTicks(LongData& note, double now, bool held);                 // 中継点

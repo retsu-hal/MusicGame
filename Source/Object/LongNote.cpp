@@ -9,13 +9,11 @@
 #include <algorithm>
 #include "Input.h"         
 #include "NoteManager.h" 
+#include "Renderer.h"
+#include "Camera.h"
 #include <cmath>           
 
-using namespace LaneDraw;
-
 static constexpr int TICK_STEP = TICKS_PER_BEAT / 2;   // 中継点の間隔(8分音符)
-
-
 
 // ===============================================================
 // 初期化・読み込み
@@ -72,7 +70,9 @@ void LongNote::Draw()
 	const float speed = Settings::noteSpeed;
 	const float h = 14.0f;   // 始点・終点の厚みの半分(TapNote と同じ)
 
-	Begin3D();
+	Renderer::ClearDepth();            // 背景(2D)が書いた深度を消す
+	Renderer::SetDepthEnable(false);   // 奥から順に描くので、深度は書かない
+	if (CAMERA* camera = Manager::GetGameObject<CAMERA>())	camera->Draw();    // 背景の 2D で上書きされた行列を送り直す
 
 	// 1. 帯(加算)。黒いところは加算で消えて、光る帯になる
 	for (const LongData& n : m_Notes)
@@ -101,13 +101,18 @@ void LongNote::Draw()
 	// 2. 始点・終点(ふつうの合成)。帯の上にかぶせる
 	for (const LongData& n : m_Notes)
 	{
+        if (n.endJudge != Judge::None) continue;
+
 		float zStart = ((float)n.startTime - now) * speed;
 		float zEnd = ((float)n.endTime - now) * speed;
+
+        bool holding = (n.startJudge != Judge::None) && Input::GetKeyPress(Lane::KEYS[n.lane]);
+		if (holding) zStart = 0.0f;
 
 		Layout L = m_Layout;
 		L.height = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
-		// 段ごとの色(TapNote と同じ。仮 ★)
+		// 段ごとの色
 		XMFLOAT4 tint = (n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, 1.0f)    // 上段:紫 (200, 150, 255)
 			: XMFLOAT4(0.43f, 0.88f, 1.0f, 1.0f);   // 下段:水色 (110, 225, 255)
 		float lane = (float)n.lane;
@@ -122,7 +127,7 @@ void LongNote::Draw()
 	}
 	QuadBatch::Flush(m_CapTex);
 
-	End3D();
+    Renderer::SetDepthEnable(true);
 }
 
 
