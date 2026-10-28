@@ -13,62 +13,69 @@
 #include <algorithm>
 #include <cmath>
 
-
 // ===============================================================
 // 初期化・読み込み
 // ===============================================================
 void WheelNote::Init()
 {
-	m_Layer   = 2;   // 床(1)と判定ライン(3)の間
-	m_UpTex   = TextureManager::Load(L"asset\\texture\\flick_wheel_up.png");
+	m_Layer = 2; // 床(1)と判定ライン(3)の間
+	m_UpTex = TextureManager::Load(L"asset\\texture\\flick_wheel_up.png");
 	m_DownTex = TextureManager::Load(L"asset\\texture\\flick_wheel_down.png");
 }
 
 void WheelNote::Update()
 {
-	const double now   = Conductor::GetSongTime();
-	const int    wheel = Input::GetMouseWheel();
+	const double now = Conductor::GetSongTime();
+	const int wheel = Input::GetMouseWheel();
 
 	// 1. 回したら、その向きのノーツを1個だけ取る
 	if (wheel != 0)
 	{
-		const int dir = (wheel > 0) ? 1 : -1;   // 回した向き
+		const int dir = (wheel > 0) ? 1 : -1; // 回した向き
 
-		for (WheelData& n : m_Notes)   // 時刻の順
+		for (WheelData &n : m_Notes) // 時刻の順
 		{
-			if (n.judge != Judge::None) continue;   // もう判定した
+			if (n.judge != Judge::None)
+				continue; // もう判定した
 
 			double diff = now - n.time;
-			if (diff >  WINDOW_BAD) continue;   // もう過ぎてる(このあと MISS になる)
-			if (diff < -WINDOW_BAD) break;      // ここから先は全部まだ遠い
+			if (diff > WINDOW_BAD)
+				continue; // もう過ぎてる(このあと MISS になる)
+			if (diff < -WINDOW_BAD)
+				break; // ここから先は全部まだ遠い
 
-			if (n.dir != dir) continue;         // 向きが違う → 次のノーツを見る
+			if (n.dir != dir)
+				continue; // 向きが違う → 次のノーツを見る
 
 			// タイミングはタップと同じ(ずれで PERFECT〜BAD。10/28 変更)
 			double a = std::fabs(diff);
-			Judge  judge;
-			if      (a <= WINDOW_PERFECT) judge = Judge::Perfect;
-			else if (a <= WINDOW_GREAT)   judge = Judge::Great;
-			else if (a <= WINDOW_GOOD)    judge = Judge::Good;
-			else                          judge = Judge::Bad;
+			Judge judge;
+			if (a <= WINDOW_PERFECT)
+				judge = Judge::Perfect;
+			else if (a <= WINDOW_GREAT)
+				judge = Judge::Great;
+			else if (a <= WINDOW_GOOD)
+				judge = Judge::Good;
+			else
+				judge = Judge::Bad;
 
 			SetJudge(n, judge, diff);
-			break;   // 1フレームで1個だけ
+			break; // 1フレームで1個だけ
 		}
 	}
 
 	// 2. 回されないまま BAD の幅も過ぎたノーツは MISS
-	for (WheelData& n : m_Notes)
+	for (WheelData &n : m_Notes)
 	{
 		if (n.judge == Judge::None && now - n.time > WINDOW_BAD)
 			SetJudge(n, Judge::Miss, 0.0);
 	}
 }
 
-void WheelNote::SetJudge(WheelData& note, Judge judge, double diff)
+void WheelNote::SetJudge(WheelData &note, Judge judge, double diff)
 {
 	note.judge = judge;
-	m_Manager->OnJudge(judge, 0, diff);   // レーン全体のノーツなのでレーンは仮に 0(ヒット演出を作るときに考える ★)
+	m_Manager->OnJudge(judge, 0, diff); // レーン全体のノーツなのでレーンは仮に 0(ヒット演出を作るときに考える ★)
 }
 
 // ===============================================================
@@ -76,16 +83,17 @@ void WheelNote::SetJudge(WheelData& note, Judge judge, double diff)
 // ===============================================================
 void WheelNote::Draw()
 {
-	const float now   = (float)Conductor::GetSongTime();
+	const float now = (float)Conductor::GetSongTime();
 	const float speed = Settings::noteSpeed;
 
 	// 3D 描画
 	Renderer::ClearDepth();
 	Renderer::SetDepthEnable(false);
-	if (CAMERA* camera = Manager::GetGameObject<CAMERA>()) camera->Draw();
+	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
+		camera->Draw();
 
-	DrawDir( 1, now, speed);   // 上(マゼンタ)
-	DrawDir(-1, now, speed);   // 下(ブルー)
+	DrawDir(1, now, speed);	 // 上(マゼンタ)
+	DrawDir(-1, now, speed); // 下(ブルー)
 
 	Renderer::SetDepthEnable(true);
 }
@@ -100,42 +108,47 @@ void WheelNote::DrawDir(int dir, float now, float speed)
 	const float N = (float)L.laneCount;
 	const float h = L.laneWidth * N * (128.0f / 1440.0f) * 0.5f;
 
-	for (const WheelData& n : m_Notes)
+	for (const WheelData &n : m_Notes)
 	{
-		if (n.dir != dir) continue;
-		if (n.judge != Judge::None) continue;
+		if (n.dir != dir)
+			continue;
+		if (n.judge != Judge::None)
+			continue;
 
 		float z = ((float)n.time - now) * speed;
-		if (z > Z_FAR || z < -60.0f) continue;   // 遠すぎ・通り過ぎ
+		if (z > Z_FAR || z < -60.0f)
+			continue; // 遠すぎ・通り過ぎ
 
 		// 奥から出てくるときにふわっと(TapNote と同じ式)
-		float    fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
-		XMFLOAT4 tint(1.0f, 1.0f, 1.0f, fade);   // 色は画像に入っているので白
+		float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
+		XMFLOAT4 tint(1.0f, 1.0f, 1.0f, fade); // 色は画像に入っているので白
 
 		QuadBatch::Quad(L.World(0, z + h), L.World(N, z + h),
-		                L.World(N, z - h), L.World(0, z - h),
-		                tint, tint);
+						L.World(N, z - h), L.World(0, z - h),
+						tint, tint);
 	}
 	QuadBatch::Flush((dir > 0) ? m_UpTex : m_DownTex);
 }
 
-void WheelNote::Load(const Chart& chart)
+void WheelNote::Load(const Chart &chart)
 {
 	m_Notes.clear();
-	for (const Note& n : chart.notes)
+	for (const Note &n : chart.notes)
 	{
-		if (n.type != 2) continue;   // ホイールフリックだけ拾う
-		if (n.dir == 0)  continue;   // 向きがないものは回しようがないので飛ばす
+		if (n.type != 2)
+			continue; // ホイールフリックだけ拾う
+		if (n.dir == 0)
+			continue; // 向きがないものは回しようがないので飛ばす
 
 		WheelData data;
 		data.time = chart.TickToSec(n.tick);
-		data.dir  = (n.dir > 0) ? 1 : -1;   // 2 や -3 と書かれていても 1 / -1 にそろえる
+		data.dir = (n.dir > 0) ? 1 : -1; // 2 や -3 と書かれていても 1 / -1 にそろえる
 		m_Notes.push_back(data);
 	}
 }
 
 void WheelNote::Reset(double startSec)
 {
-	for (WheelData& n : m_Notes)
-		n.judge = (n.time < startSec) ? Judge::Skip : Judge::None;   // 途中から再生なら、前のノーツは飛ばす
+	for (WheelData &n : m_Notes)
+		n.judge = (n.time < startSec) ? Judge::Skip : Judge::None; // 途中から再生なら、前のノーツは飛ばす
 }
