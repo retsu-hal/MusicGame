@@ -77,7 +77,7 @@ void WheelNote::Update()
 void WheelNote::SetJudge(WheelData &note, Judge judge, double diff)
 {
 	note.judge = judge;
-	m_Manager->OnJudge(judge, 0, diff); // レーン全体のノーツなのでレーンは仮に 0(ヒット演出を作るときに考える ★)
+	m_Manager->OnJudge(judge, 0, diff, LANE_COUNT);
 }
 
 // ===============================================================

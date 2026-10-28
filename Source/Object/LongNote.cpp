@@ -235,7 +235,7 @@ void LongNote::JudgeTicks(LongData &note, double now, bool held)
 	// 時刻を過ぎた中継点を、その瞬間に押しているかで判定
 	while (note.nextTick < (int)note.ticks.size() && now >= note.ticks[note.nextTick])
 	{
-		m_Manager->OnJudge(held ? Judge::Perfect : Judge::Miss, note.lane, 0.0);
+		m_Manager->OnJudge(held ? Judge::Perfect : Judge::Miss, note.lane, 0.0, 0); // 輪は出さない
 		note.nextTick++;
 	}
 }

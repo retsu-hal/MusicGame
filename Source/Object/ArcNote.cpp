@@ -63,7 +63,7 @@ void ArcNote::Update()
 			bool ok = std::fabs(cursorX - XAt(a, t)) <= ON_WIDTH;
 
 			int lane = std::clamp((int)XAt(a, t), 0, LANE_COUNT - 1); // 光らせるレーン(x の下のレーン)
-			m_Manager->OnJudge(ok ? Judge::Perfect : Judge::Miss, lane, 0.0);
+			m_Manager->OnJudge(ok ? Judge::Perfect : Judge::Miss, lane, 0.0, 0);
 			a.nextCheck++;
 		}
 	}

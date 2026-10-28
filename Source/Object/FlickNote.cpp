@@ -90,7 +90,7 @@ void FlickNote::Update()
 void FlickNote::SetJudge(FlickData &note, Judge judge, double diff)
 {
     note.judge = judge;
-    m_Manager->OnJudge(judge, note.lane, diff);
+    m_Manager->OnJudge(judge, note.lane, diff, note.width);
 }
 
 // ===============================================================

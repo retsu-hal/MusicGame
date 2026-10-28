@@ -12,6 +12,7 @@ private:
 	Layout m_upper; // 上段の判定ライン(動かない)
 	ID3D11ShaderResourceView *m_White = nullptr;
 	ID3D11ShaderResourceView *m_Cursor = nullptr;
+	ID3D11ShaderResourceView *m_KeyTex[LANE_COUNT] = {};
 	float m_Glow[LANE_COUNT] = {};
 
 public:

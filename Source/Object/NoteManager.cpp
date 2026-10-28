@@ -15,6 +15,7 @@
 #include "WheelNote.h"
 #include "FlickNote.h"
 #include "Lane.h"
+#include "Effect.h"
 #include <algorithm>
 
 // 達成率の割合(OnJudge の switch で使う)
@@ -31,6 +32,7 @@ void NoteManager::Init()
 	// GameScene が先に足しておいたものを探す
 	m_Score = Manager::GetGameObject<Score>();
 	m_Combo = Manager::GetGameObject<Combo>();
+	m_Effect = Manager::GetGameObject<Effect>();
 }
 
 void NoteManager::Uninit()
@@ -136,7 +138,7 @@ void NoteManager::Play()
 	Conductor::Start(m_Music, -LEAD_IN);
 }
 
-void NoteManager::OnJudge(Judge judge, int lane, double diff)
+void NoteManager::OnJudge(Judge judge, int lane, double diff, int width)
 {
 	m_Count[(int)judge]++;
 
@@ -162,6 +164,10 @@ void NoteManager::OnJudge(Judge judge, int lane, double diff)
 	default:
 		break;
 	}
+
+	// 判定文字と輪
+	if (m_Effect)
+		m_Effect->Show(judge, lane, width, diff);
 }
 
 // 曲が終わったら、結果を GameSession に書いて「終わった」印を立てる

@@ -2,6 +2,7 @@
 #include "GameObject.h"
 #include "Chart.h"
 #include "Judge.h"
+
 #include <vector>
 #include <string>
 #include <deque>
@@ -10,6 +11,7 @@ class Audio;
 class Score;
 class Combo;
 class NoteBase;
+class Effect;
 
 // マウスの移動の記録1個(左右フリック用)
 struct MouseSample
@@ -30,6 +32,7 @@ private:
 
 	Score *m_Score = nullptr;
 	Combo *m_Combo = nullptr;
+	Effect *m_Effect = nullptr;
 
 	// 段
 	int m_PlayLayer = 0;		  // 今いる段 0:下段 1:上段(判定はこっちを見る)
@@ -56,7 +59,7 @@ public:
 
 	bool LoadChart(const std::string &path);
 	void Play();
-	void OnJudge(Judge judge, int lane, double diff); // ノーツが判定したら呼ぶ
+	void OnJudge(Judge judge, int lane, double diff, int width = 1); // ノーツが判定したら呼ぶ
 
 	const Chart &GetChart() const { return m_Chart; }
 	int GetPlayLayer() const { return m_PlayLayer; }
