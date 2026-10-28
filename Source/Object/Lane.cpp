@@ -13,39 +13,6 @@
 #include <cmath>
 #include <algorithm>
 
-using namespace LaneDraw;
-
-// ===============================================================
-// Lane と JudgeLine で共通して使うもの
-// ===============================================================
-
-// 3D で描く準備と後片付け。ノーツからも呼ぶので static にしない(宣言は Lane.h)
-namespace LaneDraw
-{
-	void Begin3D()
-	{
-		Renderer::ClearDepth();            // 背景(2D)が書いた深度を消す
-		Renderer::SetDepthEnable(false);   // 奥から順に描くので、深度は書かない
-		if (CAMERA* camera = Manager::GetGameObject<CAMERA>())
-			camera->Draw();                // 背景の 2D で上書きされた行列を送り直す
-	}
-
-	void End3D()
-	{
-		Renderer::SetDepthEnable(true);
-	}
-}
-
-// 押しているレーンを光らせる(押したら 1、離したらだんだん 0 へ)
-static void UpdateGlow(float glow[], int count, float dt)
-{
-	for (int i = 0; i < count; i++)
-	{
-		if (Input::GetKeyPress(Lane::KEYS[i])) glow[i] = 1.0f;
-		else glow[i] = std::max(0.0f, glow[i] - dt * 6.0f);
-	}
-}
-
 // 奥行き方向の線(区切り線・両端)。床に寝た細長い四角形。奥で消える
 static void DepthLine(const Layout& L, float laneX, float width, const XMFLOAT4& nearColor)
 {
@@ -57,17 +24,6 @@ static void DepthLine(const Layout& L, float laneX, float width, const XMFLOAT4&
 					farColor, nearColor);
 }
 
-// 横方向の線(拍の線・判定ライン)。奥行き方向に width の太さを持つ
-static void WidthLine(const Layout& L, float z, float width, const XMFLOAT4& color)
-{
-	float h = width * 0.5f;
-	float N = (float)L.laneCount;
-	QuadBatch::Quad(L.World(0, z + h), L.World(N, z + h),
-					L.World(N, z - h), L.World(0, z - h),
-					color, color);
-}
-
-
 // ===============================================================
 // Lane(床)
 // ===============================================================
@@ -76,11 +32,19 @@ void Lane::Init()
 	m_Layer = 1;   // ノーツより奥
 	m_White = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
 	m_LaneTex = TextureManager::Load(L"asset\\texture\\lane.png");
+    m_upper.height=UPPER_HEIGHT;
 }
 
 void Lane::Update()
 {
-	UpdateGlow(m_Glow, m_Layout.laneCount, Manager::GetDeltaTime());
+    float dt= Manager::GetDeltaTime();
+    
+    //押したキーのレーンを光らせる（徐々に暗くする）
+	for (int i = 0; i < LANE_COUNT; i++)
+	{
+		if (Input::GetKeyPress(Lane::KEYS[i])) m_Glow[i] = 1.0f;
+		else m_Glow[i] = std::max(0.0f, m_Glow[i] - dt * 6.0f);
+	}
 }
 
 void Lane::Draw()
@@ -94,22 +58,24 @@ void Lane::Draw()
 	const float  speed = Settings::noteSpeed;
 	const float  anim = noteManager->GetPlayLayerAnim();   // 0 = 下段、1 = 上段
 
-	Layout play = m_Layout; play.height = UPPER_HEIGHT * anim;   // 今いる面(上下する)
-	Layout upper = m_Layout; upper.height = UPPER_HEIGHT;          // 上段の枠(動かない)
+    m_play.height = UPPER_HEIGHT * anim;   // 今いる面(上下する)
 
-	Begin3D();
+    //3d描画
+	Renderer::ClearDepth();            // 背景(2D)が書いた深度を消す
+	Renderer::SetDepthEnable(false);   // 奥から順に描くので、深度は書かない
+	if (CAMERA* camera = Manager::GetGameObject<CAMERA>())	camera->Draw();                // 背景の 2D で上書きされた行列を送り直す
 
 	// 上段を先、今いる面を後に描く。後のほうが手前に重なるので、今いる面が隠れない
 	// (DrawFloor の中で、床 → 線 の順に Flush まで済ませる)
-	DrawFloor(upper, chart, now, speed, 0.0f);
-	DrawFloor(play, chart, now, speed, 1.0f);
+	DrawFloor(m_upper, chart, now, speed, 0.0f);
+	DrawFloor(m_play, chart, now, speed, 1.0f);
 
 	// 両端のネオン(加算)
-	DrawNeon(upper);
-	DrawNeon(play);
+	DrawNeon(m_upper);
+	DrawNeon(m_play);
 	QuadBatch::Flush(m_White, true);
 
-	End3D();
+	Renderer::SetDepthEnable(true);
 }
 
 void Lane::DrawFloor(const Layout& L, const Chart& chart, float now, float speed, float active)
@@ -142,10 +108,15 @@ void Lane::DrawFloor(const Layout& L, const Chart& chart, float now, float speed
 		float z = ((float)chart.TickToSec(beat * TICKS_PER_BEAT) - now) * speed;
 		if (z > Z_FAR) break;
 		if (z < 0.0f) continue;
-		bool  bar = (beat % 4 == 0);         // 小節の頭は太く濃く
+		bool  bar  = (beat % 4 == 0);
 		float fade = 1.0f - z / Z_FAR;
-		WidthLine(L, z, bar ? 4.0f : 2.0f,
-				  XMFLOAT4(0.67f, 0.59f, 1.0f, (bar ? 0.35f : 0.12f) * fade));   // (170, 150, 255)
+
+		// 拍の線:横いっぱいの細い四角形(奥行き方向に h の太さ)
+		float    h = bar ? 2.0f : 1.0f;   // 太さの半分(小節の頭は太く)
+		XMFLOAT4 color(0.67f, 0.59f, 1.0f, (bar ? 0.35f : 0.12f) * fade);   // (170, 150, 255)
+		QuadBatch::Quad(L.World(0, z + h), L.World(N, z + h),
+		                L.World(N, z - h), L.World(0, z - h),
+		                color, color);
 	}
 
 	// 4. 区切り線(今いる面だけ)
@@ -178,58 +149,3 @@ void Lane::DrawNeon(const Layout& L)
 	DepthLine(L, N, 2.0f, core);
 }
 
-
-// ===============================================================
-// JudgeLine(判定ライン・キー枠)
-// ===============================================================
-void JudgeLine::Init()
-{
-	m_Layer = 3;   // ノーツより手前
-	m_White = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
-	m_Cursor = TextureManager::Load(L"asset\\texture\\ui\\assets\\cursor.png");
-}
-
-void JudgeLine::Update()
-{
-	UpdateGlow(m_Glow, m_Layout.laneCount, Manager::GetDeltaTime());
-}
-
-void JudgeLine::Draw()
-{
-	Layout upper = m_Layout; upper.height = UPPER_HEIGHT;   // 上段の判定ライン(動かない)
-	Layout play = m_Layout;                                // 今いる面(上下する)
-	if (NoteManager* noteManager = Manager::GetGameObject<NoteManager>())
-		play.height = UPPER_HEIGHT * noteManager->GetPlayLayerAnim();
-
-	Begin3D();
-
-	// 1. 判定ライン(上段の固定と、今いる面)
-	const XMFLOAT4 lineColor(1.0f, 0.78f, 0.96f, 1.0f);   // (255, 200, 245)
-	WidthLine(upper, 0.0f, 6.0f, lineColor);
-	WidthLine(play, 0.0f, 6.0f, lineColor);
-
-	// 2. キーの枠(今いる面)。押すと濃くなる
-	for (int i = 0; i < play.laneCount; i++)
-	{
-		XMFLOAT4 c(0.59f, 0.47f, 1.0f, 0.10f + 0.35f * m_Glow[i]);   // (150, 120, 255)
-		QuadBatch::Quad(play.World(i + 0.12f, -20.0f), play.World(i + 0.88f, -20.0f),
-						play.World(i + 0.88f, -80.0f), play.World(i + 0.12f, -80.0f),
-						c, c);
-	}
-	QuadBatch::Flush(m_White);
-
-	// 3. アークのカーソル(今いる面の判定ラインの上)
-	if (NoteManager* noteManager = Manager::GetGameObject<NoteManager>())
-	{
-		const float x = noteManager->GetCursorX();
-		const float s = 0.3f;                    // 大きさの半分(レーン単位)
-		const float h = s * play.laneWidth;      // 奥行きも同じピクセル数で正方形に
-		const XMFLOAT4 white(1.0f, 1.0f, 1.0f, 1.0f);
-		QuadBatch::Quad(play.World(x - s, h), play.World(x + s, h),
-						play.World(x + s, -h), play.World(x - s, -h),
-						white, white);
-		QuadBatch::Flush(m_Cursor);
-	}
-
-	End3D();
-}
