@@ -27,6 +27,8 @@ void LongNote::Init()
 
 void LongNote::Update()
 {
+	if (!Conductor::IsPlaying())
+		return; // ポーズ中・再開のカウント中は何もしない
 	const double now = Conductor::GetSongTime();
 	const int layer = m_Manager->GetPlayLayer();
 

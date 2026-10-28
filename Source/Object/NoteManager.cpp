@@ -41,6 +41,8 @@ void NoteManager::Uninit()
 
 void NoteManager::Update()
 {
+	if (!Conductor::IsPlaying())
+		return; // ポーズ中・再開のカウント中は何もしない
 	GameObject::Update();
 
 	const double now = Conductor::GetSongTime();

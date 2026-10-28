@@ -44,6 +44,9 @@ void ArcNote::Init()
 
 void ArcNote::Update()
 {
+	if (!Conductor::IsPlaying())
+		return; // ポーズ中・再開のカウント中は何もしない
+
 	const double now = Conductor::GetSongTime();
 	const float cursorX = m_Manager->GetCursorX();
 

@@ -49,6 +49,8 @@ void TapNote::Reset(double startSec)
 // ===============================================================
 void TapNote::Update()
 {
+	if (!Conductor::IsPlaying())
+		return; // ポーズ中・再開のカウント中は何もしない
 	if (m_Manager->IsFinished())
 		return;
 

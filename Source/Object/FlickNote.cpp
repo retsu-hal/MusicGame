@@ -30,6 +30,8 @@ void FlickNote::Init()
 
 void FlickNote::Update()
 {
+    if (!Conductor::IsPlaying())
+        return; // ポーズ中・再開のカウント中は何もしない
     const double now = Conductor::GetSongTime();
     const float move = m_Manager->GetFlickMove();
 
