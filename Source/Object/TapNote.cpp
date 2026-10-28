@@ -13,7 +13,6 @@
 #include <cmath>
 #include <algorithm>   
 
-using namespace LaneDraw;
 
 // ===============================================================
 // 初期化・読み込み・やり直し
@@ -37,7 +36,6 @@ void TapNote::Load(const Chart& chart)
 		data.layer = n.layer;
 		m_Notes.push_back(data);
 	}
-	// chart.notes は Chart::Load で tick 順に並べてあるので、m_Notes も時刻順になっている
 }
 
 void TapNote::Reset(double startSec)
@@ -101,7 +99,7 @@ void TapNote::JudgeLane(int lane, int layer, double hitTime)
 void TapNote::SetJudge(TapData& note, Judge judge, double diff)
 {
 	note.judge = judge;
-	m_Manager->OnJudge(judge, note.lane, diff);   // あとのことは NoteManager に任せる
+	m_Manager->OnJudge(judge, note.lane, diff);
 }
 
 
@@ -114,7 +112,9 @@ void TapNote::Draw()
 	const float speed = Settings::noteSpeed;
 	const float h = 14.0f;   // ノーツの奥行き方向の厚みの半分
 
-	Begin3D();
+	Renderer::ClearDepth();            // 背景(2D)が書いた深度を消す
+	Renderer::SetDepthEnable(false);   // 奥から順に描くので、深度は書かない
+	if (CAMERA* camera = Manager::GetGameObject<CAMERA>())	camera->Draw();    // 背景の 2D で上書きされた行列を送り直す
 
 	for (const TapData& n : m_Notes)
 	{
@@ -141,5 +141,5 @@ void TapNote::Draw()
 	}
 	QuadBatch::Flush(m_Texture);
 
-	End3D();
+	Renderer::SetDepthEnable(true);
 }

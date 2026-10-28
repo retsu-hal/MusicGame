@@ -17,8 +17,8 @@ struct TapData
 class TapNote : public NoteBase
 {
 private:
+	Layout  m_Layout;
 	std::vector<TapData>      m_Notes;          // 時刻の順に並んでいる
-	LaneDraw::Layout          m_Layout;
 	ID3D11ShaderResourceView* m_Texture = nullptr;
 
 	void JudgeLane(int lane, int layer, double hitTime);   // キーが押されたレーンを判定
