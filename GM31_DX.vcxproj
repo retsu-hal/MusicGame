@@ -161,6 +161,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Object\ArcNote.cpp" />
+    <ClCompile Include="Source\Object\Effect.cpp" />
+    <ClCompile Include="Source\Object\FlickNote.cpp" />
+    <ClCompile Include="Source\Object\JudgeLine.cpp" />
     <ClCompile Include="Source\Object\LongNote.cpp" />
     <ClCompile Include="Source\Object\Combo.cpp" />
     <ClCompile Include="Source\Core\QuadBatch.cpp" />
@@ -168,8 +171,10 @@
     <ClCompile Include="Source\Object\ExitDialog.cpp" />
     <ClCompile Include="Source\Object\NoteManager.cpp" />
     <ClCompile Include="Source\Object\Lane.cpp" />
+    <ClCompile Include="Source\Object\Pause.cpp" />
     <ClCompile Include="Source\Object\TapNote.cpp" />
     <ClCompile Include="Source\Object\Polygon2D.cpp" />
+    <ClCompile Include="Source\Object\WheelNote.cpp" />
     <ClCompile Include="Source\Rhythm\Chart.cpp" />
     <ClCompile Include="Source\Rhythm\Settings.cpp" />
     <ClCompile Include="Source\Rhythm\Conductor.cpp" />
@@ -205,6 +210,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Object\ArcNote.h" />
+    <ClInclude Include="Source\Object\Effect.h" />
+    <ClInclude Include="Source\Object\FlickNote.h" />
+    <ClInclude Include="Source\Object\JudgeLine.h" />
     <ClInclude Include="Source\Object\LongNote.h" />
     <ClInclude Include="Source\Object\NoteBase.h" />
     <ClInclude Include="Source\Object\Combo.h" />
@@ -213,8 +221,10 @@
     <ClInclude Include="Source\Object\ExitDialog.h" />
     <ClInclude Include="Source\Object\NoteManager.h" />
     <ClInclude Include="Source\Object\Lane.h" />
+    <ClInclude Include="Source\Object\Pause.h" />
     <ClInclude Include="Source\Object\TapNote.h" />
     <ClInclude Include="Source\Object\Polygon2D.h" />
+    <ClInclude Include="Source\Object\WheelNote.h" />
     <ClInclude Include="Source\Rhythm\Chart.h" />
     <ClInclude Include="Source\Rhythm\Judge.h" />
     <ClInclude Include="Source\Rhythm\Settings.h" />

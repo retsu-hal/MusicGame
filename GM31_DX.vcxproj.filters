@@ -147,10 +147,33 @@
     <ClCompile Include="Source\Rhythm\SongList.cpp">
       <Filter>Rhythm</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Core\QuadBatch.cpp" />
-    <ClCompile Include="Source\Object\Combo.cpp" />
-    <ClCompile Include="Source\Object\LongNote.cpp" />
-    <ClCompile Include="Source\Object\ArcNote.cpp" />
+    <ClCompile Include="Source\Object\ArcNote.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\Combo.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\Effect.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\FlickNote.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\JudgeLine.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\LongNote.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\Pause.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\QuadBatch.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\WheelNote.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Rhythm\GameSession.h">
@@ -285,12 +308,39 @@
     <ClInclude Include="Source\Rhythm\SongList.h">
       <Filter>Rhythm</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Rhythm\Judge.h" />
-    <ClInclude Include="Source\Core\QuadBatch.h" />
-    <ClInclude Include="Source\Object\Combo.h" />
-    <ClInclude Include="Source\Object\NoteBase.h" />
-    <ClInclude Include="Source\Object\LongNote.h" />
-    <ClInclude Include="Source\Object\ArcNote.h" />
+    <ClInclude Include="Source\Object\ArcNote.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\Combo.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\Effect.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\FlickNote.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rhythm\Judge.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\JudgeLine.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\LongNote.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\NoteBase.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\Pause.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\QuadBatch.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\WheelNote.h">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader\common.hlsl">

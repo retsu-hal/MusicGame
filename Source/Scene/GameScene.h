@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene.h"
+#include "Pause.h"
 
 class NoteManager;
 class Score;
@@ -15,6 +16,7 @@ private:
 	Combo* m_Combo = nullptr;
 	Lane* m_Lane = nullptr;
 	JudgeLine* m_JudgeLine = nullptr;
+	PauseMenu m_Pause;
 
 public:
 	void Init() override;
