@@ -13,7 +13,6 @@
 #include "LongNote.h"
 #include "ArcNote.h"
 #include "Lane.h"       
-#include "Settings.h"   
 #include <algorithm>
 
 // 達成率の割合(OnJudge の switch で使う)
@@ -45,10 +44,19 @@ void NoteManager::Update()
 	const float  dt = Manager::GetDeltaTime();
 
 	// 段の切り替え(ノーツの判定より先。NoteManager は TapNote より先に足してあるので、先に Update される)
-	UpdateLayer(dt);
-	UpdateCursor();
+	// 奥に回す(+)で上段、手前に回す(-)で下段
+	int wheel = Input::GetMouseWheel();
+	if (wheel > 0) m_PlayLayer = 1;
+	if (wheel < 0) m_PlayLayer = 0;
 
-	// 判定は各ノーツが自分の Update でやる
+	// 見た目だけ追いかける(判定は m_PlayLayer を見るから遅れない)
+	m_PlayLayerAnim += ((float)m_PlayLayer - m_PlayLayerAnim) * std::min(1.0f, dt * 20.0f);
+	
+    // マウスの横の移動量で、カーソルを動かす(レーンの幅の中で止める)
+	m_CursorX += Input::GetMouseMoveX() * Settings::mouseSensitivity;
+	m_CursorX = std::clamp(m_CursorX, 0.0f, (float)LANE_COUNT);
+
+
 
 	// 終了時刻を過ぎたら終わり
 	if (m_Music && !m_Finished && now > m_EndTime)
@@ -63,9 +71,10 @@ bool NoteManager::LoadChart(const std::string& path)
 	m_Music->Load(m_Chart.audioPath.c_str(), Audio::TYPE_MUSIC);
 
 	// ノーツの種類を足す(種類が増えたら、ここに1行足す)
+    m_Notes.push_back(Manager::AddGameObject<ArcNote>());
 	m_Notes.push_back(Manager::AddGameObject<TapNote>());
 	m_Notes.push_back(Manager::AddGameObject<LongNote>());
-	m_Notes.push_back(Manager::AddGameObject<ArcNote>());
+
 
 	// 各種類に、自分の分を拾ってもらう
 	double lastTime = 0.0;
@@ -81,12 +90,7 @@ bool NoteManager::LoadChart(const std::string& path)
 	return true;
 }
 
-void NoteManager::PlayFromStart()
-{
-	Play(-LEAD_IN);   // マイナスから始めると、Conductor が 0 秒になるまで曲を待ってくれる
-}
-
-void NoteManager::Play(double startSec)
+void NoteManager::Play()
 {
 	if (!m_Music) return;
 
@@ -94,13 +98,13 @@ void NoteManager::Play(double startSec)
 	m_Finished = false;
 	m_PlayLayer = 0;      // 下段から始める
 	m_PlayLayerAnim = 0.0f;
-	m_CursorX = LaneDraw::LANE_COUNT * 0.5f;
+	m_CursorX = LANE_COUNT * 0.5f;
 
 	// 各種類をやり直して、判定の回数を数える
 	m_TotalJudges = 0;
 	for (NoteBase* notes : m_Notes)
 	{
-		notes->Reset(startSec);
+		notes->Reset(-LEAD_IN);
 		m_TotalJudges += notes->GetJudgeCount();
 	}
 
@@ -109,7 +113,7 @@ void NoteManager::Play(double startSec)
 	m_Combo->Reset();
 
 	Conductor::SetOffset(Settings::offsetMs / 1000.0);
-	Conductor::Start(m_Music, startSec);
+	Conductor::Start(m_Music,-LEAD_IN);
 }
 
 void NoteManager::OnJudge(Judge judge, int lane, double diff)
@@ -126,17 +130,6 @@ void NoteManager::OnJudge(Judge judge, int lane, double diff)
 		case Judge::Miss:    m_Combo->ResetCombo(); break;   // 達成率は 0 なので足さない
 		default: break;
 	}
-}
-
-void NoteManager::UpdateLayer(float dt)
-{
-	// 奥に回す(+)で上段、手前に回す(-)で下段
-	int wheel = Input::GetMouseWheel();
-	if (wheel > 0) m_PlayLayer = 1;
-	if (wheel < 0) m_PlayLayer = 0;
-
-	// 見た目だけ追いかける(判定は m_PlayLayer を見るから遅れない)
-	m_PlayLayerAnim += ((float)m_PlayLayer - m_PlayLayerAnim) * std::min(1.0f, dt * 20.0f);
 }
 
 // 曲が終わったら、結果を GameSession に書いて「終わった」印を立てる
@@ -156,9 +149,4 @@ void NoteManager::Finish()
 	m_Finished = true;   // シーン切り替えは GameScene が行う
 }
 
-// マウスの横の移動量で、カーソルを動かす(レーンの幅の中で止める)
-void NoteManager::UpdateCursor()
-{
-	m_CursorX += Input::GetMouseMoveX() * Settings::mouseSensitivity;
-	m_CursorX = std::clamp(m_CursorX, 0.0f, (float)LaneDraw::LANE_COUNT);
-}
+

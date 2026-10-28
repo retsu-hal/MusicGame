@@ -15,7 +15,7 @@ class NoteBase;
 class NoteManager : public GameObject
 {
 private:
-	Chart                  m_Chart;
+	Chart  m_Chart;
 	Audio* m_Music = nullptr;   // ステップ5で GameScene に引っ越す
 	std::vector<NoteBase*> m_Notes;             // ノーツの種類(TapNote など)。中身は Manager が持っている
 
@@ -37,8 +37,6 @@ private:
 	double m_EndTime = 0.0;
 	bool   m_Finished = false;
 
-	void UpdateLayer(float dt);
-	void UpdateCursor();
 	void Finish();
 
 public:
@@ -47,9 +45,7 @@ public:
 	void Update() override;
 
 	bool LoadChart(const std::string& path);
-	void Play(double startSec);   // startSec 秒から始める
-	void PlayFromStart();         // カウントインを付けて最初から
-
+	void Play();
 	void OnJudge(Judge judge, int lane, double diff);   // ノーツが判定したら呼ぶ
 
 	const Chart& GetChart() const { return m_Chart; }
