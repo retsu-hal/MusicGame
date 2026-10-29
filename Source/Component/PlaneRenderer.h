@@ -16,10 +16,10 @@ private:
 public:
     using Component::Component;
 
-    void Load(const wchar_t *textureFile);
     void Uninit() override;
     void Draw() override;
 
+    void Load(const wchar_t *textureFile);
     void SetColor(const XMFLOAT4 &color) { m_Color = color; }
     void SetAlpha(float alpha) { m_Color.w = alpha; }
     void SetUV(float u, float v, float w, float h) { m_UV = {u, v, w, h}; }

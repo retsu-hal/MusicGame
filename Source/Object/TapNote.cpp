@@ -6,12 +6,14 @@
 #include "Conductor.h"
 #include "Settings.h"
 #include "Chart.h"
-#include "QuadBatch.h"
-#include "TextureManager.h"
 #include "NoteManager.h"
 #include "TapNote.h"
+#include "PlaneRenderer.h"
 #include <cmath>
 #include <algorithm>
+
+static constexpr float NOTE_WIDTH = 0.92f;
+static constexpr float NOTE_DEPTH = 28.0f;
 
 // ===============================================================
 // 初期化・読み込み・やり直し
@@ -19,7 +21,11 @@
 void TapNote::Init()
 {
 	m_Layer = 2; // 床(1)と判定ライン(3)の間
-	m_Texture = TextureManager::Load(L"asset\\texture\\tapnote.png");
+	m_Plane = AddComponent<PlaneRenderer>();
+	m_Plane->Load(L"asset\\texture\\tapnote.png");
+
+	m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f);
+	m_Scale = Vector3(m_Layout.laneWidth * NOTE_WIDTH, NOTE_DEPTH, 1.0f);
 }
 
 void TapNote::Load(const Chart &chart)
@@ -119,12 +125,6 @@ void TapNote::Draw()
 {
 	const float now = (float)Conductor::GetSongTime();
 	const float speed = Settings::noteSpeed;
-	const float h = 14.0f; // ノーツの奥行き方向の厚みの半分
-
-	Renderer::ClearDepth();			 // 背景(2D)が書いた深度を消す
-	Renderer::SetDepthEnable(false); // 奥から順に描くので、深度は書かない
-	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
-		camera->Draw(); // 背景の 2D で上書きされた行列を送り直す
 
 	for (const TapData &n : m_Notes)
 	{
@@ -135,23 +135,20 @@ void TapNote::Draw()
 		if (z > Z_FAR || z < -60.0f)
 			continue; // 遠すぎ・通り過ぎ
 
-		// 段の高さに置く
-		Layout L = m_Layout;
-		L.height = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
-
 		// 奥から出てくるときにふわっと出す
 		float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
 
 		// 段ごとの色
-		XMFLOAT4 tint = (n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, fade)	 // 上段:紫 (200, 150, 255)
-									   : XMFLOAT4(0.43f, 0.88f, 1.0f, fade); // 下段:水色 (110, 225, 255)
+		m_Plane->SetColor((n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, fade)	// 上段:紫 (200, 150, 255)
+										 : XMFLOAT4(0.43f, 0.88f, 1.0f, fade)); // 下段:水色 (110, 225, 255)
 
-		float lane = (float)n.lane;
-		QuadBatch::Quad(L.World(lane + 0.04f, z + h), L.World(lane + 0.96f, z + h),
-						L.World(lane + 0.96f, z - h), L.World(lane + 0.04f, z - h),
-						tint, tint);
+		// レーンの真ん中(レーン全体の真ん中が x = 0)、段の高さ、奥行き z
+		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
+
+		m_Position = Vector3(x, y, z); // このノーツの位置に動かして
+		m_Plane->Draw();			   // 描く(PlaneRenderer が GetWorldMatrix() で S×R×T する)
 	}
-	QuadBatch::Flush(m_Texture);
 
-	Renderer::SetDepthEnable(true);
+	m_Position = Vector3(0.0f, 0.0f, 0.0f); // 元に戻す
 }
