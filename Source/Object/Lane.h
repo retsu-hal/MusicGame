@@ -3,7 +3,7 @@
 #include "GameObject.h"
 
 class Chart;
-
+struct ShaderSet;
 // 見た目の設定(奥行き)
 constexpr float CAMERA_DIST = 600.0f;  // カメラから判定ラインまでの距離
 constexpr float HORIZON_Y = 90.0f;	   // 地平線(レンズの中心)の画面の高さ
@@ -31,17 +31,21 @@ class Lane : public GameObject
 private:
 	Layout m_play;
 	Layout m_upper;
-	ID3D11ShaderResourceView *m_White = nullptr;   // 色を付けるための真っ白な画像
-	ID3D11ShaderResourceView *m_LaneTex = nullptr; // 床の画像(lane.png)
+	ID3D11ShaderResourceView *m_WhiteTex = nullptr;
+	ID3D11ShaderResourceView *m_LaneTex = nullptr;
+	const ShaderSet *m_Shader = nullptr;
 	float m_Glow[LANE_COUNT] = {};
 
 	// 1面ぶん。active:1 = 今いる面(濃い床・光・区切り線)、0 = 上段の枠(薄い床だけ)
 	void DrawFloor(const Layout &layout, const Chart &chart, float now, float speed, float active);
 	void DrawNeon(const Layout &layout); // 1面ぶんの両端のネオン
+	void DrawDepthLine(const Layout &L, float laneX, float width, const XMFLOAT4 &color);
+
 public:
 	static constexpr BYTE KEYS[LANE_COUNT] = {'A', 'S', 'D', 'F', VK_SPACE}; // 各レーンのキー
 
 	void Init() override;
+	void Uninit() override;
 	void Update() override;
 	void Draw() override;
 };

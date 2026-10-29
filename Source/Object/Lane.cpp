@@ -8,20 +8,30 @@
 #include "Conductor.h"
 #include "Settings.h"
 #include "NoteManager.h"
-#include "QuadBatch.h"
+#include "ShaderManager.h"
 #include "TextureManager.h"
 #include <cmath>
 #include <algorithm>
 
-// 奥行き方向の線(区切り線・両端)。床に寝た細長い四角形。奥で消える
-static void DepthLine(const Layout &L, float laneX, float width, const XMFLOAT4 &nearColor)
+// 奥行き方向の線(区切り線・両端)。床に寝た細長い板。手前の端から奥の端まで
+void Lane::DrawDepthLine(const Layout &L, float laneX, float width, const XMFLOAT4 &color)
 {
-	float w = width / L.laneWidth * 0.5f; // ピクセルの太さ → レーン単位の半分
-	XMFLOAT4 farColor = nearColor;
-	farColor.w = 0.0f; // 奥は同じ色で透明
-	QuadBatch::Quad(L.World(laneX - w, Z_FAR), L.World(laneX + w, Z_FAR),
-					L.World(laneX + w, Z_NEAR), L.World(laneX - w, Z_NEAR),
-					farColor, nearColor);
+	// マトリックス設定
+	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
+	ScaleMatrix = XMMatrixScaling(width, Z_FAR - Z_NEAR, 1.0f);
+	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+	TransMatrix = XMMatrixTranslation((laneX - L.laneCount * 0.5f) * L.laneWidth, L.height, (Z_FAR + Z_NEAR) * 0.5f);
+	WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+	Renderer::SetWorldMatrix(WorldMatrix);
+
+	// マテリアル設定
+	MATERIAL material{};
+	material.Diffuse = color;
+	material.TextureEnable = true;
+	Renderer::SetMaterial(material);
+
+	// 描画(画像は呼ぶ前に white をセットしておく)
+	Renderer::GetDeviceContext()->Draw(4, 0);
 }
 
 // ===============================================================
@@ -30,9 +40,58 @@ static void DepthLine(const Layout &L, float laneX, float width, const XMFLOAT4 
 void Lane::Init()
 {
 	m_Layer = 1; // ノーツより奥
-	m_White = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
+
+	// 頂点:原点が真ん中の 1×1 の板。
+	VERTEX_3D vertex[4];
+	{
+		vertex[0].Position = XMFLOAT3(-0.5f, 0.5f, 0.0f); // 左上
+		vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[0].TexCoord = XMFLOAT2(0.0f, 0.0f);
+
+		vertex[1].Position = XMFLOAT3(0.5f, 0.5f, 0.0f); // 右上
+		vertex[1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[1].TexCoord = XMFLOAT2(1.0f, 0.0f);
+
+		vertex[2].Position = XMFLOAT3(-0.5f, -0.5f, 0.0f); // 左下
+		vertex[2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[2].TexCoord = XMFLOAT2(0.0f, 1.0f);
+
+		vertex[3].Position = XMFLOAT3(0.5f, -0.5f, 0.0f); // 右下
+		vertex[3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[3].TexCoord = XMFLOAT2(1.0f, 1.0f);
+	}
+
+	// 頂点バッファ生成
+	D3D11_BUFFER_DESC bd{};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(VERTEX_3D) * 4;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA sd{};
+	sd.pSysMem = vertex;
+
+	Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
+
+	// シェーダー読み込み
+	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
+
+	// テクスチャ読み込み
+	m_WhiteTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
 	m_LaneTex = TextureManager::Load(L"asset\\texture\\lane.png");
+
 	m_upper.height = UPPER_HEIGHT;
+}
+
+void Lane::Uninit()
+{
+	m_vertexBuffer->Release();
+
+	GameObject::Uninit();
 }
 
 void Lane::Update()
@@ -63,21 +122,37 @@ void Lane::Draw()
 
 	m_play.height = UPPER_HEIGHT * anim; // 今いる面(上下する)
 
-	// 3d描画
-	Renderer::ClearDepth();			 // 背景(2D)が書いた深度を消す
-	Renderer::SetDepthEnable(false); // 奥から順に描くので、深度は書かない
-	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
-		camera->Draw(); // 背景の 2D で上書きされた行列を送り直す
+	// ----- 共通の設定(最初に 1 回) -----
+	Renderer::ClearDepth(); // 背景(2D)が書いた深度を消す(前のまま)
 
+	// カメラ(3D のビュー・射影)
+	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
+		camera->Draw();
+
+	// 入力レイアウト・シェーダー設定
+	m_Shader->Set();
+
+	// 頂点バッファ設定
+	UINT stride = sizeof(VERTEX_3D);
+	UINT offset = 0;
+	Renderer::GetDeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+
+	// プリミティブトポロジ設定
+	Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	Renderer::SetDepthEnable(false); // 奥から順に描くので、深度は使わない
+
+	// ----- 床 -----
 	// 上段を先、今いる面を後に描く。後のほうが手前に重なるので、今いる面が隠れない
-	// (DrawFloor の中で、床 → 線 の順に Flush まで済ませる)
 	DrawFloor(m_upper, chart, now, speed, 0.0f);
 	DrawFloor(m_play, chart, now, speed, 1.0f);
 
-	// 両端のネオン(加算)
+	// ----- 両端のネオン(加算) -----
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_WhiteTex);
+	Renderer::SetAddEnable(true);
 	DrawNeon(m_upper);
 	DrawNeon(m_play);
-	QuadBatch::Flush(m_White, true);
+	Renderer::SetAddEnable(false);
 
 	Renderer::SetDepthEnable(true);
 }
@@ -85,28 +160,49 @@ void Lane::Draw()
 void Lane::DrawFloor(const Layout &L, const Chart &chart, float now, float speed, float active)
 {
 	const float N = (float)L.laneCount;
+	const float lw = L.laneWidth;
 
-	// 1. 床(lane.png)。頂点の色は白にして、画像の色をそのまま出す。奥は透明
-	//    今いる面は濃く(0.95)、上段の枠は薄く(0.2)
-	float floorA = 0.2f + 0.75f * active;
-	QuadBatch::Quad(L.World(0, Z_FAR), L.World(N, Z_FAR),
-					L.World(N, Z_NEAR), L.World(0, Z_NEAR),
-					XMFLOAT4(1.0f, 1.0f, 1.0f, 0.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, floorA));
-	QuadBatch::Flush(m_LaneTex); // 床だけ画像が違うので、ここで区切る
+	// 全部床に寝かせる(回転は全部同じなので 1 回だけ作る)
+	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
+	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+	MATERIAL material{};
+	material.TextureEnable = true;
 
-	// 2. 押しているレーンの光(今いる面だけ)
+	// ----- 1. 床(lane.png)。今いる面は濃く(0.95)、上段の枠は薄く(0.2) -----
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_LaneTex);
+
+	ScaleMatrix = XMMatrixScaling(N * lw, Z_FAR - Z_NEAR, 1.0f);
+	TransMatrix = XMMatrixTranslation(0.0f, L.height, (Z_FAR + Z_NEAR) * 0.5f);
+	WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+	Renderer::SetWorldMatrix(WorldMatrix);
+
+	material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.2f + 0.75f * active);
+	Renderer::SetMaterial(material);
+
+	Renderer::GetDeviceContext()->Draw(4, 0);
+
+	// ここから先は全部、真っ白な画像に色を付ける
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_WhiteTex);
+
+	// ----- 2. 押しているレーンの光(今いる面だけ)。判定ライン(0)から Z_FAR × 0.6 まで -----
+	ScaleMatrix = XMMatrixScaling(lw, Z_FAR * 0.6f, 1.0f);
 	for (int i = 0; i < L.laneCount; i++)
 	{
 		float g = m_Glow[i] * active;
 		if (g <= 0.0f)
 			continue;
-		QuadBatch::Quad(L.World((float)i, Z_FAR * 0.6f), L.World(i + 1.0f, Z_FAR * 0.6f),
-						L.World(i + 1.0f, 0.0f), L.World((float)i, 0.0f),
-						XMFLOAT4(0.47f, 0.35f, 1.0f, 0.0f),		  // (120, 90, 255) 奥は透明
-						XMFLOAT4(0.59f, 0.47f, 1.0f, 0.45f * g)); // (150, 120, 255)
+
+		TransMatrix = XMMatrixTranslation((i + 0.5f - N * 0.5f) * lw, L.height, Z_FAR * 0.3f);
+		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+		Renderer::SetWorldMatrix(WorldMatrix);
+
+		material.Diffuse = XMFLOAT4(0.59f, 0.47f, 1.0f, 0.45f * g); // (150, 120, 255) ★
+		Renderer::SetMaterial(material);
+
+		Renderer::GetDeviceContext()->Draw(4, 0);
 	}
 
-	// 3. 拍の線
+	// ----- 3. 拍の線 -----
 	int beat = (int)std::floor(chart.SecToTick(now) / TICKS_PER_BEAT);
 	for (int k = 0; k < 64; k++, beat++) // 念のため本数に上限を付ける
 	{
@@ -118,23 +214,25 @@ void Lane::DrawFloor(const Layout &L, const Chart &chart, float now, float speed
 		bool bar = (beat % 4 == 0);
 		float fade = 1.0f - z / Z_FAR;
 
-		// 拍の線:横いっぱいの細い四角形(奥行き方向に h の太さ)
-		float h = bar ? 2.0f : 1.0f;									  // 太さの半分(小節の頭は太く)
-		XMFLOAT4 color(0.67f, 0.59f, 1.0f, (bar ? 0.35f : 0.12f) * fade); // (170, 150, 255)
-		QuadBatch::Quad(L.World(0, z + h), L.World(N, z + h),
-						L.World(N, z - h), L.World(0, z - h),
-						color, color);
+		// 横いっぱいの細い板。太さは小節の頭 4、それ以外 2
+		ScaleMatrix = XMMatrixScaling(N * lw, bar ? 4.0f : 2.0f, 1.0f);
+		TransMatrix = XMMatrixTranslation(0.0f, L.height, z);
+		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+		Renderer::SetWorldMatrix(WorldMatrix);
+
+		material.Diffuse = XMFLOAT4(0.67f, 0.59f, 1.0f, (bar ? 0.35f : 0.12f) * fade); // (170, 150, 255)
+		Renderer::SetMaterial(material);
+
+		Renderer::GetDeviceContext()->Draw(4, 0);
 	}
 
-	// 4. 区切り線(今いる面だけ)
+	// ----- 4. 区切り線(今いる面だけ) -----
 	if (active > 0.0f)
 	{
 		const XMFLOAT4 divider(0.63f, 0.55f, 0.90f, 0.25f); // (160, 140, 230)
 		for (int i = 1; i < L.laneCount; i++)
-			DepthLine(L, (float)i, 1.5f, divider);
+			DrawDepthLine(L, (float)i, 1.5f, divider);
 	}
-
-	QuadBatch::Flush(m_White);
 }
 
 void Lane::DrawNeon(const Layout &L)
@@ -148,10 +246,10 @@ void Lane::DrawNeon(const Layout &L)
 	// 太い線から順に重ねて、にじんだ光にする(加算なので重なるほど明るい)
 	for (float w : {16.0f, 8.0f, 4.0f})
 	{
-		DepthLine(L, 0.0f, w, left);
-		DepthLine(L, N, w, right);
+		DrawDepthLine(L, 0.0f, w, left);
+		DrawDepthLine(L, N, w, right);
 	}
 	// 芯の白い線
-	DepthLine(L, 0.0f, 2.0f, core);
-	DepthLine(L, N, 2.0f, core);
+	DrawDepthLine(L, 0.0f, 2.0f, core);
+	DrawDepthLine(L, N, 2.0f, core);
 }
