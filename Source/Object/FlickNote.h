@@ -2,9 +2,10 @@
 #include "NoteBase.h"
 #include "Lane.h"
 #include "Judge.h"
+#include "Renderer.h"
 #include <vector>
 
-class PlaneRenderer;
+struct ShaderSet;
 
 // 左右フリック1個ぶんのデータ
 struct FlickData
@@ -23,14 +24,17 @@ class FlickNote : public NoteBase
 private:
     std::vector<FlickData> m_Notes; // 時刻の順
     Layout m_Layout;
-    PlaneRenderer *m_RightTex = nullptr;
-    PlaneRenderer *m_LeftTex = nullptr;
+    VERTEX_3D m_Vertex[4] = {};
+    ID3D11ShaderResourceView *m_RightTex = nullptr;
+    ID3D11ShaderResourceView *m_LeftTex = nullptr;
+    const ShaderSet *m_Shader = nullptr;
 
     void DrawDir(int dir, float now, float speed); // 片方の向きだけ描く
     void SetJudge(FlickData &note, Judge judge, double diff);
 
 public:
     void Init() override;
+    void Uninit() override;
     void Update() override;
     void Draw() override;
 

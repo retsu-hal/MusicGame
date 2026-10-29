@@ -7,7 +7,8 @@
 #include "Chart.h"
 #include "FlickNote.h"
 #include "NoteManager.h"
-#include "PlaneRenderer.h"
+#include "TextureManager.h"
+#include "ShaderManager.h"
 #include <cmath>
 #include <algorithm>
 
@@ -24,10 +25,54 @@ void FlickNote::Init()
 {
     m_Layer = 2;
 
-    m_RightTex = AddComponent<PlaneRenderer>();
-    m_RightTex->Load(L"asset\\texture\\flick_mouse_right.png");
-    m_LeftTex = AddComponent<PlaneRenderer>();
-    m_LeftTex->Load(L"asset\\texture\\flick_mouse_left.png");
+    // 頂点:原点が真ん中の 1×1 の板。UV はスライスごとに書きかえるので、メンバーに取っておく
+    {
+        m_Vertex[0].Position = XMFLOAT3(-0.5f, 0.5f, 0.0f); // 左上
+        m_Vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        m_Vertex[0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        m_Vertex[0].TexCoord = XMFLOAT2(0.0f, 0.0f);
+
+        m_Vertex[1].Position = XMFLOAT3(0.5f, 0.5f, 0.0f); // 右上
+        m_Vertex[1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        m_Vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        m_Vertex[1].TexCoord = XMFLOAT2(1.0f, 0.0f);
+
+        m_Vertex[2].Position = XMFLOAT3(-0.5f, -0.5f, 0.0f); // 左下
+        m_Vertex[2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        m_Vertex[2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        m_Vertex[2].TexCoord = XMFLOAT2(0.0f, 1.0f);
+
+        m_Vertex[3].Position = XMFLOAT3(0.5f, -0.5f, 0.0f); // 右下
+        m_Vertex[3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        m_Vertex[3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        m_Vertex[3].TexCoord = XMFLOAT2(1.0f, 1.0f);
+    }
+
+    // 頂点バッファ生成(TapNote と同じ。sd.pSysMem だけ m_Vertex)
+    D3D11_BUFFER_DESC bd{};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(VERTEX_3D) * 4;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA sd{};
+    sd.pSysMem = m_Vertex;
+
+    Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
+
+    // シェーダー読み込み
+    m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
+
+    // テクスチャ読み込み
+    m_RightTex = TextureManager::Load(L"asset\\texture\\flick_mouse_right.png");
+    m_LeftTex = TextureManager::Load(L"asset\\texture\\flick_mouse_left.png");
+}
+
+void FlickNote::Uninit()
+{
+    m_vertexBuffer->Release();
+
+    GameObject::Uninit();
 }
 
 void FlickNote::Update()
@@ -89,12 +134,6 @@ void FlickNote::Update()
     }
 }
 
-void FlickNote::SetJudge(FlickData &note, Judge judge, double diff)
-{
-    note.judge = judge;
-    m_Manager->OnJudge(judge, note.lane, diff, note.width);
-}
-
 // ===============================================================
 // 描画
 // ===============================================================
@@ -103,13 +142,29 @@ void FlickNote::Draw()
     const float now = (float)Conductor::GetSongTime();
     const float speed = Settings::noteSpeed;
 
+    // ----- 全ノーツ共通の設定(最初に 1 回) -----
+    // カメラ(3D のビュー・射影)
+    if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
+        camera->Draw();
+
+    // 入力レイアウト・シェーダー設定
+    m_Shader->Set();
+
+    // 頂点バッファ設定
+    UINT stride = sizeof(VERTEX_3D);
+    UINT offset = 0;
+    Renderer::GetDeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+
+    // プリミティブトポロジ設定
+    Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+    Renderer::SetDepthEnable(false); // 前後は描く順番で決める
+
+    // ----- 向きごとに描く -----
     DrawDir(1, now, speed);  // 右(ゴールド)
     DrawDir(-1, now, speed); // 左(コーラル)
 
-    // 元に戻す(Manager の並べ替えに影響しないように)
-    m_Position = Vector3(0.0f, 0.0f, 0.0f);
-    m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
-    m_Scale = Vector3(1.0f, 1.0f, 1.0f);
+    Renderer::SetDepthEnable(true);
 }
 
 void FlickNote::DrawDir(int dir, float now, float speed)
@@ -126,9 +181,9 @@ void FlickNote::DrawDir(int dir, float now, float speed)
     // 厚み:表示 64px を 1レーン = 120px に合わせる(ホイールフリックと同じ厚みになる)
     const float depth = m_Layout.laneWidth * (64.0f / 120.0f);
 
-    // この向きで使う板。全部床に寝かせる
-    PlaneRenderer *plane = (dir > 0) ? m_RightTex : m_LeftTex;
-    m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f);
+    // テクスチャ設定(この向きの画像。DrawDir の中では変わらないので最初に 1 回)
+    ID3D11ShaderResourceView *texture = (dir > 0) ? m_RightTex : m_LeftTex;
+    Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &texture);
 
     for (const FlickData &n : m_Notes)
     {
@@ -148,9 +203,12 @@ void FlickNote::DrawDir(int dir, float now, float speed)
         float x3 = x0 + n.width;
         float x[4] = {x0, x0 + leftPart, x3 - rightPart, x3};
 
-        // 奥から出てくるときにふわっと。色は画像に入っているので白
+        // マテリアル設定。色は画像に入っているので白、奥からふわっと(3 枚とも同じ)
         float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
-        plane->SetAlpha(fade);
+        MATERIAL material{};
+        material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, fade);
+        material.TextureEnable = true;
+        Renderer::SetMaterial(material);
 
         // 3枚並べる。i 番目の板は x[i]〜x[i+1] に、画像の u[i]〜u[i+1] を貼る
         for (int i = 0; i < 3; i++)
@@ -158,14 +216,27 @@ void FlickNote::DrawDir(int dir, float now, float speed)
             if (x[i + 1] <= x[i])
                 continue; // 幅 0(1レーンのときの真ん中)は描かない
 
+            // UV 設定(Polygon2D の SetUV と同じ。縦は画像全部 0〜1)
+            m_Vertex[0].TexCoord = XMFLOAT2(u[i], 0.0f);     // 左上
+            m_Vertex[1].TexCoord = XMFLOAT2(u[i + 1], 0.0f); // 右上
+            m_Vertex[2].TexCoord = XMFLOAT2(u[i], 1.0f);     // 左下
+            m_Vertex[3].TexCoord = XMFLOAT2(u[i + 1], 1.0f); // 右下
+            Renderer::GetDeviceContext()->UpdateSubresource(m_vertexBuffer, 0, nullptr, m_Vertex, 0, 0);
+
             // スライスの真ん中(レーン全体の真ん中が x = 0)と、幅(ピクセル)
             float centerX = ((x[i] + x[i + 1]) * 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
             float width = (x[i + 1] - x[i]) * m_Layout.laneWidth;
 
-            m_Scale = Vector3(width, depth, 1.0f);
-            m_Position = Vector3(centerX, y, z);
-            plane->SetUV(u[i], 0.0f, u[i + 1] - u[i], 1.0f);
-            plane->Draw();
+            // マトリックス設定(床に寝かせる)
+            XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
+            ScaleMatrix = XMMatrixScaling(width, depth, 1.0f);
+            RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+            TransMatrix = XMMatrixTranslation(centerX, y, z);
+            WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+            Renderer::SetWorldMatrix(WorldMatrix);
+
+            // 描画
+            Renderer::GetDeviceContext()->Draw(4, 0);
         }
     }
 }
@@ -194,4 +265,10 @@ void FlickNote::Reset(double startSec)
 {
     for (FlickData &n : m_Notes)
         n.judge = (n.time < startSec) ? Judge::Skip : Judge::None;
+}
+
+void FlickNote::SetJudge(FlickData &note, Judge judge, double diff)
+{
+    note.judge = judge;
+    m_Manager->OnJudge(judge, note.lane, diff, note.width);
 }
