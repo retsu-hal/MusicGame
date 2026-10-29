@@ -4,8 +4,6 @@
 #include "Lane.h"
 #include <vector>
 
-class PlaneRenderer;
-
 // タップノーツ1個ぶんのデータ
 struct TapData
 {
@@ -21,13 +19,13 @@ class TapNote : public NoteBase
 private:
 	Layout m_Layout;
 	std::vector<TapData> m_Notes; // 時刻の順に並んでいる
-	PlaneRenderer *m_Plane = nullptr;
 
 	void JudgeLane(int lane, int layer, double hitTime); // キーが押されたレーンを判定
 	void SetJudge(TapData &note, Judge judge, double diff);
 
 public:
 	void Init() override;
+	void Uninit() override;
 	void Update() override;
 	void Draw() override;
 
