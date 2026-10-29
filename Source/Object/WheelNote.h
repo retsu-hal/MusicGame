@@ -4,6 +4,8 @@
 #include "Judge.h"
 #include <vector>
 
+class PlaneRenderer;
+
 // ホイールフリック1個ぶんのデータ
 struct WheelData
 {
@@ -18,8 +20,10 @@ class WheelNote : public NoteBase
 private:
 	std::vector<WheelData> m_Notes; // 時刻の順
 	Layout m_Layout;
-	ID3D11ShaderResourceView *m_UpTex = nullptr;   // flick_wheel_up.png
-	ID3D11ShaderResourceView *m_DownTex = nullptr; // flick_wheel_down.png
+	PlaneRenderer *m_UpBar = nullptr;
+	PlaneRenderer *m_DownBar = nullptr;
+	PlaneRenderer *m_UpArrow = nullptr;
+	PlaneRenderer *m_DownArrow = nullptr;
 
 	void DrawDir(int dir, float now, float speed); // 片方の向きだけ描く
 	void SetJudge(WheelData &note, Judge judge, double diff);

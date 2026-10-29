@@ -5,13 +5,15 @@
 #include "Conductor.h"
 #include "Settings.h"
 #include "Chart.h"
-#include "QuadBatch.h"
-#include "TextureManager.h"
 #include "WheelNote.h"
 #include "Input.h"
 #include "NoteManager.h"
+#include "PlaneRenderer.h"
 #include <algorithm>
 #include <cmath>
+
+static constexpr float ARROW_SIZE = 120.0f; // 矢印の大きさ
+static constexpr float ARROW_GAP = 10.0f;	// バーと矢印のすき間
 
 // ===============================================================
 // 初期化・読み込み
@@ -19,8 +21,15 @@
 void WheelNote::Init()
 {
 	m_Layer = 2; // 床(1)と判定ライン(3)の間
-	m_UpTex = TextureManager::Load(L"asset\\texture\\flick_wheel_up.png");
-	m_DownTex = TextureManager::Load(L"asset\\texture\\flick_wheel_down.png");
+
+	m_UpBar = AddComponent<PlaneRenderer>();
+	m_UpBar->Load(L"asset\\texture\\flick_wheel_up.png");
+	m_DownBar = AddComponent<PlaneRenderer>();
+	m_DownBar->Load(L"asset\\texture\\flick_wheel_down.png");
+	m_UpArrow = AddComponent<PlaneRenderer>();
+	m_UpArrow->Load(L"asset\\texture\\wheel_arrow_up.png");
+	m_DownArrow = AddComponent<PlaneRenderer>();
+	m_DownArrow->Load(L"asset\\texture\\wheel_arrow_down.png");
 }
 
 void WheelNote::Update()
@@ -88,27 +97,30 @@ void WheelNote::Draw()
 	const float now = (float)Conductor::GetSongTime();
 	const float speed = Settings::noteSpeed;
 
-	// 3D 描画
-	Renderer::ClearDepth();
-	Renderer::SetDepthEnable(false);
-	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
-		camera->Draw();
-
 	DrawDir(1, now, speed);	 // 上(マゼンタ)
 	DrawDir(-1, now, speed); // 下(ブルー)
 
-	Renderer::SetDepthEnable(true);
+	// 元に戻す(Manager の並べ替えに影響しないように)
+	m_Position = Vector3(0.0f, 0.0f, 0.0f);
+	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
+	m_Scale = Vector3(1.0f, 1.0f, 1.0f);
 }
 
 void WheelNote::DrawDir(int dir, float now, float speed)
 {
 	// 上フリックは下段にいるときに来る → 下段の高さ。下フリックはその逆
-	Layout L = m_Layout;
-	L.height = (dir > 0) ? 0.0f : UPPER_HEIGHT;
+	const float height = (dir > 0) ? 0.0f : UPPER_HEIGHT;
 
-	// 画像の縦横比(1440 × 128)を保つ厚み。幅 = レーン全体のピクセル数
-	const float N = (float)L.laneCount;
-	const float h = L.laneWidth * N * (128.0f / 1440.0f) * 0.5f;
+	// バーの大きさ。幅 = レーン全体、厚み = 画像の縦横比(1440 × 128)を保つ
+	const float barW = m_Layout.laneWidth * m_Layout.laneCount;
+	const float barD = barW * (128.0f / 1440.0f);
+
+	// 矢印の真ん中の高さ。上向きはバーの上に立てる、下向きはバーの下にぶら下げる
+	const float arrowY = (dir > 0) ? height + ARROW_GAP + ARROW_SIZE * 0.5f : height - ARROW_GAP - ARROW_SIZE * 0.5f;
+
+	// この向きで使う板
+	PlaneRenderer *bar = (dir > 0) ? m_UpBar : m_DownBar;
+	PlaneRenderer *arrow = (dir > 0) ? m_UpArrow : m_DownArrow;
 
 	for (const WheelData &n : m_Notes)
 	{
@@ -121,15 +133,23 @@ void WheelNote::DrawDir(int dir, float now, float speed)
 		if (z > Z_FAR || z < -60.0f)
 			continue; // 遠すぎ・通り過ぎ
 
-		// 奥から出てくるときにふわっと(TapNote と同じ式)
+		// 奥から出てくるときにふわっと(TapNote と同じ式)。色は画像に入っているので白
 		float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
-		XMFLOAT4 tint(1.0f, 1.0f, 1.0f, fade); // 色は画像に入っているので白
 
-		QuadBatch::Quad(L.World(0, z + h), L.World(N, z + h),
-						L.World(N, z - h), L.World(0, z - h),
-						tint, tint);
+		// バー:床に寝かせる
+		m_Scale = Vector3(barW, barD, 1.0f);
+		m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f);
+		m_Position = Vector3(0.0f, height, z);
+		bar->SetAlpha(fade);
+		bar->Draw();
+
+		// 矢印:立ったまま(カメラに正面を向く)
+		m_Scale = Vector3(ARROW_SIZE, ARROW_SIZE, 1.0f);
+		m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
+		m_Position = Vector3(0.0f, arrowY, z);
+		arrow->SetAlpha(fade);
+		arrow->Draw();
 	}
-	QuadBatch::Flush((dir > 0) ? m_UpTex : m_DownTex);
 }
 
 void WheelNote::Load(const Chart &chart)
