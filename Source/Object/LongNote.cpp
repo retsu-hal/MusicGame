@@ -9,7 +9,8 @@
 #include "NoteManager.h"
 #include "Renderer.h"
 #include "Camera.h"
-#include "PlaneRenderer.h"
+#include "TextureManager.h"
+#include "ShaderManager.h"
 #include <cmath>
 
 static constexpr int TICK_STEP = TICKS_PER_BEAT / 2; // 中継点の間隔(8分音符)
@@ -24,10 +25,55 @@ void LongNote::Init()
 {
 	m_Layer = 2;
 
-	m_BodyTex = AddComponent<PlaneRenderer>();
-	m_BodyTex->Load(L"asset\\texture\\longnote.png");
-	m_CapTex = AddComponent<PlaneRenderer>();
-	m_CapTex->Load(L"asset\\texture\\tapnote.png");
+	// 頂点:原点が真ん中の 1×1 の板。大きさと位置は Draw の行列で決める
+	VERTEX_3D vertex[4];
+	{
+		vertex[0].Position = XMFLOAT3(-0.5f, 0.5f, 0.0f); // 左上
+		vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[0].TexCoord = XMFLOAT2(0.0f, 0.0f);
+
+		vertex[1].Position = XMFLOAT3(0.5f, 0.5f, 0.0f); // 右上
+		vertex[1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[1].TexCoord = XMFLOAT2(1.0f, 0.0f);
+
+		vertex[2].Position = XMFLOAT3(-0.5f, -0.5f, 0.0f); // 左下
+		vertex[2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[2].TexCoord = XMFLOAT2(0.0f, 1.0f);
+
+		vertex[3].Position = XMFLOAT3(0.5f, -0.5f, 0.0f); // 右下
+		vertex[3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[3].TexCoord = XMFLOAT2(1.0f, 1.0f);
+	}
+
+	// 頂点バッファ生成
+	D3D11_BUFFER_DESC bd{};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(VERTEX_3D) * 4;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA sd{};
+	sd.pSysMem = vertex;
+
+	Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
+
+	// シェーダー読み込み
+	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
+
+	// テクスチャ読み込み
+	m_BodyTex = TextureManager::Load(L"asset\\texture\\longnote.png");
+	m_CapTex = TextureManager::Load(L"asset\\texture\\tapnote.png");
+}
+
+void LongNote::Uninit()
+{
+	m_vertexBuffer->Release();
+
+	GameObject::Uninit();
 }
 
 void LongNote::Update()
@@ -77,10 +123,30 @@ void LongNote::Draw()
 	const float now = (float)Conductor::GetSongTime();
 	const float speed = Settings::noteSpeed;
 
-	// 全部床に寝かせる
-	m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f);
+	// ----- 全ノーツ共通の設定(最初に 1 回) -----
+	// カメラ(3D のビュー・射影)
+	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
+		camera->Draw();
 
-	// 1. 帯(加算)。黒いところは加算で消えて、光る帯になる
+	// 入力レイアウト・シェーダー設定
+	m_Shader->Set();
+
+	// 頂点バッファ設定
+	UINT stride = sizeof(VERTEX_3D);
+	UINT offset = 0;
+	Renderer::GetDeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+
+	// プリミティブトポロジ設定
+	Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	Renderer::SetDepthEnable(false); // 前後は描く順番で決める
+
+	// 全部床に寝かせる(回転は全部同じなので 1 回だけ作る)
+	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
+	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+
+	// ----- 1. 帯(加算)。黒いところは加算で消えて、光る帯になる -----
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_BodyTex);
 	Renderer::SetAddEnable(true);
 	for (const LongData &n : m_Notes)
 	{
@@ -100,15 +166,26 @@ void LongNote::Draw()
 		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
 		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
-		m_Scale = Vector3(m_Layout.laneWidth * BODY_WIDTH, zEnd - zStart, 1.0f);
-		m_Position = Vector3(x, y, (zStart + zEnd) * 0.5f);
-		m_BodyTex->SetAlpha(holding ? 1.0f : 0.6f);
-		m_BodyTex->Draw();
+		// マトリックス設定(帯の真ん中に、帯の長さで)
+		ScaleMatrix = XMMatrixScaling(m_Layout.laneWidth * BODY_WIDTH, zEnd - zStart, 1.0f);
+		TransMatrix = XMMatrixTranslation(x, y, (zStart + zEnd) * 0.5f);
+		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+		Renderer::SetWorldMatrix(WorldMatrix);
+
+		// マテリアル設定(押してる間は明るく)
+		MATERIAL material{};
+		material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, holding ? 1.0f : 0.6f);
+		material.TextureEnable = true;
+		Renderer::SetMaterial(material);
+
+		// 描画
+		Renderer::GetDeviceContext()->Draw(4, 0);
 	}
 	Renderer::SetAddEnable(false);
 
-	// 2. 始点・終点(ふつうの合成)。帯の上にかぶせる
-	m_Scale = Vector3(m_Layout.laneWidth * CAP_WIDTH, CAP_DEPTH, 1.0f);
+	// ----- 2. 始点・終点(ふつうの合成)。帯の上にかぶせる -----
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_CapTex);
+	ScaleMatrix = XMMatrixScaling(m_Layout.laneWidth * CAP_WIDTH, CAP_DEPTH, 1.0f); // 全部同じ大きさ
 	for (const LongData &n : m_Notes)
 	{
 		if (n.endJudge != Judge::None)
@@ -124,22 +201,29 @@ void LongNote::Draw()
 		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
 		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
-		// 段ごとの色
-		m_CapTex->SetColor((n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, 1.0f) : XMFLOAT4(0.43f, 0.88f, 1.0f, 1.0f));
+		// マテリアル設定(段ごとの色。始点と終点は同じ色)
+		MATERIAL material{};
+		material.Diffuse = (n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, 1.0f)	// 上段:紫 (200, 150, 255)
+										  : XMFLOAT4(0.43f, 0.88f, 1.0f, 1.0f); // 下段:水色 (110, 225, 255)
+		material.TextureEnable = true;
+		Renderer::SetMaterial(material);
 
 		for (float z : {zStart, zEnd})
 		{
 			if (z > Z_FAR || z < -60.0f)
 				continue;
-			m_Position = Vector3(x, y, z);
-			m_CapTex->Draw();
+
+			// マトリックス設定(位置だけ変わる)
+			TransMatrix = XMMatrixTranslation(x, y, z);
+			WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+			Renderer::SetWorldMatrix(WorldMatrix);
+
+			// 描画
+			Renderer::GetDeviceContext()->Draw(4, 0);
 		}
 	}
 
-	// 元に戻す(Manager の並べ替えに影響しないように)
-	m_Position = Vector3(0.0f, 0.0f, 0.0f);
-	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
-	m_Scale = Vector3(1.0f, 1.0f, 1.0f);
+	Renderer::SetDepthEnable(true);
 }
 
 void LongNote::Load(const Chart &chart)
