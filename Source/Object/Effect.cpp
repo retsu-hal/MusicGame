@@ -1,7 +1,7 @@
 #include "main.h"
 #include "Manager.h"
 #include "Renderer.h"
-#include "QuadBatch.h"
+#include "ShaderManager.h"
 #include "TextureManager.h"
 #include "NoteManager.h"
 #include "Lane.h"
@@ -32,6 +32,46 @@ void Effect::Init()
 {
     m_Layer = 3; // ノーツより手前
 
+    // 頂点:原点が真ん中の 1×1 の板。2D(y が下向き)なので、Polygon2D と同じ向き
+    VERTEX_3D vertex[4];
+    {
+        vertex[0].Position = XMFLOAT3(-0.5f, -0.5f, 0.0f); // 左上
+        vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        vertex[0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        vertex[0].TexCoord = XMFLOAT2(0.0f, 0.0f);
+
+        vertex[1].Position = XMFLOAT3(0.5f, -0.5f, 0.0f); // 右上
+        vertex[1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        vertex[1].TexCoord = XMFLOAT2(1.0f, 0.0f);
+
+        vertex[2].Position = XMFLOAT3(-0.5f, 0.5f, 0.0f); // 左下
+        vertex[2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        vertex[2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        vertex[2].TexCoord = XMFLOAT2(0.0f, 1.0f);
+
+        vertex[3].Position = XMFLOAT3(0.5f, 0.5f, 0.0f); // 右下
+        vertex[3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        vertex[3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+        vertex[3].TexCoord = XMFLOAT2(1.0f, 1.0f);
+    }
+
+    // 頂点バッファ生成
+    D3D11_BUFFER_DESC bd{};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(VERTEX_3D) * 4;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA sd{};
+    sd.pSysMem = vertex;
+
+    Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
+
+    // シェーダー読み込み。頂点シェーダーは同じで、ピクセルシェーダーだけちがう
+    m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
+    m_RingShader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\ringPS.cso");
+
     m_JudgeTex[(int)Judge::Perfect] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_perfect.png");
     m_JudgeTex[(int)Judge::Great] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_great.png");
     m_JudgeTex[(int)Judge::Good] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_good.png");
@@ -40,7 +80,13 @@ void Effect::Init()
 
     m_FastTex = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_fast.png");
     m_SlowTex = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_slow.png");
-    m_RingTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\ring_wave.png");
+}
+
+void Effect::Uninit()
+{
+    m_vertexBuffer->Release();
+
+    GameObject::Uninit();
 }
 
 void Effect::Show(Judge judge, int lane, int width, double diff)
@@ -81,16 +127,33 @@ void Effect::Draw()
     if (!noteManager)
         return;
 
-    // 今いる面の判定ラインの、画面での高さ(奥行き 0 なので世界の 1 = 画面の 1 ピクセル。0章)
+    // 今いる面の判定ラインの、画面での高さ(奥行き 0 なので世界の 1 = 画面の 1 ピクセル)
     const Layout L;
     const float lineY = L.judgeLineY - UPPER_HEIGHT * noteManager->GetPlayLayerAnim();
     const float centerX = SCREEN_WIDTH * 0.5f;
 
-    // 2D で描く
+    // ----- 共通の設定(最初に 1 回) -----
     Renderer::SetDepthEnable(false);
+
+    // マトリックス設定(2D)
     Renderer::SetWorldViewProjection2D();
 
-    // 1. 輪(加算)
+    // 頂点バッファ設定
+    UINT stride = sizeof(VERTEX_3D);
+    UINT offset = 0;
+    Renderer::GetDeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+
+    // プリミティブトポロジ設定
+    Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+    XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
+    RotMatrix = XMMatrixRotationRollPitchYaw(0.0f, 0.0f, 0.0f); // 2D なので回転なし(Polygon2D と同じ)
+    MATERIAL material{};
+
+    // ----- 1. 輪(加算)。ringPS で描くので画像はなし -----
+    m_RingShader->Set();
+    material.TextureEnable = false;
+    Renderer::SetAddEnable(true);
     for (const HitRing &r : m_Rings)
     {
         float t = r.time / RING_TIME; // 0 → 1
@@ -100,19 +163,30 @@ void Effect::Draw()
 
         // 大きさ:レーン幅の 0.6 倍 → 1.3 倍に広がる。横は範囲の幅ぶん伸ばす
         float s = 0.6f + 0.7f * t;
-        float hw = L.laneWidth * r.width * s * 0.5f; // 横の半分
-        float hh = L.laneWidth * s * 0.5f;           // 縦の半分
 
-        XMFLOAT4 color = JUDGE_COLOR[(int)r.judge];
-        color.w = 1.0f - t; // 広がりながら消える
+        // マトリックス設定
+        ScaleMatrix = XMMatrixScaling(L.laneWidth * r.width * s, L.laneWidth * s, 1.0f);
+        TransMatrix = XMMatrixTranslation(x, lineY, 0.0f);
+        WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+        Renderer::SetWorldMatrix(WorldMatrix);
 
-        QuadBatch::Quad(XMFLOAT3(x - hw, lineY - hh, 0.0f), XMFLOAT3(x + hw, lineY - hh, 0.0f),
-                        XMFLOAT3(x + hw, lineY + hh, 0.0f), XMFLOAT3(x - hw, lineY + hh, 0.0f),
-                        color, color);
+        // マテリアル設定(広がりながら消える。広がり具合 t はシェーダーへ)
+        material.Diffuse = JUDGE_COLOR[(int)r.judge];
+        material.Diffuse.w = 1.0f - t;
+        material.Emission = XMFLOAT4(t, 0.0f, 0.0f, 0.0f);
+        Renderer::SetMaterial(material);
+
+        // 描画
+        Renderer::GetDeviceContext()->Draw(4, 0);
     }
-    QuadBatch::Flush(m_RingTex, true);
+    Renderer::SetAddEnable(false);
 
-    // 2. 判定文字
+    // ここからは画像の板(unlitTexture)
+    m_Shader->Set();
+    material.TextureEnable = true;
+    material.Emission = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    // ----- 2. 判定文字 -----
     if (m_Judge != Judge::None && m_JudgeTime < SHOW_TIME)
     {
         // 出た瞬間は 1.3 倍、POP_TIME かけて 1 倍に戻す
@@ -121,28 +195,44 @@ void Effect::Draw()
         // 最後の FADE_TIME で薄くする
         float fade = std::clamp((SHOW_TIME - m_JudgeTime) / FADE_TIME, 0.0f, 1.0f);
 
-        XMFLOAT4 color = JUDGE_COLOR[(int)m_Judge];
-        color.w = fade;
-
         float y = lineY - 100.0f; // 文字の中心(判定ラインの 100 ピクセル上)★
-        float hw = JUDGE_W[(int)m_Judge] * pop * 0.5f;
-        float hh = JUDGE_H * pop * 0.5f;
-        QuadBatch::Quad(XMFLOAT3(centerX - hw, y - hh, 0.0f), XMFLOAT3(centerX + hw, y - hh, 0.0f),
-                        XMFLOAT3(centerX + hw, y + hh, 0.0f), XMFLOAT3(centerX - hw, y + hh, 0.0f),
-                        color, color);
-        QuadBatch::Flush(m_JudgeTex[(int)m_Judge]);
 
-        // 3. FAST / SLOW(判定文字の上)
+        // マトリックス設定
+        ScaleMatrix = XMMatrixScaling(JUDGE_W[(int)m_Judge] * pop, JUDGE_H * pop, 1.0f);
+        TransMatrix = XMMatrixTranslation(centerX, y, 0.0f);
+        WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+        Renderer::SetWorldMatrix(WorldMatrix);
+
+        // マテリアル設定
+        material.Diffuse = JUDGE_COLOR[(int)m_Judge];
+        material.Diffuse.w = fade;
+        Renderer::SetMaterial(material);
+
+        // テクスチャ設定・描画
+        Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_JudgeTex[(int)m_Judge]);
+        Renderer::GetDeviceContext()->Draw(4, 0);
+
+        // ----- 3. FAST / SLOW(判定文字の上) -----
         if (m_Timing != 0)
         {
-            float w = (m_Timing < 0) ? 71.0f : 80.0f;                          // 画像の幅(高さは 41)
-            float fy = y - JUDGE_H * 0.5f;                                     // 判定文字の画像の上の端
-            XMFLOAT4 c = (m_Timing < 0) ? XMFLOAT4(0.435f, 0.890f, 1.0f, fade) // FAST 水色
-                                        : XMFLOAT4(1.0f, 0.55f, 0.75f, fade);  // SLOW ピンク
-            QuadBatch::Quad(XMFLOAT3(centerX - w * 0.5f, fy - 41.0f, 0.0f), XMFLOAT3(centerX + w * 0.5f, fy - 41.0f, 0.0f),
-                            XMFLOAT3(centerX + w * 0.5f, fy, 0.0f), XMFLOAT3(centerX - w * 0.5f, fy, 0.0f),
-                            c, c);
-            QuadBatch::Flush((m_Timing < 0) ? m_FastTex : m_SlowTex);
+            float w = (m_Timing < 0) ? 71.0f : 80.0f; // 画像の幅(高さは 41)
+            float fy = y - JUDGE_H * 0.5f;            // 判定文字の画像の上の端
+
+            // マトリックス設定(下の端が fy なので、真ん中は fy - 41 / 2)
+            ScaleMatrix = XMMatrixScaling(w, 41.0f, 1.0f);
+            TransMatrix = XMMatrixTranslation(centerX, fy - 41.0f * 0.5f, 0.0f);
+            WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+            Renderer::SetWorldMatrix(WorldMatrix);
+
+            // マテリアル設定
+            material.Diffuse = (m_Timing < 0) ? XMFLOAT4(0.435f, 0.890f, 1.0f, fade) // FAST 水色
+                                              : XMFLOAT4(1.0f, 0.55f, 0.75f, fade);  // SLOW ピンク
+            Renderer::SetMaterial(material);
+
+            // テクスチャ設定・描画
+            ID3D11ShaderResourceView *texture = (m_Timing < 0) ? m_FastTex : m_SlowTex;
+            Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &texture);
+            Renderer::GetDeviceContext()->Draw(4, 0);
         }
     }
 

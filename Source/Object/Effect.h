@@ -3,6 +3,8 @@
 #include "Judge.h"
 #include <vector>
 
+struct ShaderSet;
+
 // 広がって消える輪1個ぶん
 struct HitRing
 {
@@ -16,10 +18,11 @@ struct HitRing
 class Effect : public GameObject
 {
 private:
-    ID3D11ShaderResourceView *m_JudgeTex[6] = {}; // Judge の番号で引く(0 = None は空)
+    ID3D11ShaderResourceView *m_JudgeTex[6] = {};
     ID3D11ShaderResourceView *m_FastTex = nullptr;
     ID3D11ShaderResourceView *m_SlowTex = nullptr;
-    ID3D11ShaderResourceView *m_RingTex = nullptr;
+    const ShaderSet *m_Shader = nullptr;     // 文字用
+    const ShaderSet *m_RingShader = nullptr; // 輪用
 
     Judge m_Judge = Judge::None; // 今出している判定文字(None = 出していない)
     float m_JudgeTime = 0.0f;    // 判定文字を出してからの時間(秒)
@@ -29,6 +32,7 @@ private:
 
 public:
     void Init() override;
+    void Uninit() override;
     void Update() override;
     void Draw() override;
 
