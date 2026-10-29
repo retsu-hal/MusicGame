@@ -5,10 +5,9 @@
 #include "Conductor.h"
 #include "Settings.h"
 #include "Chart.h"
-#include "QuadBatch.h"
-#include "TextureManager.h"
 #include "FlickNote.h"
 #include "NoteManager.h"
+#include "PlaneRenderer.h"
 #include <cmath>
 #include <algorithm>
 
@@ -23,9 +22,12 @@ static constexpr float FLICK_MARGIN = 0.25f;
 // ===============================================================
 void FlickNote::Init()
 {
-    m_Layer = 2; // 床(1)と判定ライン(3)の間
-    m_RightTex = TextureManager::Load(L"asset\\texture\\flick_mouse_right.png");
-    m_LeftTex = TextureManager::Load(L"asset\\texture\\flick_mouse_left.png");
+    m_Layer = 2;
+
+    m_RightTex = AddComponent<PlaneRenderer>();
+    m_RightTex->Load(L"asset\\texture\\flick_mouse_right.png");
+    m_LeftTex = AddComponent<PlaneRenderer>();
+    m_LeftTex->Load(L"asset\\texture\\flick_mouse_left.png");
 }
 
 void FlickNote::Update()
@@ -101,16 +103,13 @@ void FlickNote::Draw()
     const float now = (float)Conductor::GetSongTime();
     const float speed = Settings::noteSpeed;
 
-    // 3D 描画
-    Renderer::ClearDepth();
-    Renderer::SetDepthEnable(false);
-    if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
-        camera->Draw();
-
     DrawDir(1, now, speed);  // 右(ゴールド)
     DrawDir(-1, now, speed); // 左(コーラル)
 
-    Renderer::SetDepthEnable(true);
+    // 元に戻す(Manager の並べ替えに影響しないように)
+    m_Position = Vector3(0.0f, 0.0f, 0.0f);
+    m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
+    m_Scale = Vector3(1.0f, 1.0f, 1.0f);
 }
 
 void FlickNote::DrawDir(int dir, float now, float speed)
@@ -124,6 +123,13 @@ void FlickNote::DrawDir(int dir, float now, float speed)
     const float u2 = (dir > 0) ? 1.0f / 3.0f : 5.0f / 6.0f;
     const float u[4] = {0.0f, u1, u2, 1.0f};
 
+    // 厚み:表示 64px を 1レーン = 120px に合わせる(ホイールフリックと同じ厚みになる)
+    const float depth = m_Layout.laneWidth * (64.0f / 120.0f);
+
+    // この向きで使う板。全部床に寝かせる
+    PlaneRenderer *plane = (dir > 0) ? m_RightTex : m_LeftTex;
+    m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f);
+
     for (const FlickData &n : m_Notes)
     {
         if (n.dir != dir)
@@ -135,32 +141,33 @@ void FlickNote::DrawDir(int dir, float now, float speed)
         if (z > Z_FAR || z < -60.0f)
             continue; // 遠すぎ・通り過ぎ
 
-        Layout L = m_Layout;
-        L.height = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
+        float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
-        // 厚み:表示 64px を 1レーン = 120px に合わせる(ホイールフリックと同じ厚みになる)
-        const float h = L.laneWidth * (64.0f / 120.0f) * 0.5f;
-
-        // 横の区切り(x)。左端・区切り1・区切り2・右端
+        // 横の区切り(x、レーン単位)。左端・区切り1・区切り2・右端
         float x0 = (float)n.lane;
         float x3 = x0 + n.width;
         float x[4] = {x0, x0 + leftPart, x3 - rightPart, x3};
 
+        // 奥から出てくるときにふわっと。色は画像に入っているので白
         float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
-        XMFLOAT4 tint(1.0f, 1.0f, 1.0f, fade); // 色は画像に入っているので白
+        plane->SetAlpha(fade);
 
-        // 3枚並べる。i 番目の四角形は x[i]〜x[i+1] に、画像の u[i]〜u[i+1] を貼る
+        // 3枚並べる。i 番目の板は x[i]〜x[i+1] に、画像の u[i]〜u[i+1] を貼る
         for (int i = 0; i < 3; i++)
         {
             if (x[i + 1] <= x[i])
                 continue; // 幅 0(1レーンのときの真ん中)は描かない
-            QuadBatch::Quad(L.World(x[i], z + h), L.World(x[i + 1], z + h),
-                            L.World(x[i + 1], z - h), L.World(x[i], z - h),
-                            tint, tint,
-                            XMFLOAT2(u[i], 0.0f), XMFLOAT2(u[i + 1], 1.0f));
+
+            // スライスの真ん中(レーン全体の真ん中が x = 0)と、幅(ピクセル)
+            float centerX = ((x[i] + x[i + 1]) * 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+            float width = (x[i + 1] - x[i]) * m_Layout.laneWidth;
+
+            m_Scale = Vector3(width, depth, 1.0f);
+            m_Position = Vector3(centerX, y, z);
+            plane->SetUV(u[i], 0.0f, u[i + 1] - u[i], 1.0f);
+            plane->Draw();
         }
     }
-    QuadBatch::Flush((dir > 0) ? m_RightTex : m_LeftTex);
 }
 
 void FlickNote::Load(const Chart &chart)

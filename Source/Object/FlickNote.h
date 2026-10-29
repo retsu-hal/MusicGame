@@ -4,6 +4,8 @@
 #include "Judge.h"
 #include <vector>
 
+class PlaneRenderer;
+
 // 左右フリック1個ぶんのデータ
 struct FlickData
 {
@@ -21,8 +23,8 @@ class FlickNote : public NoteBase
 private:
     std::vector<FlickData> m_Notes; // 時刻の順
     Layout m_Layout;
-    ID3D11ShaderResourceView *m_RightTex = nullptr; // flick_mouse_right.png
-    ID3D11ShaderResourceView *m_LeftTex = nullptr;  // flick_mouse_left.png
+    PlaneRenderer *m_RightTex = nullptr;
+    PlaneRenderer *m_LeftTex = nullptr;
 
     void DrawDir(int dir, float now, float speed); // 片方の向きだけ描く
     void SetJudge(FlickData &note, Judge judge, double diff);
