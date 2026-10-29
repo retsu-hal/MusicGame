@@ -9,6 +9,7 @@
 #include "NoteManager.h"
 #include "TapNote.h"
 #include "TextureManager.h"
+#include "ShaderManager.h"
 #include <cmath>
 #include <algorithm>
 
@@ -59,8 +60,7 @@ void TapNote::Init()
 	Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
 
 	// シェーダー読み込み
-	Renderer::CreateVertexShader(&m_VertexShader, &m_VertexLayout, "shader\\unlitTextureVS.cso");
-	Renderer::CreatePixelShader(&m_PixelShader, "shader\\unlitTexturePS.cso");
+	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
 	// テクスチャ読み込み
 	m_Texture = TextureManager::Load(L"asset\\texture\\tapnote.png");
@@ -69,11 +69,6 @@ void TapNote::Init()
 void TapNote::Uninit()
 {
 	m_vertexBuffer->Release();
-
-	m_VertexLayout->Release();
-	m_VertexShader->Release();
-	m_PixelShader->Release();
-
 	GameObject::Uninit();
 }
 
@@ -121,13 +116,8 @@ void TapNote::Draw()
 	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
 		camera->Draw();
 
-	// 入力レイアウト設定
-	Renderer::GetDeviceContext()->IASetInputLayout(m_VertexLayout);
-
-	// シェーダー設定
-	Renderer::GetDeviceContext()->VSSetShader(m_VertexShader, NULL, 0);
-	Renderer::GetDeviceContext()->PSSetShader(m_PixelShader, NULL, 0);
-
+	// 入力レイアウト・シェーダー設定
+	m_Shader->Set();
 	// テクスチャ設定
 	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_Texture);
 
