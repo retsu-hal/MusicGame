@@ -3,26 +3,31 @@
 #include "Conductor.h"
 #include "Settings.h"
 #include "Chart.h"
-#include "QuadBatch.h"
-#include "TextureManager.h"
 #include "LongNote.h"
 #include <algorithm>
 #include "Input.h"
 #include "NoteManager.h"
 #include "Renderer.h"
 #include "Camera.h"
+#include "PlaneRenderer.h"
 #include <cmath>
 
 static constexpr int TICK_STEP = TICKS_PER_BEAT / 2; // 中継点の間隔(8分音符)
+static constexpr float BODY_WIDTH = 0.7f;			 // レーン幅に対する帯の幅(前の 0.15〜0.85)
+static constexpr float CAP_WIDTH = 0.92f;			 // レーン幅に対する始点・終点の幅(TapNote と同じ)
+static constexpr float CAP_DEPTH = 28.0f;			 // 始点・終点の厚み(TapNote と同じ)
 
 // ===============================================================
 // 初期化・読み込み
 // ===============================================================
 void LongNote::Init()
 {
-	m_Layer = 2; // 床(1)と判定ライン(3)の間
-	m_BodyTex = TextureManager::Load(L"asset\\texture\\longnote.png");
-	m_CapTex = TextureManager::Load(L"asset\\texture\\tapnote.png");
+	m_Layer = 2;
+
+	m_BodyTex = AddComponent<PlaneRenderer>();
+	m_BodyTex->Load(L"asset\\texture\\longnote.png");
+	m_CapTex = AddComponent<PlaneRenderer>();
+	m_CapTex->Load(L"asset\\texture\\tapnote.png");
 }
 
 void LongNote::Update()
@@ -71,14 +76,12 @@ void LongNote::Draw()
 {
 	const float now = (float)Conductor::GetSongTime();
 	const float speed = Settings::noteSpeed;
-	const float h = 14.0f; // 始点・終点の厚みの半分(TapNote と同じ)
 
-	Renderer::ClearDepth();			 // 背景(2D)が書いた深度を消す
-	Renderer::SetDepthEnable(false); // 奥から順に描くので、深度は書かない
-	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
-		camera->Draw(); // 背景の 2D で上書きされた行列を送り直す
+	// 全部床に寝かせる
+	m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f);
 
 	// 1. 帯(加算)。黒いところは加算で消えて、光る帯になる
+	Renderer::SetAddEnable(true);
 	for (const LongData &n : m_Notes)
 	{
 		if (n.endJudge != Judge::None)
@@ -94,18 +97,18 @@ void LongNote::Draw()
 			continue;				  // まだ遠い・通り過ぎ
 		zEnd = std::min(zEnd, Z_FAR); // 奥ははみ出さない
 
-		Layout L = m_Layout;
-		L.height = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
+		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
-		XMFLOAT4 tint(1.0f, 1.0f, 1.0f, holding ? 1.0f : 0.6f);
-		float lane = (float)n.lane;
-		QuadBatch::Quad(L.World(lane + 0.15f, zEnd), L.World(lane + 0.85f, zEnd),
-						L.World(lane + 0.85f, zStart), L.World(lane + 0.15f, zStart),
-						tint, tint);
+		m_Scale = Vector3(m_Layout.laneWidth * BODY_WIDTH, zEnd - zStart, 1.0f);
+		m_Position = Vector3(x, y, (zStart + zEnd) * 0.5f);
+		m_BodyTex->SetAlpha(holding ? 1.0f : 0.6f);
+		m_BodyTex->Draw();
 	}
-	QuadBatch::Flush(m_BodyTex, true);
+	Renderer::SetAddEnable(false);
 
 	// 2. 始点・終点(ふつうの合成)。帯の上にかぶせる
+	m_Scale = Vector3(m_Layout.laneWidth * CAP_WIDTH, CAP_DEPTH, 1.0f);
 	for (const LongData &n : m_Notes)
 	{
 		if (n.endJudge != Judge::None)
@@ -118,26 +121,25 @@ void LongNote::Draw()
 		if (holding)
 			zStart = 0.0f;
 
-		Layout L = m_Layout;
-		L.height = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
+		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
 		// 段ごとの色
-		XMFLOAT4 tint = (n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, 1.0f)	 // 上段:紫 (200, 150, 255)
-									   : XMFLOAT4(0.43f, 0.88f, 1.0f, 1.0f); // 下段:水色 (110, 225, 255)
-		float lane = (float)n.lane;
+		m_CapTex->SetColor((n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, 1.0f) : XMFLOAT4(0.43f, 0.88f, 1.0f, 1.0f));
 
 		for (float z : {zStart, zEnd})
 		{
 			if (z > Z_FAR || z < -60.0f)
 				continue;
-			QuadBatch::Quad(L.World(lane + 0.04f, z + h), L.World(lane + 0.96f, z + h),
-							L.World(lane + 0.96f, z - h), L.World(lane + 0.04f, z - h),
-							tint, tint);
+			m_Position = Vector3(x, y, z);
+			m_CapTex->Draw();
 		}
 	}
-	QuadBatch::Flush(m_CapTex);
 
-	Renderer::SetDepthEnable(true);
+	// 元に戻す(Manager の並べ替えに影響しないように)
+	m_Position = Vector3(0.0f, 0.0f, 0.0f);
+	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
+	m_Scale = Vector3(1.0f, 1.0f, 1.0f);
 }
 
 void LongNote::Load(const Chart &chart)
