@@ -3,13 +3,14 @@
 #include "Conductor.h"
 #include "Settings.h"
 #include "Chart.h"
-#include "QuadBatch.h"
 #include "TextureManager.h"
 #include "ArcNote.h"
 #include "Judge.h"
 #include "NoteManager.h"
 #include "Renderer.h"
 #include "Camera.h"
+#include "ShaderManager.h"
+#include "PlaneRenderer.h"
 #include <algorithm>
 #include <cmath>
 
@@ -37,9 +38,34 @@ static float Ease(float t, int ease)
 // ===============================================================
 void ArcNote::Init()
 {
-	m_Layer = 2; // 床(1)と判定ライン(3)の間
+	m_Layer = 2;
+
+	m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f); // 床に寝かせる
+	m_Scale = Vector3(0.4f * 2.0f * m_Layout.laneWidth, 0.4f * 2.0f * m_Layout.laneWidth, 1.0f);
+
 	m_BandTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\arc_band.png");
-	m_HeadTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\arc_head.png");
+	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
+
+	// 頂点は毎フレーム書き換えるので、初期データなしの動的バッファを作る(1点 = 左右の2頂点)
+	D3D11_BUFFER_DESC bd{};
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.ByteWidth = sizeof(VERTEX_3D) * BAND_MAX_POINTS * 2;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	Renderer::GetDevice()->CreateBuffer(&bd, nullptr, &m_vertexBuffer);
+
+	m_HeadTex = AddComponent<PlaneRenderer>();
+	m_HeadTex->Load(L"asset\\texture\\ui\\assets\\arc_head.png");
+}
+
+void ArcNote::Uninit()
+{
+	if (m_vertexBuffer)
+	{
+		m_vertexBuffer->Release();
+		m_vertexBuffer = nullptr;
+	}
+	GameObject::Uninit();
 }
 
 void ArcNote::Update()
@@ -54,7 +80,7 @@ void ArcNote::Update()
 	{
 		// 今乗っているか(見た目用。アークの途中のときだけ)
 		bool inside = (now >= a.checks.front() && now <= a.checks.back());
-		a.on = inside && std::fabs(cursorX - XAt(a, now)) <= ON_WIDTH;
+		a.OnCursor = inside && std::fabs(cursorX - XAt(a, now)) <= ON_WIDTH;
 
 		// 時刻を過ぎた判定を、その瞬間に乗っているかで決める
 		while (a.nextCheck < (int)a.checks.size() && now >= a.checks[a.nextCheck])
@@ -75,67 +101,83 @@ void ArcNote::Draw()
 	const float speed = Settings::noteSpeed;
 	const float W = 0.3f; // 帯の幅の半分(レーン単位。0.6 レーンぶん)
 
-	Renderer::ClearDepth();			 // 背景(2D)が書いた深度を消す
-	Renderer::SetDepthEnable(false); // 奥から順に描くので、深度は書かない
-	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
-		camera->Draw(); // 背景の 2D で上書きされた行列を送り直す
+	ID3D11DeviceContext *context = Renderer::GetDeviceContext();
 
-	// 1. 帯
+	// ----- 1. 帯(頂点を自分で並べる) -----
+	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
+		camera->Draw(); // ビュー・射影をセット。ワールドは単位行列になる
+
+	MATERIAL material{};
+	material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	material.TextureEnable = true;
+	Renderer::SetMaterial(material);
+
+	m_Shader->Set();
+	context->PSSetShaderResources(0, 1, &m_BandTex);
+	UINT stride = sizeof(VERTEX_3D);
+	UINT offset = 0;
+	context->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	Renderer::SetDepthEnable(false); // 前後は描く順番で決める
+
+	XMFLOAT3 normal(0.0f, 1.0f, 0.0f); // 上向き(unlit なので使われない)
+
 	for (const ArcData &arc : m_Arcs)
 	{
 		Layout L = m_Layout;
 		L.height = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
-		for (size_t i = 0; i + 1 < arc.samples.size(); i++)
-		{
-			const ArcSample &s0 = arc.samples[i];	  // 手前
-			const ArcSample &s1 = arc.samples[i + 1]; // 奥
+		D3D11_MAPPED_SUBRESOURCE msr;
+		context->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+		VERTEX_3D *vertex = (VERTEX_3D *)msr.pData;
+		int count = 0; // 並べた点の数
 
-			float z0 = ((float)s0.time - now) * speed;
-			float z1 = ((float)s1.time - now) * speed;
-			if (z1 < -60.0f)
-				continue; // 通り過ぎた
-			if (z0 > Z_FAR)
-				break; // ここから先は全部まだ遠い
-			if (z1 <= z0)
-				continue; // 同じ時刻の点(長さ 0)は描けない
+		for (size_t i = 0; i < arc.samples.size(); i++)
+		{
+			const ArcSample &s = arc.samples[i];
+			float z = ((float)s.time - now) * speed;
+
+			// 次の点まで通り過ぎていたら、この点は要らない(その区間は全部見えない)
+			if (i + 1 < arc.samples.size() && ((float)arc.samples[i + 1].time - now) * speed < -60.0f)
+				continue;
+			if (count >= BAND_MAX_POINTS)
+				break; // バッファがいっぱい
 
 			// 奥ほど薄く(TapNote と同じ式)
-			float f0 = std::clamp((Z_FAR - z0) / (Z_FAR * 0.3f), 0.0f, 1.0f);
-			float f1 = std::clamp((Z_FAR - z1) / (Z_FAR * 0.3f), 0.0f, 1.0f);
-			XMFLOAT4 nearColor(1.0f, 1.0f, 1.0f, f0);
-			XMFLOAT4 farColor(1.0f, 1.0f, 1.0f, f1);
+			float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
+			XMFLOAT4 color(1.0f, 1.0f, 1.0f, fade);
 
-			// 画像の真ん中の1行だけ貼る(帯の「断面」を引き伸ばす)
-			QuadBatch::Quad(L.World(s1.x - W, z1), L.World(s1.x + W, z1),
-							L.World(s0.x + W, z0), L.World(s0.x - W, z0),
-							farColor, nearColor,
-							XMFLOAT2(0.0f, 0.5f), XMFLOAT2(1.0f, 0.5f));
+			// 右 → 左の順(時計回りが表)。画像は真ん中の1行だけ貼る(帯の「断面」を引き伸ばす)
+			vertex[count * 2 + 0] = {L.World(s.x + W, z), normal, color, XMFLOAT2(1.0f, 0.5f)};
+			vertex[count * 2 + 1] = {L.World(s.x - W, z), normal, color, XMFLOAT2(0.0f, 0.5f)};
+			count++;
+
+			if (z > Z_FAR)
+				break; // この点で奥の端を超えた。ここから先は全部まだ遠い
 		}
-	}
-	QuadBatch::Flush(m_BandTex);
+		context->Unmap(m_vertexBuffer, 0);
 
-	// 2. 判定ラインのところの印。乗っていると明るい
+		if (count >= 2)
+			context->Draw(count * 2, 0); // 2点(4頂点)以上あれば帯になる
+	}
+	Renderer::SetDepthEnable(true);
+
+	// ----- 2. 判定ラインのところの印(PlaneRenderer)。乗っていると明るい -----
 	for (const ArcData &arc : m_Arcs)
 	{
 		if (now < arc.samples.front().time || now > arc.samples.back().time)
 			continue;
 
-		float x = XAt(arc, now); // ← その1の for で探していたところが、この1行に
+		float x = XAt(arc, now); // 今の時刻のアークの位置(レーン単位)
+		float y = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
-		Layout L = m_Layout;
-		L.height = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
-
-		const float s = 0.4f;
-		const float h = s * L.laneWidth;
-		XMFLOAT4 color(1.0f, 1.0f, 1.0f, arc.on ? 1.0f : 0.4f); // 乗ってなければ薄く
-		QuadBatch::Quad(L.World(x - s, h), L.World(x + s, h),
-						L.World(x + s, -h), L.World(x - s, -h),
-						color, color);
+		m_Position = Vector3((x - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth, y, 0.0f);
+		m_HeadTex->SetAlpha(arc.OnCursor ? 1.0f : 0.4f); // 乗ってなければ薄く
+		m_HeadTex->Draw();
 	}
-	QuadBatch::Flush(m_HeadTex);
 
-	Renderer::SetDepthEnable(true);
+	// 元に戻す(Manager の並べ替えに影響しないように)
+	m_Position = Vector3(0.0f, 0.0f, 0.0f);
 }
 
 void ArcNote::Load(const Chart &chart)
@@ -192,7 +234,7 @@ void ArcNote::Reset(double startSec)
 {
 	for (ArcData &a : m_Arcs)
 	{
-		a.on = false;
+		a.OnCursor = false;
 		// 途中から再生なら、始まっているアークは丸ごと飛ばす(ロングと同じ)
 		a.nextCheck = (a.checks.front() < startSec) ? (int)a.checks.size() : 0;
 	}

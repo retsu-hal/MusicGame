@@ -3,6 +3,9 @@
 #include "Lane.h"
 #include <vector>
 
+class PlaneRenderer;
+struct ShaderSet;
+
 // 細かく区切ったアークの1点(読み込みのときに計算しておく)
 struct ArcSample
 {
@@ -18,24 +21,26 @@ struct ArcData
 
 	std::vector<double> checks; // 判定する時刻(始点・中継点・終点)。時刻の順
 	int nextCheck = 0;
-	bool on = false; // 今カーソルが乗っているか(見た目用)
+	bool OnCursor = false; // 今カーソルが乗っているか(見た目用)
 };
 
-// アーク全部。レイヤー2(床と判定ラインの間)
 class ArcNote : public NoteBase
 {
 private:
 	std::vector<ArcData> m_Arcs;
 	Layout m_Layout;
 	ID3D11ShaderResourceView *m_BandTex = nullptr;
-	ID3D11ShaderResourceView *m_HeadTex = nullptr;
+	PlaneRenderer *m_HeadTex = nullptr;
+	const ShaderSet *m_Shader = nullptr;
 
 	static constexpr int DIVISION = 16;
+	static constexpr int BAND_MAX_POINTS = 1024;
 
 	static float XAt(const ArcData &arc, double time);
 
 public:
 	void Init() override;
+	void Uninit() override;
 	void Update() override;
 	void Draw() override;
 
