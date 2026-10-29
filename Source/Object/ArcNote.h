@@ -3,7 +3,6 @@
 #include "Lane.h"
 #include <vector>
 
-class PlaneRenderer;
 struct ShaderSet;
 
 // 細かく区切ったアークの1点(読み込みのときに計算しておく)
@@ -30,7 +29,8 @@ private:
 	std::vector<ArcData> m_Arcs;
 	Layout m_Layout;
 	ID3D11ShaderResourceView *m_BandTex = nullptr;
-	PlaneRenderer *m_HeadTex = nullptr;
+	ID3D11ShaderResourceView *m_HeadTex = nullptr;
+	ID3D11Buffer *m_HeadVertexBuffer = nullptr;
 	const ShaderSet *m_Shader = nullptr;
 
 	static constexpr int DIVISION = 16;
