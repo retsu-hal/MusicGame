@@ -8,7 +8,8 @@
 #include "WheelNote.h"
 #include "Input.h"
 #include "NoteManager.h"
-#include "PlaneRenderer.h"
+#include "TextureManager.h"
+#include "ShaderManager.h"
 #include <algorithm>
 #include <cmath>
 
@@ -22,14 +23,56 @@ void WheelNote::Init()
 {
 	m_Layer = 2; // 床(1)と判定ライン(3)の間
 
-	m_UpBar = AddComponent<PlaneRenderer>();
-	m_UpBar->Load(L"asset\\texture\\flick_wheel_up.png");
-	m_DownBar = AddComponent<PlaneRenderer>();
-	m_DownBar->Load(L"asset\\texture\\flick_wheel_down.png");
-	m_UpArrow = AddComponent<PlaneRenderer>();
-	m_UpArrow->Load(L"asset\\texture\\wheel_arrow_up.png");
-	m_DownArrow = AddComponent<PlaneRenderer>();
-	m_DownArrow->Load(L"asset\\texture\\wheel_arrow_down.png");
+	VERTEX_3D vertex[4];
+	{
+		vertex[0].Position = XMFLOAT3(-0.5f, 0.5f, 0.0f); // 左上
+		vertex[0].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[0].TexCoord = XMFLOAT2(0.0f, 0.0f);
+
+		vertex[1].Position = XMFLOAT3(0.5f, 0.5f, 0.0f); // 右上
+		vertex[1].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[1].TexCoord = XMFLOAT2(1.0f, 0.0f);
+
+		vertex[2].Position = XMFLOAT3(-0.5f, -0.5f, 0.0f); // 左下
+		vertex[2].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[2].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[2].TexCoord = XMFLOAT2(0.0f, 1.0f);
+
+		vertex[3].Position = XMFLOAT3(0.5f, -0.5f, 0.0f); // 右下
+		vertex[3].Normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		vertex[3].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		vertex[3].TexCoord = XMFLOAT2(1.0f, 1.0f);
+	}
+
+	// 頂点バッファ生成
+	D3D11_BUFFER_DESC bd{};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(VERTEX_3D) * 4;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA sd{};
+	sd.pSysMem = vertex;
+
+	Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
+
+	// シェーダー読み込み
+	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
+
+	// テクスチャ読み込み
+	m_UpBarTex = TextureManager::Load(L"asset\\texture\\flick_wheel_up.png");
+	m_DownBarTex = TextureManager::Load(L"asset\\texture\\flick_wheel_down.png");
+	m_UpArrowTex = TextureManager::Load(L"asset\\texture\\wheel_arrow_up.png");
+	m_DownArrowTex = TextureManager::Load(L"asset\\texture\\wheel_arrow_down.png");
+}
+
+void WheelNote::Uninit()
+{
+	m_vertexBuffer->Release();
+
+	GameObject::Uninit();
 }
 
 void WheelNote::Update()
@@ -97,13 +140,29 @@ void WheelNote::Draw()
 	const float now = (float)Conductor::GetSongTime();
 	const float speed = Settings::noteSpeed;
 
+	// ----- 全ノーツ共通の設定(最初に 1 回) -----
+	// カメラ(3D のビュー・射影)
+	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
+		camera->Draw();
+
+	// 入力レイアウト・シェーダー設定
+	m_Shader->Set();
+
+	// 頂点バッファ設定
+	UINT stride = sizeof(VERTEX_3D);
+	UINT offset = 0;
+	Renderer::GetDeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+
+	// プリミティブトポロジ設定
+	Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	Renderer::SetDepthEnable(false); // 前後は描く順番で決める
+
+	// ----- 向きごとに描く -----
 	DrawDir(1, now, speed);	 // 上(マゼンタ)
 	DrawDir(-1, now, speed); // 下(ブルー)
 
-	// 元に戻す(Manager の並べ替えに影響しないように)
-	m_Position = Vector3(0.0f, 0.0f, 0.0f);
-	m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
-	m_Scale = Vector3(1.0f, 1.0f, 1.0f);
+	Renderer::SetDepthEnable(true);
 }
 
 void WheelNote::DrawDir(int dir, float now, float speed)
@@ -118,9 +177,9 @@ void WheelNote::DrawDir(int dir, float now, float speed)
 	// 矢印の真ん中の高さ。上向きはバーの上に立てる、下向きはバーの下にぶら下げる
 	const float arrowY = (dir > 0) ? height + ARROW_GAP + ARROW_SIZE * 0.5f : height - ARROW_GAP - ARROW_SIZE * 0.5f;
 
-	// この向きで使う板
-	PlaneRenderer *bar = (dir > 0) ? m_UpBar : m_DownBar;
-	PlaneRenderer *arrow = (dir > 0) ? m_UpArrow : m_DownArrow;
+	// この向きで使う画像
+	ID3D11ShaderResourceView *barTex = (dir > 0) ? m_UpBarTex : m_DownBarTex;
+	ID3D11ShaderResourceView *arrowTex = (dir > 0) ? m_UpArrowTex : m_DownArrowTex;
 
 	for (const WheelData &n : m_Notes)
 	{
@@ -133,22 +192,34 @@ void WheelNote::DrawDir(int dir, float now, float speed)
 		if (z > Z_FAR || z < -60.0f)
 			continue; // 遠すぎ・通り過ぎ
 
-		// 奥から出てくるときにふわっと(TapNote と同じ式)。色は画像に入っているので白
+		// マテリアル設定。色は画像に入っているので白、奥からふわっと(TapNote と同じ式)
 		float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
+		MATERIAL material{};
+		material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, fade);
+		material.TextureEnable = true;
+		Renderer::SetMaterial(material);
 
-		// バー:床に寝かせる
-		m_Scale = Vector3(barW, barD, 1.0f);
-		m_Rotation = Vector3(XM_PIDIV2, 0.0f, 0.0f);
-		m_Position = Vector3(0.0f, height, z);
-		bar->SetAlpha(fade);
-		bar->Draw();
+		XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
 
-		// 矢印:立ったまま(カメラに正面を向く)
-		m_Scale = Vector3(ARROW_SIZE, ARROW_SIZE, 1.0f);
-		m_Rotation = Vector3(0.0f, 0.0f, 0.0f);
-		m_Position = Vector3(0.0f, arrowY, z);
-		arrow->SetAlpha(fade);
-		arrow->Draw();
+		// ----- バー:床に寝かせる -----
+		ScaleMatrix = XMMatrixScaling(barW, barD, 1.0f);
+		RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+		TransMatrix = XMMatrixTranslation(0.0f, height, z);
+		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+		Renderer::SetWorldMatrix(WorldMatrix);
+
+		Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &barTex);
+		Renderer::GetDeviceContext()->Draw(4, 0);
+
+		// ----- 矢印:立ったまま(カメラに正面を向く) -----
+		ScaleMatrix = XMMatrixScaling(ARROW_SIZE, ARROW_SIZE, 1.0f);
+		RotMatrix = XMMatrixRotationRollPitchYaw(0.0f, 0.0f, 0.0f);
+		TransMatrix = XMMatrixTranslation(0.0f, arrowY, z);
+		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+		Renderer::SetWorldMatrix(WorldMatrix);
+
+		Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &arrowTex);
+		Renderer::GetDeviceContext()->Draw(4, 0);
 	}
 }
 

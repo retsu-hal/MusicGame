@@ -4,7 +4,7 @@
 #include "Judge.h"
 #include <vector>
 
-class PlaneRenderer;
+struct ShaderSet;
 
 // ホイールフリック1個ぶんのデータ
 struct WheelData
@@ -17,24 +17,27 @@ struct WheelData
 // ホイールフリック全部。レイヤー2(床と判定ラインの間)
 class WheelNote : public NoteBase
 {
+
 private:
 	std::vector<WheelData> m_Notes; // 時刻の順
 	Layout m_Layout;
-	PlaneRenderer *m_UpBar = nullptr;
-	PlaneRenderer *m_DownBar = nullptr;
-	PlaneRenderer *m_UpArrow = nullptr;
-	PlaneRenderer *m_DownArrow = nullptr;
+	ID3D11ShaderResourceView *m_UpBarTex = nullptr;
+	ID3D11ShaderResourceView *m_DownBarTex = nullptr;
+	ID3D11ShaderResourceView *m_UpArrowTex = nullptr;
+	ID3D11ShaderResourceView *m_DownArrowTex = nullptr;
+	const ShaderSet *m_Shader = nullptr;
 
 	void DrawDir(int dir, float now, float speed); // 片方の向きだけ描く
 	void SetJudge(WheelData &note, Judge judge, double diff);
 
 public:
 	void Init() override;
+	void Uninit() override;
 	void Update() override;
 	void Draw() override;
 
 	void Load(const Chart &chart) override;
 	void Reset(double startSec) override;
 	int GetJudgeCount() const override { return (int)m_Notes.size(); }
-	double GetLastTime() const override { return m_Notes.empty() ? 0.0 : m_Notes.back().time; }
+	double GetLastTime() const override { return m_Notes.empty() ? 0.0 : m_Notes.back().time; };
 };
