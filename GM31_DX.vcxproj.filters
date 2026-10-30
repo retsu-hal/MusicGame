@@ -168,9 +168,6 @@
     <ClCompile Include="Source\Object\Pause.cpp">
       <Filter>Object</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Core\QuadBatch.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Object\WheelNote.cpp">
       <Filter>Object</Filter>
     </ClCompile>
@@ -333,9 +330,6 @@
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\Pause.h">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Core\QuadBatch.h">
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\WheelNote.h">

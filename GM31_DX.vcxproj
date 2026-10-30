@@ -166,7 +166,6 @@
     <ClCompile Include="Source\Object\JudgeLine.cpp" />
     <ClCompile Include="Source\Object\LongNote.cpp" />
     <ClCompile Include="Source\Object\Combo.cpp" />
-    <ClCompile Include="Source\Core\QuadBatch.cpp" />
     <ClCompile Include="Source\Object\Camera.cpp" />
     <ClCompile Include="Source\Object\ExitDialog.cpp" />
     <ClCompile Include="Source\Object\NoteManager.cpp" />
@@ -216,7 +215,6 @@
     <ClInclude Include="Source\Object\LongNote.h" />
     <ClInclude Include="Source\Object\NoteBase.h" />
     <ClInclude Include="Source\Object\Combo.h" />
-    <ClInclude Include="Source\Core\QuadBatch.h" />
     <ClInclude Include="Source\Object\Camera.h" />
     <ClInclude Include="Source\Object\ExitDialog.h" />
     <ClInclude Include="Source\Object\NoteManager.h" />
