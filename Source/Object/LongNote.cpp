@@ -66,7 +66,7 @@ void LongNote::Init()
 
 	// テクスチャ読み込み
 	m_BodyTex = TextureManager::Load(L"asset\\texture\\longnote.png");
-	m_CapTex = TextureManager::Load(L"asset\\texture\\tapnote.png");
+	m_CapTex = TextureManager::Load(L"asset\\texture\\tapnote_lower.png");
 }
 
 void LongNote::Uninit()

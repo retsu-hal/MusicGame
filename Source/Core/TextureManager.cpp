@@ -31,6 +31,13 @@ ID3D11ShaderResourceView* TextureManager::Load(const wchar_t* filename)
 
 	ID3D11ShaderResourceView* texture = nullptr;
 	CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(), image.GetImageCount(), metadata, &texture);	//テクスチャ作成
+
+	if (!texture)
+	{
+		OutputDebugStringW(L"[TextureManager] 読み込み失敗: ");
+		OutputDebugStringW(filename);   // 読めなかったファイル名を出力に出す
+		OutputDebugStringW(L"\n");
+	}
 	assert(texture);	//読み込み失敗時にダイアログを表示
 
 	m_Pool[filename] = texture;

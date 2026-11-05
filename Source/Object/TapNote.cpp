@@ -63,7 +63,8 @@ void TapNote::Init()
 	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
 	// テクスチャ読み込み
-	m_Texture = TextureManager::Load(L"asset\\texture\\tapnote.png");
+	m_TapTexture[0] = TextureManager::Load(L"asset\\texture\\tapnote_lower.png");
+	m_TapTexture[1] = TextureManager::Load(L"asset\\texture\\tapnote_upper.png");
 }
 
 void TapNote::Uninit()
@@ -118,9 +119,7 @@ void TapNote::Draw()
 
 	// 入力レイアウト・シェーダー設定
 	m_Shader->Set();
-	// テクスチャ設定
-	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_Texture);
-
+	
 	// 頂点バッファ設定
 	UINT stride = sizeof(VERTEX_3D);
 	UINT offset = 0;
@@ -130,6 +129,9 @@ void TapNote::Draw()
 	Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	Renderer::SetDepthEnable(false); // 前後は描く順番で決める
+
+	// テクスチャ設定
+	const float anim = m_Manager->GetPlayLayerAnim();
 
 	// ----- ノーツ 1 個ずつ -----
 	for (const TapData &n : m_Notes)
@@ -157,10 +159,16 @@ void TapNote::Draw()
 
 		Renderer::SetWorldMatrix(WorldMatrix);
 
+		// テクスチャ設定(段ごとの画像)
+		Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_TapTexture[n.layer]);
+
+		// いない段のノーツは薄く(いる段 1.0、いない段 0.35)
+		float here = (n.layer == 1) ? anim : 1.0f - anim;
+		float alpha = fade * (0.35f + 0.65f * here);
+
 		// マテリアル設定(段ごとの色)
 		MATERIAL material{};
-		material.Diffuse = (n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, fade)	// 上段:紫 (200, 150, 255)
-										  : XMFLOAT4(0.43f, 0.88f, 1.0f, fade); // 下段:水色 (110, 225, 255)
+		material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, alpha);
 		material.TextureEnable = true;
 		Renderer::SetMaterial(material);
 

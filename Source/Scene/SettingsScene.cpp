@@ -73,6 +73,7 @@
 #define ARROW_GAP          (12.0f)				// 矢印と値のすき間
 #define ARROW_HIT_H        (40.0f)				// 矢印をクリックできる範囲の高さ
 #define HI_SPEED_STEP      (10.0f)				// HI-SPEED が A / D 1回で変わる量(表示では 0.1)
+#define MOUSE_SENS_STEP    (0.0005f)			// MOUSE SENS が A / D 1回で変わる量(表示では 0.05)
 
 #define WINDOW_W     (150.0f)	// 「WINDOW」の画像の幅
 #define FULLSCREEN_W (224.0f)	// 「FULLSCREEN」の画像の幅
@@ -123,6 +124,7 @@ static const ItemImage ITEM_IMAGE[SettingsScene::TAB_MAX][SettingsScene::ROW_MAX
 		{ L"asset\\texture\\ui\\text\\setting_item\\visual_offset.png", 212.0f, L"asset\\texture\\ui\\text\\jp_desc\\visual_offset.png", 351.0f, 38.0f },
 		{ L"asset\\texture\\ui\\text\\setting_item\\layer_guide.png",   180.0f, L"asset\\texture\\ui\\text\\jp_desc\\layer_guide.png",   356.0f, 36.0f },
 		{ L"asset\\texture\\ui\\text\\setting_item\\fast_slow.png",     177.0f, L"asset\\texture\\ui\\text\\jp_desc\\fast_slow.png",     353.0f, 38.0f },
+		{ L"asset\\texture\\ui\\text\\setting_item\\mouse_sens.png",    182.0f, L"asset\\texture\\ui\\text\\jp_desc\\mouse_sens.png",    132.0f, 38.0f },
 	},
 	// AUDIO
 	{
@@ -286,7 +288,7 @@ void SettingsScene::Init()
 		m_ValueOff[r] = nullptr;
 
 		//数字の行(HI-SPEED / JUDGE OFFSET / VISUAL OFFSET)
-		if (r == GP_HI_SPEED || r == GP_JUDGE_OFFSET || r == GP_VISUAL_OFFSET)
+		if (r == GP_HI_SPEED || r == GP_JUDGE_OFFSET || r == GP_VISUAL_OFFSET || r == GP_MOUSE_SENS)
 		{
 			for (int i = 0; i < VALUE_CHAR_MAX; i++)
 			{
@@ -721,6 +723,10 @@ void SettingsScene::UpdateLook()
 					hide->SetAlpha(0.0f);
 					break;
 				}
+			case GP_MOUSE_SENS:
+				snprintf(text, sizeof(text), "%.2f", Settings::mouseSensitivity * 100.0f);	// 0.01 → "1.00"
+				left = SetValueText(r, text, right, centerY, color);
+				break;
 		}
 
 		if (selected)
@@ -922,6 +928,16 @@ bool SettingsScene::ChangeGameplay(int row, int dir)
 		case GP_FAST_SLOW:
 			Settings::fastSlow = !Settings::fastSlow;
 			break;
+
+		case GP_MOUSE_SENS:
+			{
+				float before = Settings::mouseSensitivity;
+				float value = Settings::mouseSensitivity + 0.0005f * dir;		// 表示では 0.05 ずつ
+				value = std::round(value * 2000.0f) / 2000.0f;					// 0.0005 の倍数にそろえる(誤差がたまらないように)
+				Settings::mouseSensitivity = std::clamp(value, 0.001f, 0.05f);	// 表示では 0.10〜5.00
+				if (Settings::mouseSensitivity == before) return false;		// 端で止まった
+				break;
+			}
 
 		default:
 			return false;

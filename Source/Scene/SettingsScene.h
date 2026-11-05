@@ -22,6 +22,7 @@ public:
 		GP_VISUAL_OFFSET,
 		GP_LAYER_GUIDE,
 		GP_FAST_SLOW,
+		GP_MOUSE_SENS,
 	};
 
 	// ★ DISPLAY タブの行(上から。ITEM_IMAGE の DISPLAY と同じ並び)
@@ -34,7 +35,7 @@ public:
 		DP_SHOW_FPS,
 	};
 
-	static const int ROW_MAX = 5;					// 1つのタブに並ぶ項目の最大数(GAMEPLAY と DISPLAY が5つ)
+	static const int ROW_MAX = 6;					// 1つのタブに並ぶ項目の最大数(GAMEPLAY と DISPLAY が5つ)
 	static const int VOLUME_NUM = 3;				// AUDIO タブの行数(MASTER / MUSIC / SE)
 	static const int DIGIT_MAX = 3;					// 音量の数字の桁数(最大 100 なので3桁)
 	static const int VALUE_CHAR_MAX = 4;			//  GAMEPLAY の値の文字数の最大("+200" "20.0" で4文字)

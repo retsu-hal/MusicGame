@@ -25,6 +25,7 @@ void Settings::Load()
 	layerGuide = j.value("layerGuide", layerGuide);
 	fastSlow = j.value("fastSlow", fastSlow);
 	showFps = j.value("showFps", showFps);
+	mouseSensitivity = std::clamp(j.value("mouseSensitivity", mouseSensitivity), 0.001f, 0.05f);
 }
 
 void Settings::Save()
@@ -42,6 +43,7 @@ void Settings::Save()
 	j["layerGuide"] = layerGuide;
 	j["fastSlow"] = fastSlow;
 	j["showFps"] = showFps;
+	j["mouseSensitivity"] = mouseSensitivity;
 
 	std::ofstream ofs(SETTINGS_PATH);
 	if (ofs) ofs << j.dump(2);
