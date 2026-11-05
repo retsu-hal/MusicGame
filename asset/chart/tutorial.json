@@ -168,218 +168,122 @@
     {
       "tick": 23040,
       "lane": 0,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 23520,
-      "lane": 1,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 24000,
-      "lane": 2,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 24480,
-      "lane": 3,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 24960,
-      "lane": 4,
-      "type": 0,
-      "length": 0,
-      "layer": 1
-    },
-    {
-      "tick": 25440,
-      "lane": 3,
-      "type": 0,
-      "length": 0,
-      "layer": 1
-    },
-    {
-      "tick": 25920,
-      "lane": 2,
-      "type": 0,
-      "length": 0,
-      "layer": 1
-    },
-    {
-      "tick": 26400,
-      "lane": 1,
-      "type": 0,
-      "length": 0,
-      "layer": 1
+      "type": 2,
+      "dir": 1
     },
     {
       "tick": 26880,
-      "lane": 2,
+      "lane": 0,
       "type": 0,
       "length": 0,
-      "layer": 0
+      "layer": 1
     },
     {
       "tick": 27360,
-      "lane": 3,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 27840,
       "lane": 1,
       "type": 0,
       "length": 0,
-      "layer": 0
+      "layer": 1
+    },
+    {
+      "tick": 27840,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 1
     },
     {
       "tick": 28320,
-      "lane": 4,
+      "lane": 3,
       "type": 0,
       "length": 0,
-      "layer": 0
+      "layer": 1
     },
     {
       "tick": 28800,
-      "lane": 2,
-      "type": 1,
-      "length": 960,
+      "lane": 4,
+      "type": 0,
+      "length": 0,
+      "layer": 1
+    },
+    {
+      "tick": 29280,
+      "lane": 3,
+      "type": 0,
+      "length": 0,
       "layer": 1
     },
     {
       "tick": 29760,
-      "lane": 0,
+      "lane": 2,
       "type": 0,
       "length": 0,
       "layer": 1
     },
     {
       "tick": 30240,
-      "lane": 4,
-      "type": 0,
-      "length": 0,
-      "layer": 1
-    },
-    {
-      "tick": 30720,
-      "lane": 0,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 31200,
-      "lane": 4,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 34560,
-      "lane": 0,
-      "type": 2,
-      "dir": 1
-    },
-    {
-      "tick": 35040,
       "lane": 1,
       "type": 0,
       "length": 0,
       "layer": 1
     },
     {
-      "tick": 35520,
-      "lane": 2,
-      "type": 0,
-      "length": 0,
-      "layer": 1
-    },
-    {
-      "tick": 36000,
-      "lane": 3,
-      "type": 0,
-      "length": 0,
-      "layer": 1
-    },
-    {
-      "tick": 36480,
-      "lane": 0,
-      "type": 2,
-      "dir": -1
-    },
-    {
-      "tick": 36960,
-      "lane": 3,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 37440,
-      "lane": 2,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 37920,
+      "tick": 34080,
       "lane": 1,
-      "type": 0,
-      "length": 0,
-      "layer": 0
-    },
-    {
-      "tick": 38400,
-      "lane": 0,
-      "type": 2,
-      "dir": 1
-    },
-    {
-      "tick": 38880,
-      "lane": 0,
       "type": 1,
       "length": 960,
       "layer": 1
     },
     {
-      "tick": 39840,
-      "lane": 4,
-      "type": 0,
-      "length": 0,
+      "tick": 35040,
+      "lane": 3,
+      "type": 1,
+      "length": 960,
       "layer": 1
     },
     {
-      "tick": 40320,
+      "tick": 36000,
+      "lane": 2,
+      "type": 1,
+      "length": 1920,
+      "layer": 1
+    },
+    {
+      "tick": 41760,
       "lane": 0,
       "type": 2,
       "dir": -1
     },
     {
-      "tick": 40800,
+      "tick": 42240,
       "lane": 1,
       "type": 0,
       "length": 0,
       "layer": 0
     },
     {
-      "tick": 41280,
+      "tick": 42720,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 43200,
       "lane": 3,
       "type": 0,
       "length": 0,
       "layer": 0
     },
     {
-      "tick": 55680,
+      "tick": 43680,
+      "lane": 2,
+      "type": 0,
+      "length": 0,
+      "layer": 0
+    },
+    {
+      "tick": 47520,
       "lane": 1,
       "type": 3,
       "width": 2,
@@ -387,7 +291,7 @@
       "layer": 0
     },
     {
-      "tick": 56640,
+      "tick": 48480,
       "lane": 2,
       "type": 3,
       "width": 2,
@@ -395,7 +299,7 @@
       "layer": 0
     },
     {
-      "tick": 57600,
+      "tick": 49440,
       "lane": 0,
       "type": 3,
       "width": 1,
@@ -403,7 +307,7 @@
       "layer": 0
     },
     {
-      "tick": 58080,
+      "tick": 49920,
       "lane": 4,
       "type": 3,
       "width": 1,
@@ -411,7 +315,7 @@
       "layer": 0
     },
     {
-      "tick": 58560,
+      "tick": 50400,
       "lane": 0,
       "type": 3,
       "width": 2,
@@ -419,7 +323,7 @@
       "layer": 0
     },
     {
-      "tick": 59040,
+      "tick": 50880,
       "lane": 3,
       "type": 3,
       "width": 2,
@@ -427,7 +331,7 @@
       "layer": 0
     },
     {
-      "tick": 59520,
+      "tick": 51360,
       "lane": 0,
       "type": 3,
       "width": 5,
@@ -435,7 +339,7 @@
       "layer": 0
     },
     {
-      "tick": 60480,
+      "tick": 52320,
       "lane": 0,
       "type": 3,
       "width": 5,
@@ -443,14 +347,14 @@
       "layer": 0
     },
     {
-      "tick": 63360,
+      "tick": 67680,
       "lane": 0,
       "type": 0,
       "length": 0,
       "layer": 0
     },
     {
-      "tick": 63360,
+      "tick": 67680,
       "lane": 4,
       "type": 0,
       "length": 0,
@@ -462,12 +366,12 @@
       "layer": 0,
       "points": [
         {
-          "tick": 44160,
+          "tick": 56160,
           "x": 2.5,
           "ease": 0
         },
         {
-          "tick": 46080,
+          "tick": 58080,
           "x": 2.5,
           "ease": 0
         }
@@ -477,12 +381,12 @@
       "layer": 0,
       "points": [
         {
-          "tick": 47040,
+          "tick": 59040,
           "x": 0.5,
           "ease": 3
         },
         {
-          "tick": 48960,
+          "tick": 60960,
           "x": 4.5,
           "ease": 0
         }
@@ -492,27 +396,27 @@
       "layer": 0,
       "points": [
         {
-          "tick": 49920,
+          "tick": 61920,
           "x": 4.5,
           "ease": 0
         },
         {
-          "tick": 50400,
+          "tick": 62400,
           "x": 0.5,
           "ease": 0
         },
         {
-          "tick": 50880,
+          "tick": 62880,
           "x": 4.5,
           "ease": 0
         },
         {
-          "tick": 51360,
+          "tick": 63360,
           "x": 0.5,
           "ease": 0
         },
         {
-          "tick": 51840,
+          "tick": 63840,
           "x": 2.5,
           "ease": 0
         }
@@ -537,20 +441,28 @@
       "page": 3
     },
     {
-      "tick": 32640,
+      "tick": 24960,
       "page": 4
     },
     {
-      "tick": 42240,
+      "tick": 32160,
       "page": 5
     },
     {
-      "tick": 53760,
+      "tick": 39840,
       "page": 6
     },
     {
-      "tick": 61440,
+      "tick": 45600,
       "page": 7
+    },
+    {
+      "tick": 54240,
+      "page": 8
+    },
+    {
+      "tick": 65760,
+      "page": 9
     }
   ]
 }
