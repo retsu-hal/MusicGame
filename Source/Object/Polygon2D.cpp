@@ -1,6 +1,8 @@
 ﻿#include "main.h"
 #include "Renderer.h"
 #include "Polygon2D.h"
+#include "TextureManager.h"
+#include "ShaderManager.h"
 
 void Polygon2D::Init(float x, float y, float width, float height,const WCHAR* TextureName)
 {
@@ -38,26 +40,15 @@ void Polygon2D::Init(float x, float y, float width, float height,const WCHAR* Te
 
 	Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_vertexBuffer);
 	//シェーダー読み込み
-	Renderer::CreateVertexShader(&m_VertexShader, &m_VertexLayout, "shader\\unlitTextureVS.cso");
-	Renderer::CreatePixelShader(&m_PixelShader, "shader\\unlitTexturePS.cso");
-	
+	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 	//テクスチャ読み込み
-	TexMetadata metadata;
-	ScratchImage image;
-	LoadFromWICFile(TextureName, WIC_FLAGS_NONE, &metadata, image);//テクスチャは変更可
-	CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(),
-		image.GetImageCount(), metadata, &m_Texture);
-	assert(m_Texture);//読み込み失敗時にダイアログを表示
+	m_Texture = TextureManager::Load(TextureName);
 }
 
 void Polygon2D::Uninit()
 {
 	m_vertexBuffer->Release();
-
-	m_VertexLayout->Release();
-	m_VertexShader->Release();
-	m_PixelShader->Release();
-	m_Texture->Release();
+;
 }
 
 void Polygon2D::Update()
@@ -66,12 +57,8 @@ void Polygon2D::Update()
 
 void Polygon2D::Draw()
 {
-	//入力レイアウト設定
-	Renderer::GetDeviceContext()->IASetInputLayout(m_VertexLayout);
-
-	//シェーダー設定
-	Renderer::GetDeviceContext()->VSSetShader(m_VertexShader, NULL, 0);
-	Renderer::GetDeviceContext()->PSSetShader(m_PixelShader, NULL, 0);
+	//入力レイアウト・シェーダー設定
+	m_Shader->Set();
 
 	//マトリックス設定
 	Renderer::SetWorldViewProjection2D();
@@ -119,8 +106,7 @@ void Polygon2D::SetGradientAlpha(float leftAlpha, float rightAlpha)
 
 void Polygon2D::SetPixelShader(const char* FileName)
 {
-	if (m_PixelShader) m_PixelShader->Release();		// Init で作った unlitTexturePS を捨てる
-	Renderer::CreatePixelShader(&m_PixelShader, FileName);
+	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", FileName);
 }
 
 void Polygon2D::SetRect(float x, float y, float width, float height)

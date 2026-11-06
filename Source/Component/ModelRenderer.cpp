@@ -180,7 +180,13 @@ void ModelRenderer::LoadModel( const char *FileName, MODEL *Model)
 			ScratchImage image;
 			wchar_t wc[256];
 			mbstowcs(wc, modelObj.SubsetArray[i].Material.TextureName, sizeof(wc));
-			LoadFromWICFile(wc, WIC_FLAGS_NONE, &metadata, image);
+			HRESULT hr = LoadFromWICFile(wc, WIC_FLAGS_NONE, &metadata, image);
+			if (FAILED(hr))
+			{
+				OutputDebugStringW(L"[モデルテクスチャ読み込み失敗] ");
+				OutputDebugStringW(wc);
+				OutputDebugStringW(L"\n");
+			}
 			CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(), image.GetImageCount(), metadata, &Model->SubsetArray[i].Material.Texture);
 
 			if (Model->SubsetArray[i].Material.Texture)
@@ -229,13 +235,20 @@ void ModelRenderer::LoadObj( const char *FileName, MODEL_OBJ *ModelObj )
 	MODEL_MATERIAL	*materialArray = nullptr;
 	unsigned int	materialNum = 0;
 
+
 	char str[256];
 	char *s;
 	char c;
 
 
 	FILE *file;
-	file = fopen( FileName, "rt" );
+	file = fopen(FileName, "rt");
+	if (!file)
+	{
+		OutputDebugStringA("[モデル読み込み失敗] ");	// mtl の方は "[マテリアル読み込み失敗] "
+		OutputDebugStringA(FileName);
+		OutputDebugStringA("\n");
+	}
 	assert(file);
 
 
@@ -463,7 +476,13 @@ void ModelRenderer::LoadMaterial( const char *FileName, MODEL_MATERIAL **Materia
 	char str[256];
 
 	FILE *file;
-	file = fopen( FileName, "rt" );
+	file = fopen(FileName, "rt");
+	if (!file)
+	{
+		OutputDebugStringA("[モデル読み込み失敗] ");	// mtl の方は "[マテリアル読み込み失敗] "
+		OutputDebugStringA(FileName);
+		OutputDebugStringA("\n");
+	}
 	assert(file);
 
 	MODEL_MATERIAL *materialArray;

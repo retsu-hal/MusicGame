@@ -70,6 +70,12 @@ void Audio::Load(const char *FileName, TYPE type)
 
 
 		hmmio = mmioOpen((LPSTR)FileName, &mmioinfo, MMIO_READ);
+		if (!hmmio)
+		{
+			OutputDebugStringA("[音声読み込み失敗] ");
+			OutputDebugStringA(FileName);
+			OutputDebugStringA("\n");
+		}
 		assert(hmmio);
 
 		riffchunkinfo.fccType = mmioFOURCC('W', 'A', 'V', 'E');

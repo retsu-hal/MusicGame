@@ -3,6 +3,8 @@
 #include "GameObject.h"
 #include "Renderer.h"
 
+struct ShaderSet;
+
 class Polygon2D : public GameObject
 {
 private:
@@ -10,10 +12,10 @@ private:
 	VERTEX_3D m_Vertex[4] = {}; // すべてゼロ初期化
 	XMFLOAT4 m_Param = { 0.0f, 0.0f, 0.0f, 0.0f };	// シェーダーに渡す数値(時間など)
 
+	const ShaderSet* m_Shader = nullptr;
 
 public:
-
-
+	
 	void Init() override {}
 	void Init(float x, float y, float width, float height, const WCHAR* TextureName);
 	void Uninit() override;

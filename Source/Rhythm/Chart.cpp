@@ -1,3 +1,4 @@
+#include "main.h"
 #include "Chart.h"
 #include <climits>
 #include "nlohmann/json.hpp"
@@ -81,11 +82,24 @@ bool Chart::Save(const std::string& path) const
 bool Chart::Load(const std::string& path)
 {
 	std::ifstream ifs(path);
-	if (!ifs) return false;           // ファイルが無い
+	if (!ifs)
+	{
+		OutputDebugStringA("[譜面ファイルが無い] ");
+		OutputDebugStringA(path.c_str());
+		OutputDebugStringA("\n");
+		return false;
+	}
+
 
 	// 第3引数 false = 書式が壊れていても例外を投げず、is_discarded() で知らせる
 	json j = json::parse(ifs, nullptr, false);
-	if (j.is_discarded()) return false;
+	if (j.is_discarded())
+	{
+		OutputDebugStringA("[譜面jsonの書式エラー] ");
+		OutputDebugStringA(path.c_str());
+		OutputDebugStringA("\n");
+		return false;
+	}
 
 	// value("キー", 無かったときの値)
 	title = j.value("title", "");

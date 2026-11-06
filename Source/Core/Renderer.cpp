@@ -615,6 +615,7 @@ void Renderer::CreatePixelShader( ID3D11PixelShader** PixelShader, const char* F
 	long int fsize;
 
 	file = fopen(FileName, "rb");
+	if (!file) { OutputDebugStringA("シェーダーが見つからない: "); OutputDebugStringA(FileName); OutputDebugStringA("\n"); }
 	assert(file);
 
 	fsize = _filelength(_fileno(file));

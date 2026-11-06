@@ -27,17 +27,16 @@ ID3D11ShaderResourceView* TextureManager::Load(const wchar_t* filename)
 	
 	TexMetadata metadata;
 	ScratchImage image;
-	LoadFromWICFile(filename, WIC_FLAGS_NONE, &metadata, image);		//ファイルから読み込み
+	HRESULT hr = LoadFromWICFile(filename, WIC_FLAGS_NONE, &metadata, image);	//ファイルから読み込み
+	if (FAILED(hr))
+	{
+		OutputDebugStringW(L"[テクスチャ読み込み失敗] ");
+		OutputDebugStringW(filename);
+		OutputDebugStringW(L"\n");
+	}
 
 	ID3D11ShaderResourceView* texture = nullptr;
 	CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(), image.GetImageCount(), metadata, &texture);	//テクスチャ作成
-
-	if (!texture)
-	{
-		OutputDebugStringW(L"[TextureManager] 読み込み失敗: ");
-		OutputDebugStringW(filename);   // 読めなかったファイル名を出力に出す
-		OutputDebugStringW(L"\n");
-	}
 	assert(texture);	//読み込み失敗時にダイアログを表示
 
 	m_Pool[filename] = texture;

@@ -78,6 +78,14 @@ void AnimationModel::Load(const char* FileName)
 	const std::string modelPath(FileName);
 
 	m_AiScene = aiImportFile(FileName, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_ConvertToLeftHanded);
+	if (!m_AiScene)
+	{
+		OutputDebugStringA("[アニメモデル読み込み失敗] ");
+		OutputDebugStringA(FileName);
+		OutputDebugStringA("\n");
+		OutputDebugStringA(aiGetErrorString());	// assimp が失敗理由を教えてくれる
+		OutputDebugStringA("\n");
+	}
 	assert(m_AiScene);
 
 	m_VertexBuffer = new ID3D11Buffer * [m_AiScene->mNumMeshes];
