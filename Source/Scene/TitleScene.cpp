@@ -17,6 +17,7 @@
 #include "TitleScene.h"
 #include "SelectScene.h"
 #include "SettingsScene.h"
+#include "GameSession.h"
 #include <algorithm>		
 #include "audio.h"
 //==============================================================================
@@ -229,7 +230,8 @@ void TitleScene::Update()
 					m_FadeTime = 0.0f;							// フェードアウトを 0 秒から始める
 					break;
 
-				case MENU_SETTINGS:								
+				case MENU_SETTINGS:		
+					GameSession::settingsFromSelect = false;
 					Manager::ChangeScene<SettingsScene>(FADE_TIME);
 					m_IsLeaving = true;
 					m_FadeTime = 0.0f;

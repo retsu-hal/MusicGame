@@ -25,7 +25,9 @@ struct SongInfo
 	float        artistHeight = 0.0f;
 
 	std::wstring jacket;					// ジャケットの画像
+	std::string  previewAudio;				// プレビューで流す音(空なら譜面の曲を流す)
 	double       previewStart = 0.0;		// プレビュー再生を始める位置(秒)
+	bool         tutorial = false;			// true なら難易度の代わりに PLAY を出す
 };
 
 // 収録曲の一覧(songs.json から読む)

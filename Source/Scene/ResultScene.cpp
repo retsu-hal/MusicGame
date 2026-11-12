@@ -1,9 +1,8 @@
 #include "main.h"
 #include "Manager.h"
 #include "Input.h"
-#include "GameSession.h"
 #include "ResultScene.h"
-#include "TitleScene.h"
+#include "SelectScene.h"
 
 void ResultScene::Init()
 {
@@ -20,7 +19,7 @@ void ResultScene::Update()
 
 	// 少し待ってから受け付ける（ゲームの最後の打鍵で飛ばしてしまわないように）
 	if (m_Time > 0.5f && (Input::GetKeyTrigger(VK_RETURN) || Input::GetKeyTrigger(VK_ESCAPE)))
-		Manager::ChangeScene<TitleScene>();
+		Manager::ChangeScene<SelectScene>();
 }
 
 void ResultScene::Draw()

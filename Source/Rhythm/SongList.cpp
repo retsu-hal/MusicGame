@@ -43,7 +43,9 @@ bool SongList::Load(const std::string& path)
 		info.artistHeight = s.value("artistHeight", 0.0f);
 
 		info.jacket = ToWide(s.value("jacket", ""));
+		info.previewAudio = s.value("preview", "");			// 無ければ空(譜面の曲を流す)
 		info.previewStart = s.value("previewStart", 0.0);
+		info.tutorial = s.value("tutorial", false);			// 書いてなければ false
 
 		songs.push_back(info);
 	}
