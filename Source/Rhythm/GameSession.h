@@ -26,4 +26,8 @@ public:
 
 	static inline int songIndex = 0;	// 選曲画面で選んでいた曲(SongList::songs の番号)
 	static inline int difficulty = 0;	// 選んでいた難易度(DIFFICULTY の値)
+
+	static inline bool settingsFromSelect = false;	// true なら設定画面を選曲画面から開いた(戻り先が選曲画面)
+
+
 };

@@ -18,6 +18,8 @@
 #include "Settings.h"
 #include "SettingsScene.h"
 #include "TitleScene.h"
+#include "SelectScene.h"		
+#include "GameSession.h"	
 #include "Conductor.h"	
 #include <algorithm>
 #include <cmath>
@@ -552,13 +554,20 @@ void SettingsScene::Update()
 			}
 		}
 	}
-	//Esc で保存してタイトルへ戻る(キーガイドの「Esc 保存して戻る」)
+	//Esc で保存して、来た画面へ戻る(キーガイドの「Esc 保存して戻る」)
 	if (Input::GetKeyTrigger(VK_ESCAPE))
 	{
 		Settings::Save();
 		m_DecideSE->Play();
 
-		Manager::ChangeScene<TitleScene>(FADE_TIME);
+		if (GameSession::settingsFromSelect)
+		{
+			Manager::ChangeScene<SelectScene>(FADE_TIME);
+		}
+		else
+		{
+			Manager::ChangeScene<TitleScene>(FADE_TIME);
+		}
 		m_IsLeaving = true;
 		m_FadeTime = 0.0f;
 	}

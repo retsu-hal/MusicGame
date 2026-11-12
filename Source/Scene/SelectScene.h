@@ -16,6 +16,7 @@ public:
 		int  bpmMax = 0;		// 一番速い BPM
 		int  notes = 0;		// ノーツの数
 		int  lengthSec = 0;		// 最後のノーツが終わるまでの秒数
+		std::string audioPath;	// 譜面に書いてある曲のファイル
 	};
 
 	static const int INFO_CHAR_MAX = 7;				// 数字の最大文字数("120-180" で7文字)
@@ -26,7 +27,8 @@ public:
 
 	class Audio* m_SelectSE;				// 選択が変わったときの音
 	class Audio* m_DecideSE;				// 決定したときの音
-	class Audio* m_BGM;						// 仮のBGM(プレビュー再生ができたら消す)
+	std::vector<class Audio*> m_Preview;	// プレビューの音(曲ごとに1つ。SongList::songs と同じ並び。音が無い曲は nullptr)
+	float m_PreviewTime;					// 今のプレビューを流し始めてからの時間(秒)
 
 	ExitDialog m_ExitDialog;				// 終了確認
 	class Polygon2D* m_GuideEscExit;		// キーガイド「Esc 終了」
@@ -50,6 +52,16 @@ public:
 	class Polygon2D* m_LengthChar[INFO_CHAR_MAX];		// LENGTH の数字
 	class Polygon2D* m_NotesChar[INFO_CHAR_MAX];		// NOTES の数字
 
+	class Polygon2D* m_DiffNormal[DIFFICULTY_MAX];		// 選んでいない難易度の枠
+	class Polygon2D* m_DiffSelected[DIFFICULTY_MAX];	// 選んでいる難易度の枠
+	class Polygon2D* m_DiffText[DIFFICULTY_MAX];		// EASY / HARD の文字
+
+	class Polygon2D* m_DiffLabel;						// 見出し「DIFFICULTY」(チュートリアルのときは隠す)
+	class Polygon2D* m_PlayFrame;						// チュートリアル用の PLAY の枠
+	class Polygon2D* m_PlayText;						// PLAY の文字
+
+	class Polygon2D* m_Gear;							// 右上の歯車(設定画面へ)
+
 	void Init() override;
 	void Uninit() override;
 	void Update() override;
@@ -65,4 +77,19 @@ public:
 	void UpdateInfoText();									// 選択中の曲・難易度の数字を出す
 	void CreateNumberText(class Polygon2D* chars[], float left);	// 数字用の Polygon2D を INFO_CHAR_MAX 個作る
 	void SetNumberText(class Polygon2D* chars[], const char* text, float left);	// 文字を左揃えで並べる
+
+	void UpdateDifficultyLook();							// 選択中の難易度に合わせて枠と文字の見た目を変える
+
+	int  HitSong(int x, int y) const;						// (x, y) が画面に出ている曲の行の上なら、その曲の番号。どれでもなければ -1
+	bool HitJacket(int x, int y) const;						// (x, y) がジャケットの上か
+	int  HitDifficulty(int x, int y) const;					// (x, y) が難易度の枠の上なら、その難易度。どれでもなければ -1
+
+	bool HitGear(int x, int y) const;						// (x, y) が歯車の上か
+	void OpenSettings();									// 設定画面へ
+
+	void PlayPreview();										// 選択中の曲のプレビューを頭(previewStart)から流す。ほかの曲は止める
+
+	bool IsTutorial() const;								// 選択中の曲がチュートリアルか
+	int  GetPlayDifficulty() const;							// 実際に遊ぶ難易度(チュートリアルなら EASY、それ以外は m_Difficulty)
+	bool HitPlay(int x, int y) const;						// (x, y) が PLAY の枠の上か
 };

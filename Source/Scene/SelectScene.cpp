@@ -18,10 +18,11 @@
 #include "GameSession.h"
 #include "SelectScene.h"
 #include "GameScene.h"
-#include <algorithm>
 #include "SongList.h"
-#include <cstdio>
+#include "SettingsScene.h"
 #include "Chart.h"
+#include <cstdio>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 //==============================================================================
@@ -63,6 +64,27 @@
 #define DIGIT_SIZE       (48.0f)	// 1マスの大きさ(アトラスの1マスを正方形で描く)
 #define DIGIT_STEP       (26.0f)	// 1文字ぶんの送り幅
 #define NARROW_STEP      (14.0f)	// 「.」「:」の送り幅(数字より細いので詰める)
+
+// 難易度
+#define DIFF_LABEL_Y     (418.0f)	// DIFFICULTY の見出しの上端
+#define DIFF_Y           (459.0f)	// 枠の上端
+#define DIFF_W           (225.0f)	// 枠の大きさ
+#define DIFF_H           (83.0f)
+#define DIFF_PITCH       (246.0f)	// EASY の枠の左端から HARD の枠の左端まで
+#define DIFF_TEXT_MARGIN (27.0f)	// 枠の左端から文字の左端まで
+#define DIFF_TEXT_SCALE  (0.8f)		// 枠の中の文字の倍率
+
+// 歯車(右上)
+#define GEAR_X           (1791.0f)
+#define GEAR_Y           (27.0f)
+#define GEAR_SIZE        (72.0f)
+
+// チュートリアル用の PLAY
+#define PLAY_W           (DIFF_PITCH + DIFF_W)	// PLAY の枠の幅(EASY の左端から HARD の右端まで = 471)
+
+// プレビュー
+#define PREVIEW_LENGTH   (15.0f)	// 1回に流す長さ(秒)。過ぎたら頭に戻る
+#define PREVIEW_VOLUME   (0.3f)
 //==============================================================================
 //グローバル変数
 //==============================================================================
@@ -92,18 +114,17 @@ void SelectScene::Init()
 
 	m_Difficulty = GameSession::difficulty;
 
-	//全曲・全難易度の譜面を読んで、BPM・ノーツ数・長さを計算しておく
-	LoadChartInfo();
-
 	//前に選んでいた曲と難易度から始める(曲の数が減っていたら1曲目に)
 	m_Select = GameSession::songIndex;
 	if (m_Select < 0 || m_Select >= (int)SongList::songs.size())
 	{
 		m_Select = 0;
 	}
-	m_Difficulty = GameSession::difficulty;
 
-	//効果音とBGM
+	//全曲・全難易度の譜面を読んで、BPM・ノーツ数・長さを計算しておく
+	LoadChartInfo();
+
+	//効果音とプレビュー
 	GameObject* sound = Manager::AddGameObject<GameObject>();
 	m_SelectSE = sound->AddComponent<Audio>();
 	m_SelectSE->Load("asset\\audio\\se\\se_select.wav", Audio::TYPE_SE);
@@ -111,10 +132,30 @@ void SelectScene::Init()
 	m_DecideSE = sound->AddComponent<Audio>();
 	m_DecideSE->Load("asset\\audio\\se\\se_click.wav", Audio::TYPE_SE);
 
-	m_BGM = sound->AddComponent<Audio>();
-	m_BGM->Load("asset\\audio\\bgm\\bgm_title.wav", Audio::TYPE_MUSIC);
-	m_BGM->SetVolume(0.3f);
-	m_BGM->Play(true);
+	//プレビューの音(曲ごとに1つ作っておく)
+	m_Preview.clear();
+	for (int i = 0; i < (int)SongList::songs.size(); i++)
+	{
+		const SongInfo& song = SongList::songs[i];
+
+		//"preview" があればそれ、無ければ EASY の譜面に書いてある曲
+		std::string path = song.previewAudio;
+		if (path.empty())
+		{
+			path = m_ChartInfo[DIFFICULTY_EASY][i].audioPath;
+		}
+
+		if (path.empty())
+		{
+			m_Preview.push_back(nullptr);		// 音が無い曲(譜面が読めなかったとき)。並びをそろえるために nullptr を入れる
+			continue;
+		}
+
+		Audio* preview = sound->AddComponent<Audio>();
+		preview->Load(path.c_str(), Audio::TYPE_MUSIC);
+		preview->SetVolume(PREVIEW_VOLUME);
+		m_Preview.push_back(preview);
+	}
 
 	//背景
 	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\TitleBG.png");
@@ -130,6 +171,9 @@ void SelectScene::Init()
 	m_ListCursorLine->Init(LIST_CURSOR_X, LIST_CURSOR_Y + 12.0f, 6.0f, LIST_CURSOR_H - 24.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_ListCursorLine->SetColor(COLOR_ACCENT);
 
+	//アーティスト名が無い曲(チュートリアルなど)に使う画像。大きさ 0 で置くので見えない
+	const WCHAR* EMPTY_IMAGE = L"asset\\texture\\00_Common\\icon\\white_square.png";
+
 	//曲名とアーティスト名(全部「選択中の行」に置いておき、UpdateListLook でずらす)
 	m_SongTitle.clear();
 	m_SongArtist.clear();
@@ -140,7 +184,8 @@ void SelectScene::Init()
 		m_SongTitle.push_back(title);
 
 		Polygon2D* artist = Manager::AddGameObject<Polygon2D>();
-		artist->Init(LIST_X, LIST_ARTIST_Y, song.artistWidth, song.artistHeight, song.artistImage.c_str());
+		const WCHAR* artistFile = song.artistImage.empty() ? EMPTY_IMAGE : song.artistImage.c_str();
+		artist->Init(LIST_X, LIST_ARTIST_Y, song.artistWidth, song.artistHeight, artistFile);
 		m_SongArtist.push_back(artist);
 	}
 
@@ -160,7 +205,8 @@ void SelectScene::Init()
 		m_InfoTitle.push_back(title);
 
 		Polygon2D* artist = Manager::AddGameObject<Polygon2D>();
-		artist->Init(INFO_X, INFO_ARTIST_Y, song.artistWidth * INFO_SCALE, song.artistHeight * INFO_SCALE, song.artistImage.c_str());
+		const WCHAR* artistFile = song.artistImage.empty() ? EMPTY_IMAGE : song.artistImage.c_str();
+		artist->Init(INFO_X, INFO_ARTIST_Y, song.artistWidth * INFO_SCALE, song.artistHeight * INFO_SCALE, artistFile);
 		artist->SetColor(COLOR_NORMAL);
 		m_InfoArtist.push_back(artist);
 	}
@@ -192,8 +238,54 @@ void SelectScene::Init()
 	CreateNumberText(m_LengthChar, LENGTH_X);
 	CreateNumberText(m_NotesChar, NOTES_X);
 
+	//難易度
+//見出し「DIFFICULTY」
+	m_DiffLabel = Manager::AddGameObject<Polygon2D>();
+	m_DiffLabel->Init(BPM_X, DIFF_LABEL_Y, 144.0f, 36.0f, L"asset\\texture\\02_Play\\text\\label_difficulty.png");
+	m_DiffLabel->SetColor(COLOR_NORMAL);
 
-	UpdateListLook();
+	//枠と文字(左から EASY / HARD)
+	const WCHAR* diffFile[DIFFICULTY_MAX] = {
+		L"asset\\texture\\02_Play\\text\\easy.png",
+		L"asset\\texture\\02_Play\\text\\hard.png" };
+	const float diffTextW[DIFFICULTY_MAX] = { 117.0f, 126.0f };
+	const float diffTextH[DIFFICULTY_MAX] = { 60.0f, 62.0f };
+
+	for (int d = 0; d < DIFFICULTY_MAX; d++)
+	{
+		float x = BPM_X + DIFF_PITCH * d;		// d 番目の枠の左端
+
+		m_DiffNormal[d] = Manager::AddGameObject<Polygon2D>();
+		m_DiffNormal[d]->Init(x, DIFF_Y, DIFF_W, DIFF_H, L"asset\\texture\\00_Common\\icon\\btn_normal.png");
+
+		m_DiffSelected[d] = Manager::AddGameObject<Polygon2D>();
+		m_DiffSelected[d]->Init(x, DIFF_Y, DIFF_W, DIFF_H, L"asset\\texture\\00_Common\\icon\\btn_selected.png");
+
+		//文字は枠の縦の真ん中にそろえる
+		float textH = diffTextH[d] * DIFF_TEXT_SCALE;
+		float textY = DIFF_Y + (DIFF_H - textH) * 0.5f;
+
+		m_DiffText[d] = Manager::AddGameObject<Polygon2D>();
+		m_DiffText[d]->Init(x + DIFF_TEXT_MARGIN, textY, diffTextW[d] * DIFF_TEXT_SCALE, textH, diffFile[d]);
+	}
+
+	//チュートリアル用の PLAY(EASY と HARD の2つ分の幅。文字は真ん中)
+	m_PlayFrame = Manager::AddGameObject<Polygon2D>();
+	m_PlayFrame->Init(BPM_X, DIFF_Y, PLAY_W, DIFF_H, L"asset\\texture\\00_Common\\icon\\btn_selected.png");
+
+	float playTextW = 115.0f * DIFF_TEXT_SCALE;
+	float playTextH = 60.0f * DIFF_TEXT_SCALE;
+	m_PlayText = Manager::AddGameObject<Polygon2D>();
+	m_PlayText->Init(BPM_X + (PLAY_W - playTextW) * 0.5f, DIFF_Y + (DIFF_H - playTextH) * 0.5f,
+		playTextW, playTextH, L"asset\\texture\\02_Play\\text\\play.png");
+	m_PlayText->SetColor(COLOR_SELECTED);
+
+	//歯車(右上。終了確認より前に足して、終了確認を開いたときに一緒に暗くなるようにする)
+	m_Gear = Manager::AddGameObject<Polygon2D>();
+	m_Gear->Init(GEAR_X, GEAR_Y, GEAR_SIZE, GEAR_SIZE, L"asset\\texture\\02_Play\\icon\\gear.png");
+	m_Gear->SetColor(COLOR_NORMAL);
+
+	UpdateListLook();		// 中で UpdateDifficultyLook も呼ぶ
 
 	//終了確認(キーガイドより前に足す。キーガイドだけは暗くしないため)
 	m_ExitDialog.Init(m_SelectSE, m_DecideSE);
@@ -204,15 +296,14 @@ void SelectScene::Init()
 	guideLine->Init(0.0f, 1002.0f, SCREEN_WIDTH, 2.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	guideLine->SetColor(XMFLOAT4(0.541f, 0.525f, 0.659f, 0.3f));
 
-	//キーの画像を左から順に並べる(Wheel・A/D は曲リストと難易度ができたら足す)
-	//キーの画像を左から順に並べる(A/D は難易度ができたら足す)
-	const int GUIDE_NUM = 3;
+	//キーの画像を左から順に並べる
+	const int GUIDE_NUM = 4;
 	const WCHAR* guideFile[GUIDE_NUM] = {
 		L"asset\\texture\\02_Play\\keyguide\\kg_wheel_song.png",
-		L"asset\\texture\\02_Play\\keyguide\\kg_enter_decide.png",
+		L"asset\\texture\\02_Play\\keyguide\\kg_ad_difficulty.png",
+		L"asset\\texture\\00_Common\\keyguide\\kg_click_decide.png",		
 		L"asset\\texture\\00_Common\\keyguide\\kg_esc_exit.png" };
-	const float guideWidth[GUIDE_NUM] = { 162.0f, 156.0f, 137.0f };
-
+	const float guideWidth[GUIDE_NUM] = { 162.0f, 194.0f, 150.0f, 137.0f };	
 	float guideX = 66.0f;
 	float escX = 0.0f;			// 「Esc 終了」を置いた x
 	for (int i = 0; i < GUIDE_NUM; i++)
@@ -243,6 +334,8 @@ void SelectScene::Init()
 	m_Fade->SetColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 	m_FadeTime = 0.0f;
 	m_IsLeaving = false;
+
+	PlayPreview();		// 最初に選ばれている曲を流す
 }
 
 //==============================================================================
@@ -266,6 +359,13 @@ void SelectScene::Update()
 	if (m_IsLeaving)
 	{
 		return;		// 出ていく途中は操作を受け付けない
+	}
+
+	//プレビュー(PREVIEW_LENGTH 秒たったら頭に戻す。終了確認中も戻すので、終了確認の return より前)
+	m_PreviewTime += Manager::GetDeltaTime();
+	if (m_PreviewTime >= PREVIEW_LENGTH)
+	{
+		PlayPreview();
 	}
 
 	//終了確認を開いている間は、そちらだけ動かす
@@ -292,14 +392,74 @@ void SelectScene::Update()
 		int dir = (wheel > 0) ? -1 : 1;					// 奥に回すと上の曲、手前に回すと下の曲
 		m_Select = (m_Select + dir + songNum) % songNum;	// 0 の上は最後の曲、最後の下は 0
 		UpdateListLook();
+		PlayPreview();
 		m_SelectSE->Play();
 	}
 
-	//Enter で決定
-	if (Input::GetKeyTrigger(VK_RETURN))
+	//難易度の選択(A で左、D で右。端で止まる)
+	int diffDir = 0;
+	if (Input::GetKeyTrigger('A')) diffDir = -1;
+	if (Input::GetKeyTrigger('D')) diffDir = +1;
+
+	if (diffDir != 0 && !IsTutorial())		// チュートリアルは難易度を選ばない
 	{
-		StartGame();
-		return;
+		int difficulty = std::clamp(m_Difficulty + diffDir, 0, DIFFICULTY_MAX - 1);
+
+		if (difficulty != m_Difficulty)		// 端でさらに押したときは何もしない(SE も鳴らさない)
+		{
+			m_Difficulty = difficulty;
+			UpdateDifficultyLook();
+			UpdateInfoText();				// 数字をこの難易度の譜面のものに
+			m_SelectSE->Play();
+		}
+	}
+	//マウスの位置
+	int mouseX = Input::GetMouseX();
+	int mouseY = Input::GetMouseY();
+
+	//難易度の選択(マウスを動かしたときだけ、乗っている枠を選ぶ)
+	bool mouseMoved = (Input::GetMouseMoveX() != 0 || Input::GetMouseMoveY() != 0);
+	int  hoverDiff = HitDifficulty(mouseX, mouseY);
+	if (mouseMoved && !IsTutorial() && hoverDiff >= 0 && hoverDiff != m_Difficulty)
+	{
+		m_Difficulty = hoverDiff;
+		UpdateDifficultyLook();
+		UpdateInfoText();
+		m_SelectSE->Play();
+	}
+
+	//歯車(乗っている間は明るくする)
+	bool onGear = HitGear(mouseX, mouseY);
+	m_Gear->SetColor(onGear ? COLOR_SELECTED : COLOR_NORMAL);
+
+	//左クリック
+	if (Input::GetMouseTrigger(Input::MOUSE_LEFT))
+	{
+		int hitSong = HitSong(mouseX, mouseY);
+
+		//歯車なら設定画面へ
+		if (onGear)
+		{
+			OpenSettings();
+			return;
+		}
+
+		//選択中の曲の行・ジャケット・(チュートリアルなら)PLAY なら、ゲーム開始
+		bool hitPlay = IsTutorial() && HitPlay(mouseX, mouseY);
+		if (hitSong == m_Select || HitJacket(mouseX, mouseY) || hitPlay)
+		{
+			StartGame();
+			return;
+		}
+
+		//ほかの曲の行なら、その曲を選ぶだけ
+		if (hitSong >= 0)
+		{
+			m_Select = hitSong;
+			UpdateListLook();
+			PlayPreview();
+			m_SelectSE->Play();
+		}
 	}
 
 	//Esc で終了確認を開く
@@ -331,7 +491,7 @@ void SelectScene::StartGame()
 	//選んでいる曲と難易度を覚えて、その譜面を GameScene に渡す
 	GameSession::songIndex = m_Select;
 	GameSession::difficulty = m_Difficulty;
-	GameSession::chartPath = SongList::songs[m_Select].chartPath[m_Difficulty];
+	GameSession::chartPath = SongList::songs[m_Select].chartPath[GetPlayDifficulty()];	// チュートリアルは EASY
 
 	m_DecideSE->Play();
 	Manager::ChangeScene<GameScene>(FADE_TIME);
@@ -403,7 +563,8 @@ void SelectScene::UpdateListLook()
 		m_InfoTitle[i]->SetAlpha(infoAlpha);
 		m_InfoArtist[i]->SetAlpha(infoAlpha);
 	}
-	UpdateInfoText();	// 数字も選択中の曲に合わせる
+	UpdateInfoText();		// 数字も選択中の曲に合わせる
+	UpdateDifficultyLook();	// チュートリアルかどうかで、難易度と PLAY を切り替える
 }
 
 //==============================================================================
@@ -423,6 +584,7 @@ void SelectScene::LoadChartInfo()
 			if (chart.Load(song.chartPath[d]))
 			{
 				info.loaded = true;
+				info.audioPath = chart.audioPath;		// プレビューで使う
 
 				//BPM:テンポの変化点の中で一番遅いものと速いもの
 				double bpmMin = chart.tempos[0].bpm;
@@ -462,7 +624,7 @@ void SelectScene::UpdateInfoText()
 		return;
 	}
 
-	const ChartInfo& info = m_ChartInfo[m_Difficulty][m_Select];
+	const ChartInfo& info = m_ChartInfo[GetPlayDifficulty()][m_Select];
 	char text[16];
 
 	//BPM(途中で変わる曲は「最小-最大」)
@@ -523,4 +685,168 @@ void SelectScene::SetNumberText(Polygon2D* chars[], const char* text, float left
 
 		x += step;							// 次の文字へ
 	}
+}
+
+//==============================================================================
+//難易度の枠と文字の見た目を選択に合わせる
+//==============================================================================
+void SelectScene::UpdateDifficultyLook()
+{
+	bool tutorial = IsTutorial();
+
+	//チュートリアルなら PLAY だけ、そうでなければ難易度だけを見せる
+	m_DiffLabel->SetAlpha(tutorial ? 0.0f : 1.0f);
+	m_PlayFrame->SetAlpha(tutorial ? 1.0f : 0.0f);
+	m_PlayText->SetAlpha(tutorial ? 1.0f : 0.0f);
+
+	for (int d = 0; d < DIFFICULTY_MAX; d++)
+	{
+		bool selected = (d == m_Difficulty);
+
+		m_DiffNormal[d]->SetAlpha((tutorial || selected) ? 0.0f : 1.0f);
+		m_DiffSelected[d]->SetAlpha((!tutorial && selected) ? 1.0f : 0.0f);
+
+		//SetColor はアルファも上書きするので、色の w で隠す
+		XMFLOAT4 color = selected ? COLOR_SELECTED : COLOR_NORMAL;
+		color.w = tutorial ? 0.0f : 1.0f;
+		m_DiffText[d]->SetColor(color);
+	}
+}
+
+//==============================================================================
+//(x, y) が画面に出ている曲の行の上なら、その曲の番号を返す
+//==============================================================================
+int SelectScene::HitSong(int x, int y) const
+{
+	for (int i = 0; i < (int)SongList::songs.size(); i++)
+	{
+		int slot = GetSlot(i);
+		if (slot < -LIST_ROWS_ABOVE || slot > LIST_ROWS_BELOW)
+		{
+			continue;		// 画面に出ていない曲は当たらない
+		}
+
+		//i 番目の曲の行(選択中の帯の位置から slot 行ずらした四角)
+		float left = LIST_CURSOR_X;
+		float top = LIST_CURSOR_Y + LIST_PITCH * slot;
+		float right = left + LIST_CURSOR_W;
+		float bottom = top + LIST_CURSOR_H;
+
+		if (x >= left && x < right && y >= top && y < bottom)
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+//==============================================================================
+//(x, y) がジャケットの上か
+//==============================================================================
+bool SelectScene::HitJacket(int x, int y) const
+{
+	return x >= JACKET_X && x < JACKET_X + JACKET_SIZE
+		&& y >= JACKET_Y && y < JACKET_Y + JACKET_SIZE;
+}
+
+//==============================================================================
+//(x, y) が難易度の枠の上なら、その難易度を返す
+//==============================================================================
+int SelectScene::HitDifficulty(int x, int y) const
+{
+	for (int d = 0; d < DIFFICULTY_MAX; d++)
+	{
+		float left = BPM_X + DIFF_PITCH * d;		// Init で枠を置いたのと同じ式
+		float top = DIFF_Y;
+
+		if (x >= left && x < left + DIFF_W && y >= top && y < top + DIFF_H)
+		{
+			return d;
+		}
+	}
+
+	return -1;
+}
+
+//==============================================================================
+//(x, y) が歯車の上か
+//==============================================================================
+bool SelectScene::HitGear(int x, int y) const
+{
+	return x >= GEAR_X && x < GEAR_X + GEAR_SIZE
+		&& y >= GEAR_Y && y < GEAR_Y + GEAR_SIZE;
+}
+
+//==============================================================================
+//設定画面へ(戻ってきたときに同じ曲・難易度から始められるよう、今の選択を覚えておく)
+//==============================================================================
+void SelectScene::OpenSettings()
+{
+	GameSession::songIndex = m_Select;
+	GameSession::difficulty = m_Difficulty;
+	GameSession::settingsFromSelect = true;		// 戻り先は選曲画面
+
+	m_DecideSE->Play();
+	Manager::ChangeScene<SettingsScene>(FADE_TIME);
+	m_IsLeaving = true;
+	m_FadeTime = 0.0f;
+}
+
+//==============================================================================
+//選択中の曲のプレビューを頭から流す(ほかの曲は止める)
+//==============================================================================
+void SelectScene::PlayPreview()
+{
+	//いったん全部止める
+	for (Audio* preview : m_Preview)
+	{
+		if (preview)
+		{
+			preview->Pause();
+		}
+	}
+
+	m_PreviewTime = 0.0f;
+
+	if (SongList::songs.empty())
+	{
+		return;
+	}
+
+	//選択中の曲を previewStart から流す
+	Audio* preview = m_Preview[m_Select];
+	if (preview)
+	{
+		preview->PlayFrom(SongList::songs[m_Select].previewStart);
+	}
+}
+
+//==============================================================================
+//選択中の曲がチュートリアルか
+//==============================================================================
+bool SelectScene::IsTutorial() const
+{
+	if (SongList::songs.empty())
+	{
+		return false;
+	}
+	return SongList::songs[m_Select].tutorial;
+}
+
+//==============================================================================
+//実際に遊ぶ難易度(チュートリアルは難易度を選ばないので、いつも EASY)
+//==============================================================================
+int SelectScene::GetPlayDifficulty() const
+{
+	return IsTutorial() ? DIFFICULTY_EASY : m_Difficulty;
+}
+
+//==============================================================================
+//(x, y) が PLAY の枠の上か
+//==============================================================================
+bool SelectScene::HitPlay(int x, int y) const
+{
+	return x >= BPM_X && x < BPM_X + PLAY_W
+		&& y >= DIFF_Y && y < DIFF_Y + DIFF_H;
 }

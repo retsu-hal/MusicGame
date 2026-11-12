@@ -6,11 +6,13 @@
       "titleImage": "asset\\texture\\02_Play\\text\\01_tutorial.png",
       "titleWidth": 193,
       "titleHeight": 36,
-      "artistImage": "asset\\texture\\02_Play\\text\\01_tutorial.png",
-      "artistWidth": 193,
-      "artistHeight": 36,
+      "artistImage": "",
+      "artistWidth": 0,
+      "artistHeight": 0,
       "jacket": "asset\\texture\\02_Play\\jacket\\01_tutorial.jpg",
-      "previewStart": 0.0
+      "preview": "asset\\audio\\bgm\\bgm_title.wav",
+      "previewStart": 0.0,
+      "tutorial": true
     }
   ]
 }
