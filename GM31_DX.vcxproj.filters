@@ -57,29 +57,8 @@
     <ClCompile Include="Source\Core\TextureManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Component\AnimationModel.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Component\Audio.cpp">
       <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Component\BillboardRenderer.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Component\Collider.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Component\ModelRenderer.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Component\Rigidbody.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Component\SpriteAnimation.cpp">
-      <Filter>Component</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Object\Player.cpp">
-      <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Source\Object\Score.cpp">
       <Filter>Object</Filter>
@@ -212,29 +191,8 @@
     <ClInclude Include="Source\Core\Vector3.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Component\AnimationModel.h">
-      <Filter>Component</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Component\Audio.h">
       <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Component\BillboardRenderer.h">
-      <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Component\Collider.h">
-      <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Component\ModelRenderer.h">
-      <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Component\Rigidbody.h">
-      <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Component\SpriteAnimation.h">
-      <Filter>Component</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Object\Player.h">
-      <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\Score.h">
       <Filter>Object</Filter>
@@ -340,25 +298,10 @@
     <FxCompile Include="shader\common.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
-    <FxCompile Include="shader\fieldPS.hlsl">
-      <Filter>shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\fieldVS.hlsl">
-      <Filter>shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\SkinVS.hlsl">
-      <Filter>shader</Filter>
-    </FxCompile>
     <FxCompile Include="shader\unlitTexturePS.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
     <FxCompile Include="shader\unlitTextureVS.hlsl">
-      <Filter>shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\WavePS.hlsl">
-      <Filter>shader</Filter>
-    </FxCompile>
-    <FxCompile Include="shader\WaveVS.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
     <FxCompile Include="shader\logoPS.hlsl">

@@ -21,7 +21,7 @@ struct PlayResult
 class GameSession
 {
 public:
-	static inline std::string chartPath = "asset\\chart\\test.json";   // 遊ぶ譜面
+	static inline std::string chartPath = "asset\\chart\\01_tutorial.json";   // 遊ぶ譜面
 	static inline PlayResult  result;                                   // 直前のプレイ結果
 
 	static inline int songIndex = 0;	// 選曲画面で選んでいた曲(SongList::songs の番号)

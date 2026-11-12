@@ -39,7 +39,7 @@ void ArcNote::Init()
 {
 	m_Layer = 2;
 
-	m_BandTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\arc_band.png");
+	m_BandTex = TextureManager::Load(L"asset\\texture\\02_Play\\icon\\arc_band.png");
 	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
 	{
@@ -90,7 +90,7 @@ void ArcNote::Init()
 		Renderer::GetDevice()->CreateBuffer(&bd, &sd, &m_HeadVertexBuffer);
 	}
 
-	m_HeadTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\arc_head.png");
+	m_HeadTex = TextureManager::Load(L"asset\\texture\\02_Play\\icon\\arc_head.png");
 }
 
 void ArcNote::Uninit()

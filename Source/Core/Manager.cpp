@@ -6,12 +6,11 @@
 #include "GameScene.h"
 #include "TitleScene.h"
 #include "Audio.h"
-#include "ModelRenderer.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
-#include "Collider.h"
 #include "Conductor.h"
 #include "Settings.h"
+#include "NoteManager.h"
 #include <cmath>
 
 // staticメンバー変数はcppで定義する必要がある
@@ -25,6 +24,9 @@ float Manager::m_DeltaTime = 1.0f / 60.0f;
 int Manager::m_FpsFrames = 0;
 DWORD Manager::m_FpsLastTime = 0;
 int Manager::m_Fps = 0;
+
+bool Manager::m_ShowDebug = false;
+bool Manager::m_DebugChangedMouse = false;
 
 void Manager::Init()
 {
@@ -71,7 +73,6 @@ void Manager::Uninit()
 		delete m_Scene;
 	}
 
-	ModelRenderer::UnloadAll();
 	ShaderManager::Unload();
 	TextureManager::Unload();
 
@@ -92,14 +93,32 @@ void Manager::Update()
 	Input::Update();
 	Conductor::Update();
 
+	// F1：デバッグ画面の表示 ⇔ 非表示
+	if (Input::GetKeyTrigger(VK_F1))
+	{
+		m_ShowDebug = !m_ShowDebug;
+
+		if (m_ShowDebug)
+		{
+			// 相対モード（プレイ中）ならカーソルを出す
+			m_DebugChangedMouse = (Input::GetMouseMode() == Input::MOUSE_MODE_RELATIVE);
+			if (m_DebugChangedMouse)
+				Input::SetMouseMode(Input::MOUSE_MODE_ABSOLUTE);
+		}
+		else if (m_DebugChangedMouse)
+		{
+			// 自分で変えたときだけ元に戻す
+			Input::SetMouseMode(Input::MOUSE_MODE_RELATIVE);
+			m_DebugChangedMouse = false;
+		}
+	}
+	DrawDebugWindow();	// m_Scene->Update より前：変えた値がこのフレームの処理にすぐ効く
+
 	if (m_Scene != nullptr)
 		m_Scene->Update();
 
 	for (GameObject *gameObject : m_GameObjects)
 		gameObject->Update();
-
-	// 当たり判定（各オブジェクトのUpdateで移動し終わってから、まとめて押し出す）
-	Collider::Check();
 
 	// ゲームオブジェクトの削除　【ラムダ式】
 	m_GameObjects.remove_if([](GameObject *object)
@@ -128,6 +147,7 @@ void Manager::Update()
 			m_GameObjects.clear();
 
 			Profiler::Clear();
+			m_DebugChangedMouse = false;	// 新しいシーンが自分でモードを決めるので、戻す責任は捨てる
 			m_Scene = m_NextScene;
 			{
 				ScopedSceneTimer sceneTimer; // シーン全体の実ロード時間(実経過)
@@ -232,4 +252,127 @@ void Manager::DrawFps()
 
 	char text[16];
 	snprintf(text, sizeof(text), "%d FPS", m_Fps);
+}
+
+
+//==============================================================================
+// F1 のデバッグ画面：設定の全項目・カメラ・楽曲のスキップ
+//==============================================================================
+void Manager::DrawDebugWindow()
+{
+	if (!m_ShowDebug) return;
+
+	ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(440.0f, 0.0f), ImGuiCond_FirstUseEver);
+	ImGui::Begin("デバッグ (F1)");
+
+	//---------------- 設定 ----------------
+	if (ImGui::CollapsingHeader("設定", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		// ハイスピード：中身は 800 とかだけど、設定画面に合わせて 8.0 で見せる
+		float hiSpeed = Settings::noteSpeed / 100.0f;
+		if (ImGui::SliderFloat("ハイスピード", &hiSpeed, 2.0f, 20.0f, "%.1f"))
+			Settings::noteSpeed = hiSpeed * 100.0f;
+
+		// 判定オフセットは Conductor に渡さないと効かない
+		if (ImGui::SliderFloat("判定オフセット(ms)", &Settings::offsetMs, -200.0f, 200.0f, "%.0f"))
+			Conductor::SetOffset(Settings::offsetMs / 1000.0);
+
+		ImGui::SliderFloat("表示オフセット(ms)", &Settings::visualOffsetMs, -200.0f, 200.0f, "%.0f");
+
+		// マウス感度：中身 0.025 → 表示 2.50
+		float sens = Settings::mouseSensitivity * 100.0f;
+		if (ImGui::SliderFloat("マウス感度", &sens, 0.10f, 5.00f, "%.2f"))
+			Settings::mouseSensitivity = sens / 100.0f;
+
+		ImGui::Checkbox("レイヤーガイド", &Settings::layerGuide);
+		ImGui::Checkbox("FAST / SLOW", &Settings::fastSlow);
+
+		// フルスクリーンは値を書き換えるだけじゃ切り替わらないので関数を呼ぶ
+		bool full = IsFullscreen();
+		if (ImGui::Checkbox("フルスクリーン", &full))
+			ToggleFullscreen();
+
+		ImGui::Checkbox("FPS 表示", &Settings::showFps);
+
+		// 音量：どれか変わったら XAudio2 に反映
+		bool volChanged = false;
+		volChanged |= ImGui::SliderInt("全体の音量", &Settings::masterVolume, 0, 100);
+		volChanged |= ImGui::SliderInt("曲の音量", &Settings::musicVolume, 0, 100);
+		volChanged |= ImGui::SliderInt("SE の音量", &Settings::seVolume, 0, 100);
+		if (volChanged)
+			Audio::ApplyVolume();
+
+		if (ImGui::Button("settings.json に保存"))
+			Settings::Save();
+	}
+
+	//---------------- カメラ（プレイ画面だけ） ----------------
+	CAMERA* camera = GetGameObject<CAMERA>();
+	if (camera && ImGui::CollapsingHeader("カメラ", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		Vector3 pos = camera->GetPosition();
+		Vector3 dir = camera->GetTarget() - pos;     // 位置 → 注視点
+		float dist = sqrtf(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+		if (dist < 0.001f) dist = 0.001f;            // 0 で割らない
+
+		// 向きから角度を出す（+ピッチ = 上向き、+ヨー = 右向き）
+		float pitch = XMConvertToDegrees(asinf(dir.y / dist));
+		float yaw = XMConvertToDegrees(atan2f(dir.x, dir.z));
+
+		// 位置：動かしても向きは変えない（注視点も一緒に動かす）
+		if (ImGui::DragFloat3("位置", &pos.x, 1.0f))
+		{
+			camera->SetPosition(pos);
+			camera->SetTarget(pos + dir);
+		}
+
+		// 角度：距離はそのまま、向きだけ変えて注視点を置き直す
+		bool angleChanged = false;
+		angleChanged |= ImGui::SliderFloat("ピッチ(上下)", &pitch, -89.0f, 89.0f, "%.1f°");
+		angleChanged |= ImGui::SliderFloat("ヨー(左右)", &yaw, -180.0f, 180.0f, "%.1f°");
+		if (angleChanged)
+		{
+			float p = XMConvertToRadians(pitch);
+			float y = XMConvertToRadians(yaw);
+			Vector3 newDir(cosf(p) * sinf(y), sinf(p), cosf(p) * cosf(y));
+			camera->SetTarget(pos + newDir * dist);
+		}
+
+		Vector3 target = camera->GetTarget();
+		ImGui::Text("注視点  %.1f, %.1f, %.1f", target.x, target.y, target.z);
+		ImGui::Text("注視点までの距離  %.1f", dist);
+	}
+
+	//---------------- 楽曲（プレイ画面だけ） ----------------
+	NoteManager* notes = GetGameObject<NoteManager>();
+	if (notes && ImGui::CollapsingHeader("楽曲", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		double now = Conductor::GetSongTime();
+		double length = notes->GetLength();
+		ImGui::Text("再生位置  %.1f / %.1f 秒", now, length);
+
+		// ポーズ中に飛ぶと、ポーズメニューが出たまま曲が鳴り出すので止めておく
+		if (!Conductor::IsPlaying())
+		{
+			ImGui::TextDisabled("ポーズ中はスキップできない");
+		}
+		else
+		{
+			if (ImGui::Button("-10秒")) notes->SeekTo(now - 10.0);
+			ImGui::SameLine();
+			if (ImGui::Button("+10秒")) notes->SeekTo(now + 10.0);
+
+			// スライダーで好きな位置へ。ドラッグ中に毎フレーム飛ぶと音がブツブツになるので、離した瞬間だけ飛ぶ
+			static float seekPos = 0.0f;
+			static bool  dragging = false;
+			if (!dragging) seekPos = (float)now;	// 触ってない間は今の位置に追従
+			ImGui::SliderFloat("位置へ移動", &seekPos, 0.0f, (float)length, "%.1f 秒");
+			dragging = ImGui::IsItemActive();		// スライダーを触ってるか（次のフレーム用）
+			if (ImGui::IsItemDeactivatedAfterEdit())
+				notes->SeekTo(seekPos);
+		}
+	}
+
+	ImGui::End();
 }

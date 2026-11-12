@@ -552,6 +552,11 @@ bool Input::IsMouseVisible()
 	return (info.flags & CURSOR_SHOWING) != 0;
 }
 
+Input::MOUSE_MODE Input::GetMouseMode()
+{
+	return s_Mode;
+}
+
 bool Input::IsMouseConnected()
 {
 	return GetSystemMetrics(SM_MOUSEPRESENT) != 0;

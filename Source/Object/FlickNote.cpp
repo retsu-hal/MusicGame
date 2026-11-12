@@ -64,8 +64,8 @@ void FlickNote::Init()
     m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
     // テクスチャ読み込み
-    m_RightTex = TextureManager::Load(L"asset\\texture\\flick_mouse_right.png");
-    m_LeftTex = TextureManager::Load(L"asset\\texture\\flick_mouse_left.png");
+    m_RightTex = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\flick_mouse_right.png");
+    m_LeftTex = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\flick_mouse_left.png");
 }
 
 void FlickNote::Uninit()

@@ -46,19 +46,19 @@ void ExitDialog::Init(Audio* selectSE, Audio* decideSE)
 
 	//後ろを暗くする板
 	m_Dim = Manager::AddGameObject<Polygon2D>();
-	m_Dim->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_Dim->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_Dim->SetColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	//枠・見出し・質問
 	Polygon2D* panel = Manager::AddGameObject<Polygon2D>();
-	panel->Init(585.0f, 327.0f, 750.0f, 378.0f, L"asset\\texture\\ui\\assets\\exit_panel.png");
+	panel->Init(585.0f, 327.0f, 750.0f, 378.0f, L"asset\\texture\\00_Common\\icon\\exit_panel.png");
 
 	Polygon2D* label = Manager::AddGameObject<Polygon2D>();
-	label->Init(621.0f, 355.0f, 285.0f, 36.0f, L"asset\\texture\\ui\\text\\label\\terminate_session.png");
+	label->Init(621.0f, 355.0f, 285.0f, 36.0f, L"asset\\texture\\00_Common\\text\\label_terminate_session.png");
 	label->SetColor(COLOR_ACCENT);
 
 	Polygon2D* question = Manager::AddGameObject<Polygon2D>();
-	question->Init(743.0f, 427.5f, 431.0f, 65.0f, L"asset\\texture\\ui\\text\\jp\\confirm_exit.png");
+	question->Init(743.0f, 427.5f, 431.0f, 65.0f, L"asset\\texture\\00_Common\\text\\jp_confirm_exit.png");
 	question->SetColor(COLOR_SELECTED);
 
 	m_Parts = { panel, label, question };
@@ -67,18 +67,18 @@ void ExitDialog::Init(Audio* selectSE, Audio* decideSE)
 	for (int i = 0; i < BUTTON_MAX; i++)
 	{
 		m_BtnNormal[i] = Manager::AddGameObject<Polygon2D>();
-		m_BtnNormal[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 330.0f, 120.0f, L"asset\\texture\\ui\\assets\\btn_normal.png");
+		m_BtnNormal[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 330.0f, 120.0f, L"asset\\texture\\00_Common\\icon\\btn_normal.png");
 
 		m_BtnSelected[i] = Manager::AddGameObject<Polygon2D>();
-		m_BtnSelected[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 330.0f, 120.0f, L"asset\\texture\\ui\\assets\\btn_selected.png");
+		m_BtnSelected[i]->Init(BTN_X[i], BTN_Y - BTN_MARGIN, 330.0f, 120.0f, L"asset\\texture\\00_Common\\icon\\btn_selected.png");
 	}
 
 	//ボタンの文字(枠より後に足して、枠の上に描く)
 	m_BtnText[BUTTON_YES] = Manager::AddGameObject<Polygon2D>();
-	m_BtnText[BUTTON_YES]->Init(750.0f, 568.5f, 90.0f, 60.0f, L"asset\\texture\\ui\\text\\menu\\yes.png");
+	m_BtnText[BUTTON_YES]->Init(750.0f, 568.5f, 90.0f, 60.0f, L"asset\\texture\\00_Common\\text\\yes.png");
 
 	m_BtnText[BUTTON_NO] = Manager::AddGameObject<Polygon2D>();
-	m_BtnText[BUTTON_NO]->Init(1092.0f, 567.0f, 68.0f, 60.0f, L"asset\\texture\\ui\\text\\menu\\no.png");
+	m_BtnText[BUTTON_NO]->Init(1092.0f, 567.0f, 68.0f, 60.0f, L"asset\\texture\\00_Common\\text\\no.png");
 
 	//最初は隠しておく
 	Close();

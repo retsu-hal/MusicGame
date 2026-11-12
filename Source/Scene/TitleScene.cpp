@@ -64,16 +64,16 @@ void TitleScene::Init()
 	m_BGM->Play(true);	// ループ再生
 
 	//背景
-	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\TitleBG.png");
+	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\TitleBG.png");
 	
 
 	//エンブレム(ロゴの左の丸い印)
 	Polygon2D* emblem = Manager::AddGameObject<Polygon2D>();
-	emblem->Init(350.0f, 170.0f, 1107.0f * 0.3f, 896.0f * 0.3f, L"asset\\texture\\logo.png");
+	emblem->Init(350.0f, 170.0f, 1107.0f * 0.3f, 896.0f * 0.3f, L"asset\\texture\\01_Title\\logo.png");
 	
 	//タイトルロゴ「Re:sonare」
 	m_Logo = Manager::AddGameObject<Polygon2D>();
-	m_Logo->Init(200.0f, 203.0f, 650.0f, 179.0f, L"asset\\texture\\ui\\text\\title\\resonare.png");
+	m_Logo->Init(200.0f, 203.0f, 650.0f, 179.0f, L"asset\\texture\\01_Title\\text\\title_resonare.png");
 	m_Logo->SetColor(XMFLOAT4(0.949f, 0.941f, 0.980f, 1.0f));	
 	m_Logo->SetPixelShader("shader\\logoPS.cso");	// 縁を光が走るシェーダー
 	m_Time = 0.0f;
@@ -83,19 +83,19 @@ void TitleScene::Init()
 
 	//選択中の帯と線(文字より先に足して、文字の下に描かれるようにする)
 	m_Cursor = Manager::AddGameObject<Polygon2D>();
-	m_Cursor->Init(CURSOR_X, CURSOR_Y, CURSOR_W, CURSOR_H, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_Cursor->Init(CURSOR_X, CURSOR_Y, CURSOR_W, CURSOR_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_Cursor->SetColor(COLOR_CURSOR);
 	m_Cursor->SetGradientAlpha(1.0f, 0.0f);		// 左はそのまま、右端で消える
 
 	m_CursorLine = Manager::AddGameObject<Polygon2D>();
-	m_CursorLine->Init(180.0f, MENU_Y + 3.0f, 6.0f, 48.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_CursorLine->Init(180.0f, MENU_Y + 3.0f, 6.0f, 48.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_CursorLine->SetColor(COLOR_ACCENT);
 
 	//項目ごとの画像と大きさ(画像の元のピクセル数)
 	const WCHAR* textFile[MENU_MAX] = {
-		L"asset\\texture\\ui\\text\\menu\\start.png",
-		L"asset\\texture\\ui\\text\\menu\\settings.png",	
-		L"asset\\texture\\ui\\text\\menu\\exit.png" };
+		L"asset\\texture\\01_Title\\text\\start.png",
+		L"asset\\texture\\01_Title\\text\\settings.png",	
+		L"asset\\texture\\01_Title\\text\\exit.png" };
 	const float textWidth[MENU_MAX] = { 143.0f, 214.0f, 104.0f };
 	const float subWidth[MENU_MAX] = { 96.0f, 70.0f };
 	const float subX[MENU_MAX] = { 367.0f, 329.0f };	// 英語の文字の長さが違うので、日本語の位置も項目ごと
@@ -116,12 +116,12 @@ void TitleScene::Init()
 	//キーガイド(画面下)
 //区切り線
 	Polygon2D* guideLine = Manager::AddGameObject<Polygon2D>();
-	guideLine->Init(0.0f, 1002.0f, SCREEN_WIDTH, 2.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+	guideLine->Init(0.0f, 1002.0f, SCREEN_WIDTH, 2.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	guideLine->SetColor(XMFLOAT4(0.541f, 0.525f, 0.659f, 0.3f));	// #8A86A8 をうすく
 
 	//キーの画像を左から順に並べる
 	const int GUIDE_NUM = 2;
-	const WCHAR* guideFile[GUIDE_NUM] = { L"asset\\texture\\ui\\keyguide\\kg_click_decide.png", L"asset\\texture\\ui\\keyguide\\kg_esc_exit.png" };
+	const WCHAR* guideFile[GUIDE_NUM] = { L"asset\\texture\\00_Common\\keyguide\\kg_click_decide.png", L"asset\\texture\\00_Common\\keyguide\\kg_esc_exit.png" };
 	const float guideWidth[GUIDE_NUM] = { 150.0f, 137.0f };
 
 	float guideX = 66.0f;
@@ -143,14 +143,14 @@ void TitleScene::Init()
 
 	//「Esc キャンセル」(終了確認を開いている間だけ「Esc 終了」と入れ替える)
 	m_GuideEscCancel = Manager::AddGameObject<Polygon2D>();
-	m_GuideEscCancel->Init(escX, 1005.0f, 204.0f, 78.0f, L"asset\\texture\\ui\\keyguide\\kg_esc_cancel.png");
+	m_GuideEscCancel->Init(escX, 1005.0f, 204.0f, 78.0f, L"asset\\texture\\00_Common\\keyguide\\kg_esc_cancel.png");
 	m_GuideEscCancel->SetColor(COLOR_NORMAL);
 
 	SetEscGuide(false);			// 最初は「Esc 終了」
 
 	//フェード用の黒い板(一番最後に足して、全部の上に描く)
 	m_Fade = Manager::AddGameObject<Polygon2D>();
-	m_Fade->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_Fade->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_Fade->SetColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));	// 真っ黒・不透明から始める
 	m_FadeTime = 0.0f;
 	m_IsLeaving = false;

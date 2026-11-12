@@ -62,10 +62,10 @@ void WheelNote::Init()
 	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
 	// テクスチャ読み込み
-	m_UpBarTex = TextureManager::Load(L"asset\\texture\\flick_wheel_up.png");
-	m_DownBarTex = TextureManager::Load(L"asset\\texture\\flick_wheel_down.png");
-	m_UpArrowTex = TextureManager::Load(L"asset\\texture\\wheel_arrow_up.png");
-	m_DownArrowTex = TextureManager::Load(L"asset\\texture\\wheel_arrow_down.png");
+	m_UpBarTex = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\flick_wheel_up.png");
+	m_DownBarTex = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\flick_wheel_down.png");
+	m_UpArrowTex = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\wheel_arrow_up.png");
+	m_DownArrowTex = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\wheel_arrow_down.png");
 }
 
 void WheelNote::Uninit()

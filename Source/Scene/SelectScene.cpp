@@ -88,7 +88,7 @@ static int AtlasCell(char c)
 void SelectScene::Init()
 {
 	//曲の一覧を読む
-	SongList::Load("asset\\chart\\songs.json");
+	SongList::Load("asset\\chart\\00_SongList.json");
 
 	m_Difficulty = GameSession::difficulty;
 
@@ -117,17 +117,17 @@ void SelectScene::Init()
 	m_BGM->Play(true);
 
 	//背景
-	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\TitleBG.png");
+	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\TitleBG.png");
 
 	//曲リスト
 	//選択中の帯と線(行は動かさず、曲のほうを動かす。文字より先に足して、文字の下に描く)
 	m_ListCursor = Manager::AddGameObject<Polygon2D>();
-	m_ListCursor->Init(LIST_CURSOR_X, LIST_CURSOR_Y, LIST_CURSOR_W, LIST_CURSOR_H, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_ListCursor->Init(LIST_CURSOR_X, LIST_CURSOR_Y, LIST_CURSOR_W, LIST_CURSOR_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_ListCursor->SetColor(COLOR_CURSOR);
 	m_ListCursor->SetGradientAlpha(1.0f, 0.0f);		// 左はそのまま、右端で消える
 
 	m_ListCursorLine = Manager::AddGameObject<Polygon2D>();
-	m_ListCursorLine->Init(LIST_CURSOR_X, LIST_CURSOR_Y + 12.0f, 6.0f, LIST_CURSOR_H - 24.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_ListCursorLine->Init(LIST_CURSOR_X, LIST_CURSOR_Y + 12.0f, 6.0f, LIST_CURSOR_H - 24.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_ListCursorLine->SetColor(COLOR_ACCENT);
 
 	//曲名とアーティスト名(全部「選択中の行」に置いておき、UpdateListLook でずらす)
@@ -169,13 +169,13 @@ void SelectScene::Init()
 	Polygon2D* bracket = Manager::AddGameObject<Polygon2D>();
 	bracket->Init(JACKET_X - BRACKET_MARGIN, JACKET_Y - BRACKET_MARGIN,
 		JACKET_SIZE + BRACKET_MARGIN * 2.0f, JACKET_SIZE + BRACKET_MARGIN * 2.0f,
-		L"asset\\texture\\ui\\assets\\jacket_bracket.png");
+		L"asset\\texture\\02_Play\\icon\\jacket_bracket.png");
 
 	//BPM / LENGTH / NOTES の見出し
 	const WCHAR* labelFile[3] = {
-		L"asset\\texture\\ui\\text\\label\\bpm.png",
-		L"asset\\texture\\ui\\text\\label\\length.png",
-		L"asset\\texture\\ui\\text\\label\\notes.png" };
+		L"asset\\texture\\02_Play\\text\\label_bpm.png",
+		L"asset\\texture\\02_Play\\text\\label_length.png",
+		L"asset\\texture\\02_Play\\text\\label_notes.png" };
 	const float labelX[3] = { BPM_X, LENGTH_X, NOTES_X };
 	const float labelW[3] = { 59.0f, 101.0f, 86.0f };
 	const float labelH[3] = { 36.0f, 38.0f, 38.0f };
@@ -201,16 +201,16 @@ void SelectScene::Init()
 	//キーガイド(画面下)
 	//区切り線
 	Polygon2D* guideLine = Manager::AddGameObject<Polygon2D>();
-	guideLine->Init(0.0f, 1002.0f, SCREEN_WIDTH, 2.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+	guideLine->Init(0.0f, 1002.0f, SCREEN_WIDTH, 2.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	guideLine->SetColor(XMFLOAT4(0.541f, 0.525f, 0.659f, 0.3f));
 
 	//キーの画像を左から順に並べる(Wheel・A/D は曲リストと難易度ができたら足す)
 	//キーの画像を左から順に並べる(A/D は難易度ができたら足す)
 	const int GUIDE_NUM = 3;
 	const WCHAR* guideFile[GUIDE_NUM] = {
-		L"asset\\texture\\ui\\keyguide\\kg_wheel_song.png",
-		L"asset\\texture\\ui\\keyguide\\kg_enter_decide.png",
-		L"asset\\texture\\ui\\keyguide\\kg_esc_exit.png" };
+		L"asset\\texture\\02_Play\\keyguide\\kg_wheel_song.png",
+		L"asset\\texture\\02_Play\\keyguide\\kg_enter_decide.png",
+		L"asset\\texture\\00_Common\\keyguide\\kg_esc_exit.png" };
 	const float guideWidth[GUIDE_NUM] = { 162.0f, 156.0f, 137.0f };
 
 	float guideX = 66.0f;
@@ -232,14 +232,14 @@ void SelectScene::Init()
 
 	//「Esc キャンセル」(終了確認を開いている間だけ「Esc 終了」と入れ替える)
 	m_GuideEscCancel = Manager::AddGameObject<Polygon2D>();
-	m_GuideEscCancel->Init(escX, 1005.0f, 204.0f, 78.0f, L"asset\\texture\\ui\\keyguide\\kg_esc_cancel.png");
+	m_GuideEscCancel->Init(escX, 1005.0f, 204.0f, 78.0f, L"asset\\texture\\00_Common\\keyguide\\kg_esc_cancel.png");
 	m_GuideEscCancel->SetColor(COLOR_NORMAL);
 
 	SetEscGuide(false);
 
 	//フェード用の黒い板(一番最後に足して、全部の上に描く)
 	m_Fade = Manager::AddGameObject<Polygon2D>();
-	m_Fade->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_Fade->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_Fade->SetColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 	m_FadeTime = 0.0f;
 	m_IsLeaving = false;
@@ -490,7 +490,7 @@ void SelectScene::CreateNumberText(Polygon2D* chars[], float left)
 	for (int i = 0; i < INFO_CHAR_MAX; i++)
 	{
 		chars[i] = Manager::AddGameObject<Polygon2D>();
-		chars[i]->Init(left, NUMBER_CENTER_Y - DIGIT_SIZE * 0.5f, DIGIT_SIZE, DIGIT_SIZE, L"asset\\texture\\number_atlas_512.png");
+		chars[i]->Init(left, NUMBER_CENTER_Y - DIGIT_SIZE * 0.5f, DIGIT_SIZE, DIGIT_SIZE, L"asset\\texture\\00_Common\\number_atlas_512.png");
 		chars[i]->SetAlpha(0.0f);
 	}
 }

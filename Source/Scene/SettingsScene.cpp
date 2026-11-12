@@ -119,26 +119,26 @@ static const ItemImage ITEM_IMAGE[SettingsScene::TAB_MAX][SettingsScene::ROW_MAX
 {
 	// GAMEPLAY
 	{
-		{ L"asset\\texture\\ui\\text\\setting_item\\hi_speed.png",      135.0f, L"asset\\texture\\ui\\text\\jp_desc\\hi_speed.png",      212.0f, 36.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\judge_offset.png",  206.0f, L"asset\\texture\\ui\\text\\jp_desc\\judge_offset.png",  333.0f, 38.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\visual_offset.png", 212.0f, L"asset\\texture\\ui\\text\\jp_desc\\visual_offset.png", 351.0f, 38.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\layer_guide.png",   180.0f, L"asset\\texture\\ui\\text\\jp_desc\\layer_guide.png",   356.0f, 36.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\fast_slow.png",     177.0f, L"asset\\texture\\ui\\text\\jp_desc\\fast_slow.png",     353.0f, 38.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\mouse_sens.png",    182.0f, L"asset\\texture\\ui\\text\\jp_desc\\mouse_sens.png",    132.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\hi_speed.png",      135.0f, L"asset\\texture\\04_Setting\\text\\jp_hi_speed.png",      212.0f, 36.0f },
+		{ L"asset\\texture\\04_Setting\\text\\judge_offset.png",  206.0f, L"asset\\texture\\04_Setting\\text\\jp_judge_offset.png",  333.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\visual_offset.png", 212.0f, L"asset\\texture\\04_Setting\\text\\jp_visual_offset.png", 351.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\layer_guide.png",   180.0f, L"asset\\texture\\04_Setting\\text\\jp_layer_guide.png",   356.0f, 36.0f },
+		{ L"asset\\texture\\04_Setting\\text\\fast_slow.png",     177.0f, L"asset\\texture\\04_Setting\\text\\jp_fast_slow.png",     353.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\mouse_sens.png",    182.0f, L"asset\\texture\\04_Setting\\text\\jp_mouse_sens.png",    132.0f, 38.0f },
 	},
 	// AUDIO
 	{
-		{ L"asset\\texture\\ui\\text\\setting_item\\master.png",        117.0f, L"asset\\texture\\ui\\text\\jp_desc\\master.png",        104.0f, 36.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\music.png",          95.0f, L"asset\\texture\\ui\\text\\jp_desc\\music.png",         104.0f, 38.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\se.png",             45.0f, L"asset\\texture\\ui\\text\\jp_desc\\se.png",            248.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\master.png",        117.0f, L"asset\\texture\\04_Setting\\text\\jp_master.png",        104.0f, 36.0f },
+		{ L"asset\\texture\\04_Setting\\text\\music.png",          95.0f, L"asset\\texture\\04_Setting\\text\\jp_music.png",         104.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\se.png",             45.0f, L"asset\\texture\\04_Setting\\text\\jp_se.png",            248.0f, 38.0f },
 	},
 	// DISPLAY
 	{
-		{ L"asset\\texture\\ui\\text\\setting_item\\screen_mode.png",   198.0f, L"asset\\texture\\ui\\text\\jp_desc\\screen_mode.png",   248.0f, 36.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\resolution.png",    177.0f, L"asset\\texture\\ui\\text\\jp_desc\\resolution.png",    230.0f, 38.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\v_sync.png",        108.0f, L"asset\\texture\\ui\\text\\jp_desc\\v_sync.png",        266.0f, 36.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\bg_brightness.png", 221.0f, L"asset\\texture\\ui\\text\\jp_desc\\bg_brightness.png", 212.0f, 38.0f },
-		{ L"asset\\texture\\ui\\text\\setting_item\\show_fps.png",      147.0f, L"asset\\texture\\ui\\text\\jp_desc\\show_fps.png",      248.0f, 36.0f },
+		{ L"asset\\texture\\04_Setting\\text\\screen_mode.png",   198.0f, L"asset\\texture\\04_Setting\\text\\jp_screen_mode.png",   248.0f, 36.0f },
+		{ L"asset\\texture\\04_Setting\\text\\resolution.png",    177.0f, L"asset\\texture\\04_Setting\\text\\jp_resolution.png",    230.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\v_sync.png",        108.0f, L"asset\\texture\\04_Setting\\text\\jp_v_sync.png",        266.0f, 36.0f },
+		{ L"asset\\texture\\04_Setting\\text\\bg_brightness.png", 221.0f, L"asset\\texture\\04_Setting\\text\\jp_bg_brightness.png", 212.0f, 38.0f },
+		{ L"asset\\texture\\04_Setting\\text\\show_fps.png",      147.0f, L"asset\\texture\\04_Setting\\text\\jp_show_fps.png",      248.0f, 36.0f },
 	},
 };
 
@@ -170,17 +170,17 @@ void SettingsScene::Init()
 	m_BGM->Play(true);													
 
 	//背景
-	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\TitleBG.png");
+	Manager::AddGameObject<Polygon2D>()->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\TitleBG.png");
 
 	//左上の見出し「SETTINGS」
 	Polygon2D* heading = Manager::AddGameObject<Polygon2D>();
-	heading->Init(72.0f, 50.0f, 125.0f, 36.0f, L"asset\\texture\\ui\\text\\label\\settings.png");
+	heading->Init(72.0f, 50.0f, 125.0f, 36.0f, L"asset\\texture\\04_Setting\\text\\label_settings.png");
 	heading->SetColor(COLOR_NORMAL);
 
 	
 	//タブと項目の間の縦線
 	Polygon2D* divider = Manager::AddGameObject<Polygon2D>();
-	divider->Init(393.0f, 144.0f, 2.0f, 810.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+	divider->Init(393.0f, 144.0f, 2.0f, 810.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	divider->SetColor(XMFLOAT4(0.541f, 0.525f, 0.659f, 0.3f));	// #8A86A8 をうすく
 
 	//タブ
@@ -188,18 +188,18 @@ void SettingsScene::Init()
 
 	//選択中の帯と線(文字より先に足して、文字の下に描かれるようにする)
 	m_TabCursor = Manager::AddGameObject<Polygon2D>();
-	m_TabCursor->Init(TAB_CURSOR_X, TAB_Y, TAB_CURSOR_W, TAB_H, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_TabCursor->Init(TAB_CURSOR_X, TAB_Y, TAB_CURSOR_W, TAB_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_TabCursor->SetColor(COLOR_CURSOR);
 	m_TabCursor->SetGradientAlpha(1.0f, 0.0f);		// 左はそのまま、右端で消える
 
 	m_TabCursorLine = Manager::AddGameObject<Polygon2D>();
-	m_TabCursorLine->Init(72.0f, TAB_Y + 15.0f, 6.0f, 33.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_TabCursorLine->Init(72.0f, TAB_Y + 15.0f, 6.0f, 33.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_TabCursorLine->SetColor(COLOR_ACCENT);
 
 	const WCHAR* tabFile[TAB_MAX] = {
-		L"asset\\texture\\ui\\text\\menu\\gameplay.png",
-		L"asset\\texture\\ui\\text\\menu\\audio.png",
-		L"asset\\texture\\ui\\text\\menu\\display.png" };
+		L"asset\\texture\\04_Setting\\text\\gameplay.png",
+		L"asset\\texture\\04_Setting\\text\\audio.png",
+		L"asset\\texture\\04_Setting\\text\\display.png" };
 	const float tabWidth[TAB_MAX] = { 234.0f, 141.0f, 189.0f };
 
 	for (int i = 0; i < TAB_MAX; i++)
@@ -212,12 +212,12 @@ void SettingsScene::Init()
 	m_Row = 0;
 
 	m_RowCursor = Manager::AddGameObject<Polygon2D>();
-	m_RowCursor->Init(ROW_X, ROW_Y, ROW_W, ROW_H, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_RowCursor->Init(ROW_X, ROW_Y, ROW_W, ROW_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_RowCursor->SetColor(COLOR_CURSOR);
 	m_RowCursor->SetGradientAlpha(1.0f, 0.0f);
 
 	m_RowCursorLine = Manager::AddGameObject<Polygon2D>();
-	m_RowCursorLine->Init(ROW_X, ROW_Y, 6.0f, ROW_H, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_RowCursorLine->Init(ROW_X, ROW_Y, 6.0f, ROW_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_RowCursorLine->SetColor(COLOR_ACCENT);
 
 	//3タブ分の項目を全部作っておく(今のタブ以外は UpdateLook で透明にする)
@@ -248,7 +248,7 @@ void SettingsScene::Init()
 	for (int r = 0; r < ROW_MAX; r++)
 	{
 		m_RowLine[r] = Manager::AddGameObject<Polygon2D>();
-		m_RowLine[r]->Init(ROW_X, ROW_Y + ROW_H * (r + 1) - 2.0f, ROW_W, 2.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+		m_RowLine[r]->Init(ROW_X, ROW_Y + ROW_H * (r + 1) - 2.0f, ROW_W, 2.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 		m_RowLine[r]->SetColor(COLOR_NORMAL);
 	}
 
@@ -258,20 +258,20 @@ void SettingsScene::Init()
 		float y = ROW_Y + ROW_H * r + SLIDER_OFFSET_Y;		// この行の線の真ん中の高さ
 
 		m_SliderBack[r] = Manager::AddGameObject<Polygon2D>();
-		m_SliderBack[r]->Init(SLIDER_X, y - SLIDER_H * 0.5f, SLIDER_W, SLIDER_H, L"asset\\texture\\ui\\assets\\white_square.png");
+		m_SliderBack[r]->Init(SLIDER_X, y - SLIDER_H * 0.5f, SLIDER_W, SLIDER_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 
 		m_SliderFill[r] = Manager::AddGameObject<Polygon2D>();
-		m_SliderFill[r]->Init(SLIDER_X, y - SLIDER_H * 0.5f, SLIDER_W, SLIDER_H, L"asset\\texture\\ui\\assets\\white_square.png");
+		m_SliderFill[r]->Init(SLIDER_X, y - SLIDER_H * 0.5f, SLIDER_W, SLIDER_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 
 		m_SliderKnob[r] = Manager::AddGameObject<Polygon2D>();
-		m_SliderKnob[r]->Init(SLIDER_X, y - KNOB_H * 0.5f, KNOB_W, KNOB_H, L"asset\\texture\\ui\\assets\\white_square.png");
+		m_SliderKnob[r]->Init(SLIDER_X, y - KNOB_H * 0.5f, KNOB_W, KNOB_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
 
 		for (int d = 0; d < DIGIT_MAX; d++)
 		{
 			float centerX = NUM_RIGHT - DIGIT_STEP * (d + 0.5f);		// d 桁目の真ん中(右から数える)
 
 			m_VolumeDigit[r][d] = Manager::AddGameObject<Polygon2D>();
-			m_VolumeDigit[r][d]->Init(centerX - DIGIT_SIZE * 0.5f, y - DIGIT_SIZE * 0.5f, DIGIT_SIZE, DIGIT_SIZE, L"asset\\texture\\number_atlas_512.png");
+			m_VolumeDigit[r][d]->Init(centerX - DIGIT_SIZE * 0.5f, y - DIGIT_SIZE * 0.5f, DIGIT_SIZE, DIGIT_SIZE, L"asset\\texture\\00_Common\\number_atlas_512.png");
 		}
 	}
 
@@ -293,7 +293,7 @@ void SettingsScene::Init()
 			for (int i = 0; i < VALUE_CHAR_MAX; i++)
 			{
 				m_ValueChar[r][i] = Manager::AddGameObject<Polygon2D>();
-				m_ValueChar[r][i]->Init(0.0f, 0.0f, DIGIT_SIZE, DIGIT_SIZE, L"asset\\texture\\number_atlas_512.png");
+				m_ValueChar[r][i]->Init(0.0f, 0.0f, DIGIT_SIZE, DIGIT_SIZE, L"asset\\texture\\00_Common\\number_atlas_512.png");
 			}
 		}
 
@@ -301,58 +301,58 @@ void SettingsScene::Init()
 		if (r == GP_JUDGE_OFFSET || r == GP_VISUAL_OFFSET)
 		{
 			m_ValueMs[r] = Manager::AddGameObject<Polygon2D>();
-			m_ValueMs[r]->Init(0.0f, 0.0f, MS_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\ms.png");
+			m_ValueMs[r]->Init(0.0f, 0.0f, MS_W, VALUE_IMAGE_H, L"asset\\texture\\04_Setting\\text\\setting_value_ms.png");
 		}
 
 		//ON / OFF の行
 		if (r == GP_LAYER_GUIDE || r == GP_FAST_SLOW)
 		{
 			m_ValueOn[r] = Manager::AddGameObject<Polygon2D>();
-			m_ValueOn[r]->Init(0.0f, 0.0f, ON_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\on.png");
+			m_ValueOn[r]->Init(0.0f, 0.0f, ON_W, VALUE_IMAGE_H, L"asset\\texture\\04_Setting\\text\\setting_value_on.png");
 
 			m_ValueOff[r] = Manager::AddGameObject<Polygon2D>();
-			m_ValueOff[r]->Init(0.0f, 0.0f, OFF_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\off.png");
+			m_ValueOff[r]->Init(0.0f, 0.0f, OFF_W, VALUE_IMAGE_H, L"asset\\texture\\04_Setting\\text\\setting_value_off.png");
 		}
 	}
 
 	//選択中の行の矢印(1組だけ作って、選択中の行へ動かす)
 	m_ArrowLeft = Manager::AddGameObject<Polygon2D>();
-	m_ArrowLeft->Init(0.0f, 0.0f, ARROW_SIZE, ARROW_SIZE, L"asset\\texture\\ui\\assets\\arrow_left.png");
+	m_ArrowLeft->Init(0.0f, 0.0f, ARROW_SIZE, ARROW_SIZE, L"asset\\texture\\04_Setting\\icon\\arrow_left.png");
 
 	m_ArrowRight = Manager::AddGameObject<Polygon2D>();
-	m_ArrowRight->Init(0.0f, 0.0f, ARROW_SIZE, ARROW_SIZE, L"asset\\texture\\ui\\assets\\arrow_right.png");
+	m_ArrowRight->Init(0.0f, 0.0f, ARROW_SIZE, ARROW_SIZE, L"asset\\texture\\04_Setting\\icon\\arrow_right.png");
 
 	m_ArrowLeftX = 0.0f;
 
 	//DISPLAY の値(今は SCREEN MODE だけ。WINDOW と FULLSCREEN の両方を作って、片方を隠す)
 	m_ScreenWindow = Manager::AddGameObject<Polygon2D>();
-	m_ScreenWindow->Init(0.0f, 0.0f, WINDOW_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\window.png");
+	m_ScreenWindow->Init(0.0f, 0.0f, WINDOW_W, VALUE_IMAGE_H, L"asset\\texture\\04_Setting\\text\\setting_value_window.png");
 
 	m_ScreenFull = Manager::AddGameObject<Polygon2D>();
-	m_ScreenFull->Init(0.0f, 0.0f, FULLSCREEN_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\fullscreen.png");
+	m_ScreenFull->Init(0.0f, 0.0f, FULLSCREEN_W, VALUE_IMAGE_H, L"asset\\texture\\04_Setting\\text\\setting_value_fullscreen.png");
 
 	m_ShownFullscreen = IsFullscreen();
 
 	m_FpsOn = Manager::AddGameObject<Polygon2D>();		
-	m_FpsOn->Init(0.0f, 0.0f, ON_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\on.png");
+	m_FpsOn->Init(0.0f, 0.0f, ON_W, VALUE_IMAGE_H, L"asset\\texture\\04_Setting\\text\\setting_value_on.png");
 
 	m_FpsOff = Manager::AddGameObject<Polygon2D>();	
-	m_FpsOff->Init(0.0f, 0.0f, OFF_W, VALUE_IMAGE_H, L"asset\\texture\\ui\\text\\setting_value\\off.png");
+	m_FpsOff->Init(0.0f, 0.0f, OFF_W, VALUE_IMAGE_H, L"asset\\texture\\04_Setting\\text\\setting_value_off.png");
 
 	UpdateLook();
 
 	//キーガイド(画面下)
 	//区切り線
 	Polygon2D* guideLine = Manager::AddGameObject<Polygon2D>();
-	guideLine->Init(0.0f, 1002.0f, SCREEN_WIDTH, 2.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+	guideLine->Init(0.0f, 1002.0f, SCREEN_WIDTH, 2.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	guideLine->SetColor(XMFLOAT4(0.541f, 0.525f, 0.659f, 0.3f));	// #8A86A8 をうすく
 
 	//キーの画像を左から順に並べる
 	const int GUIDE_NUM = 3;
 	const WCHAR* guideFile[GUIDE_NUM] = {
-		L"asset\\texture\\ui\\keyguide\\kg_ad_value.png",
-		L"asset\\texture\\ui\\keyguide\\kg_tab_switch.png",
-		L"asset\\texture\\ui\\keyguide\\kg_esc_save.png" };
+		L"asset\\texture\\04_Setting\\keyguide\\kg_ad_value.png",
+		L"asset\\texture\\04_Setting\\keyguide\\kg_tab_switch.png",
+		L"asset\\texture\\04_Setting\\keyguide\\kg_esc_save.png" };
 	const float guideWidth[GUIDE_NUM] = { 216.0f, 180.0f, 227.0f };
 
 	float guideX = 66.0f;
@@ -367,7 +367,7 @@ void SettingsScene::Init()
 
 	//フェード用の黒い板(一番最後に足して、全部の上に描く)
 	m_Fade = Manager::AddGameObject<Polygon2D>();
-	m_Fade->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\ui\\assets\\white_square.png");
+	m_Fade->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_Fade->SetColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));	// 真っ黒・不透明から始める
 	m_FadeTime = 0.0f;
 	m_IsLeaving = false;

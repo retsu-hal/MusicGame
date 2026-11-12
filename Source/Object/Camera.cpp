@@ -1,6 +1,5 @@
 ﻿#include "Manager.h"
 #include "Camera.h"
-#include "Player.h"
 
 #define POS_MAX 100.0f
 #define POS_MIN -100.0f

@@ -81,6 +81,7 @@ public:
 	static void SetMouseVisible(bool Visible);
 	static bool IsMouseVisible();
 	static bool IsMouseConnected();
+	static MOUSE_MODE GetMouseMode();	// 今のマウスモード（F1 のデバッグ画面で使う）
 
 	static void OnKeyDown(WPARAM wParam, LPARAM lParam);                  // WndProc から呼ぶ
 	static const std::vector<KeyEvent>& GetKeyEvents() { return m_FrameKeys; }

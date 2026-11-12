@@ -72,14 +72,14 @@ void Effect::Init()
     m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
     m_RingShader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\ringPS.cso");
 
-    m_JudgeTex[(int)Judge::Perfect] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_perfect.png");
-    m_JudgeTex[(int)Judge::Great] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_great.png");
-    m_JudgeTex[(int)Judge::Good] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_good.png");
-    m_JudgeTex[(int)Judge::Bad] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_bad.png");
-    m_JudgeTex[(int)Judge::Miss] = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_miss.png");
+    m_JudgeTex[(int)Judge::Perfect] = TextureManager::Load(L"asset\\texture\\02_Play\\text\\judge_perfect.png");
+    m_JudgeTex[(int)Judge::Great] = TextureManager::Load(L"asset\\texture\\02_Play\\text\\judge_great.png");
+    m_JudgeTex[(int)Judge::Good] = TextureManager::Load(L"asset\\texture\\02_Play\\text\\judge_good.png");
+    m_JudgeTex[(int)Judge::Bad] = TextureManager::Load(L"asset\\texture\\02_Play\\text\\judge_bad.png");
+    m_JudgeTex[(int)Judge::Miss] = TextureManager::Load(L"asset\\texture\\02_Play\\text\\judge_miss.png");
 
-    m_FastTex = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_fast.png");
-    m_SlowTex = TextureManager::Load(L"asset\\texture\\ui\\text\\play\\judge_slow.png");
+    m_FastTex = TextureManager::Load(L"asset\\texture\\02_Play\\text\\judge_fast.png");
+    m_SlowTex = TextureManager::Load(L"asset\\texture\\02_Play\\text\\judge_slow.png");
 }
 
 void Effect::Uninit()

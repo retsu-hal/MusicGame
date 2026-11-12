@@ -22,6 +22,9 @@ private:
 
 	static int   m_FpsFrames;		//  今の1秒のあいだに描いたフレーム数
 	static DWORD m_FpsLastTime;	//  数え始めた時刻(ミリ秒)
+	static bool  m_ShowDebug;			//  F1 のデバッグ画面を出しているか
+	static bool  m_DebugChangedMouse;	//  開くときに相対→絶対に変えたか（閉じるとき戻す用）
+
 	static int   m_Fps;				//  表示する FPS(1秒ごとに更新)
 
 public:
@@ -30,6 +33,7 @@ public:
 	static void Update();
 	static void Draw();
 	static float GetDeltaTime() { return m_DeltaTime; }
+	static void DrawDebugWindow();	//  F1 のデバッグ画面（ImGui）
 	static void DrawFps();			//  FPS を数えて、ON なら右上に描く
 
 	static const std::list<GameObject*>& GetAllGameObjects() { return m_GameObjects; }

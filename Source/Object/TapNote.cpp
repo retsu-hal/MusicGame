@@ -63,8 +63,8 @@ void TapNote::Init()
 	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
 	// テクスチャ読み込み
-	m_TapTexture[0] = TextureManager::Load(L"asset\\texture\\tapnote_lower.png");
-	m_TapTexture[1] = TextureManager::Load(L"asset\\texture\\tapnote_upper.png");
+	m_TapTexture[0] = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\tapnote_lower.png");
+	m_TapTexture[1] = TextureManager::Load(L"asset\\texture\\02_Play\\notes\\tapnote_upper.png");
 }
 
 void TapNote::Uninit()

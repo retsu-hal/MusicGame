@@ -37,7 +37,7 @@ void GameScene::Init()
 
 	// 背景(ほかの 2D より先に足す)
 	Polygon2D* bg = Manager::AddGameObject<Polygon2D>();
-	bg->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\backGround.png");
+	bg->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\02_Play\\PlayBG.png");
 	bg->SetUV(0.0556f, 0.0f, 0.8889f, 1.0f);
 	bg->SetLayer(0);
 

@@ -33,29 +33,29 @@ void PauseMenu::Init()
 
     // 後ろを暗くする板
     m_Dim = Manager::AddGameObject<Polygon2D>();
-    m_Dim->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\ui\\assets\\white_square.png");
+    m_Dim->Init(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, L"asset\\texture\\00_Common\\icon\\white_square.png");
     m_Dim->SetColor(XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
 
     // 「PAUSE」(284 × 96 を真ん中に)
     m_Pause = Manager::AddGameObject<Polygon2D>();
-    m_Pause->Init((SCREEN_WIDTH - 284.0f) * 0.5f, 300.0f, 284.0f, 96.0f, L"asset\\texture\\ui\\text\\pause\\pause.png");
+    m_Pause->Init((SCREEN_WIDTH - 284.0f) * 0.5f, 300.0f, 284.0f, 96.0f, L"asset\\texture\\02_Play\\text\\pause.png");
     m_Pause->SetColor(COLOR_SELECTED);
 
     // 選択中の帯と線(文字より先に足して、文字の下に描く)
     m_Cursor = Manager::AddGameObject<Polygon2D>();
-    m_Cursor->Init(CURSOR_X, CURSOR_Y, CURSOR_W, CURSOR_H, L"asset\\texture\\ui\\assets\\white_square.png");
+    m_Cursor->Init(CURSOR_X, CURSOR_Y, CURSOR_W, CURSOR_H, L"asset\\texture\\00_Common\\icon\\white_square.png");
     m_Cursor->SetColor(COLOR_CURSOR);
     m_Cursor->SetGradientAlpha(1.0f, 0.0f); // 左はそのまま、右端で消える
 
     m_CursorLine = Manager::AddGameObject<Polygon2D>();
-    m_CursorLine->Init(CURSOR_X + 12.0f, MENU_Y + 3.0f, 6.0f, 48.0f, L"asset\\texture\\ui\\assets\\white_square.png");
+    m_CursorLine->Init(CURSOR_X + 12.0f, MENU_Y + 3.0f, 6.0f, 48.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
     m_CursorLine->SetColor(COLOR_ACCENT);
 
     // 項目の文字
     const WCHAR *textFile[MENU_MAX] = {
-        L"asset\\texture\\ui\\text\\menu\\continue.png",
-        L"asset\\texture\\ui\\text\\menu\\retry.png",
-        L"asset\\texture\\ui\\text\\menu\\select.png"};
+        L"asset\\texture\\02_Play\\text\\continue.png",
+        L"asset\\texture\\02_Play\\text\\retry.png",
+        L"asset\\texture\\02_Play\\text\\select.png"};
     const float textWidth[MENU_MAX] = {228.0f, 147.0f, 171.0f};
 
     for (int i = 0; i < MENU_MAX; i++)
@@ -66,14 +66,14 @@ void PauseMenu::Init()
 
     // キーガイド(画面の左下。タイトルと同じ位置)
     m_Guide[0] = Manager::AddGameObject<Polygon2D>();
-    m_Guide[0]->Init(66.0f, 1005.0f, 150.0f, 78.0f, L"asset\\texture\\ui\\keyguide\\kg_click_decide.png");
+    m_Guide[0]->Init(66.0f, 1005.0f, 150.0f, 78.0f, L"asset\\texture\\00_Common\\keyguide\\kg_click_decide.png");
     m_Guide[1] = Manager::AddGameObject<Polygon2D>();
-    m_Guide[1]->Init(66.0f + 150.0f + 30.0f, 1005.0f, 159.0f, 78.0f, L"asset\\texture\\ui\\keyguide\\kg_esc_resume.png");
+    m_Guide[1]->Init(66.0f + 150.0f + 30.0f, 1005.0f, 159.0f, 78.0f, L"asset\\texture\\02_Play\\keyguide\\kg_esc_resume.png");
 
     // 3・2・1 の数字(Score・Combo と同じ数字のスプライト。4 × 4 マス)
     m_Count = Manager::AddGameObject<Polygon2D>();
     m_Count->Init((SCREEN_WIDTH - COUNT_SIZE) * 0.5f, (SCREEN_HEIGHT - COUNT_SIZE) * 0.5f,
-                  COUNT_SIZE, COUNT_SIZE, L"asset\\texture\\number_atlas_512.png");
+                  COUNT_SIZE, COUNT_SIZE, L"asset\\texture\\00_Common\\number_atlas_512.png");
 
     // 全部レイヤー3(判定ライン・スコアと同じ)。GameScene で一番最後に足すので、一番上に描かれる
     for (Polygon2D *p : {m_Dim, m_Pause, m_Cursor, m_CursorLine,

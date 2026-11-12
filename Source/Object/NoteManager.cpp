@@ -138,6 +138,39 @@ void NoteManager::Play()
 	Conductor::Start(m_Music, -LEAD_IN);
 }
 
+//==============================================================================
+// デバッグ用：曲の sec 秒の位置へ飛ぶ（前にも後ろにも）
+//==============================================================================
+void NoteManager::SeekTo(double sec)
+{
+	if (!m_Music)
+		return;
+
+	// 0秒〜曲の終わりの少し前に収める（終わりを超えると PlayFrom が鳴らさないので）
+	sec = std::clamp(sec, 0.0, m_Music->GetLength() - 0.5);
+
+	// ノーツを並べ直す：sec より前は Skip、後ろは未判定に戻る
+	for (NoteBase *notes : m_Notes)
+		notes->Reset(sec);
+
+	// 集計もやり直す（戻したときに同じノーツを2回数えないように）
+	for (int &c : m_Count)
+		c = 0;
+	m_Score->Reset();
+	m_Score->SetTotalJudges(m_TotalJudges);
+	m_Combo->Reset();
+
+	m_Finished = false;
+	m_MouseLog.clear(); // 飛ぶ前のマウスの記録でフリック判定しないように
+
+	Conductor::Start(m_Music, sec); // 音と時計をまとめて sec に合わせる
+}
+
+double NoteManager::GetLength() const
+{
+	return m_Music ? m_Music->GetLength() : 0.0;
+}
+
 void NoteManager::OnJudge(Judge judge, int lane, double diff, int width)
 {
 	m_Count[(int)judge]++;

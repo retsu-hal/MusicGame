@@ -11,11 +11,11 @@
 
 // キーの文字の画像と幅(高さはどれも 41)
 static const WCHAR *KEY_FILE[LANE_COUNT] = {
-	L"asset\\texture\\ui\\text\\lane_key\\a.png",
-	L"asset\\texture\\ui\\text\\lane_key\\s.png",
-	L"asset\\texture\\ui\\text\\lane_key\\d.png",
-	L"asset\\texture\\ui\\text\\lane_key\\f.png",
-	L"asset\\texture\\ui\\text\\lane_key\\space.png"};
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_a.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_s.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_d.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_f.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_space.png"};
 static const float KEY_W[LANE_COUNT] = {26.0f, 26.0f, 27.0f, 26.0f, 81.0f};
 static constexpr float KEY_Z = -50.0f; // キー枠の真ん中の奥行き
 
@@ -63,8 +63,8 @@ void JudgeLine::Init()
 	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
 	// テクスチャ読み込み
-	m_WhiteTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
-	m_CursorTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\cursor.png");
+	m_WhiteTex = TextureManager::Load(L"asset\\texture\\00_Common\\icon\\white_square.png");
+	m_CursorTex = TextureManager::Load(L"asset\\texture\\02_Play\\icon\\cursor.png");
 	for (int i = 0; i < LANE_COUNT; i++)
 		m_KeyTex[i] = TextureManager::Load(KEY_FILE[i]);
 

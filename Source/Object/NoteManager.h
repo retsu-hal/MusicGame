@@ -59,6 +59,8 @@ public:
 
 	bool LoadChart(const std::string &path);
 	void Play();
+	void SeekTo(double sec);   // デバッグ用：曲の好きな位置へ飛ぶ
+	double GetLength() const;  // 曲の長さ（秒）
 	void OnJudge(Judge judge, int lane, double diff, int width = 1); // ノーツが判定したら呼ぶ
 
 	const Chart &GetChart() const { return m_Chart; }

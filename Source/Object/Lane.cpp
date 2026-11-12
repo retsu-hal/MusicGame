@@ -81,8 +81,8 @@ void Lane::Init()
 	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
 
 	// テクスチャ読み込み
-	m_WhiteTex = TextureManager::Load(L"asset\\texture\\ui\\assets\\white_square.png");
-	m_LaneTex = TextureManager::Load(L"asset\\texture\\lane.png");
+	m_WhiteTex = TextureManager::Load(L"asset\\texture\\00_Common\\icon\\white_square.png");
+	m_LaneTex = TextureManager::Load(L"asset\\texture\\02_Play\\lane.png");
 
 	m_upper.height = UPPER_HEIGHT;
 }

@@ -1,4 +1,5 @@
 #include "SongList.h"
+#include "main.h"
 #include "nlohmann/json.hpp"
 #include <fstream>
 using json = nlohmann::json;
@@ -17,7 +18,11 @@ bool SongList::Load(const std::string& path)
 	songs.clear();					// 2回目に呼ばれたときに曲が倍にならないように
 
 	std::ifstream ifs(path);
-	if (!ifs) return false;
+	if (!ifs)
+	{
+		OutputDebugStringA(("[SongList] 読めませんでした: " + path + "\n").c_str());
+		return false;
+	}
 
 	json j = json::parse(ifs, nullptr, false);
 	if (j.is_discarded()) return false;

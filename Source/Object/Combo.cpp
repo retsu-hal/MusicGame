@@ -105,7 +105,7 @@ void Combo::Init()
 	//テクスチャ読み込み
 	TexMetadata metadata;
 	ScratchImage image;
-	LoadFromWICFile(L"asset\\texture\\number_atlas_512.png", WIC_FLAGS_NONE, &metadata, image);	// 背景が透明な数字アトラス
+	LoadFromWICFile(L"asset\\texture\\00_Common\\number_atlas_512.png", WIC_FLAGS_NONE, &metadata, image);	// 背景が透明な数字アトラス
 	CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(),
 		image.GetImageCount(), metadata, &m_Texture);
 	assert(m_Texture);
