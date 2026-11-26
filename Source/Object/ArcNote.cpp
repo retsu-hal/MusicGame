@@ -138,8 +138,6 @@ void ArcNote::Update()
 void ArcNote::Draw()
 {
 	const float now = (float)Conductor::GetSongTime();
-	const float speed = Settings::noteSpeed;
-	const float W = 0.3f; // 帯の幅の半分(レーン単位。0.6 レーンぶん)
 
 	// ----- 1. 帯(頂点を自分で並べる) -----
 	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
@@ -147,7 +145,7 @@ void ArcNote::Draw()
 
 	MATERIAL material{};
 	material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	material.TextureEnable = true;
+	material.TextureEnable = true;//true:テクスチャ使用　false:テクスチャ使用しない
 	Renderer::SetMaterial(material);
 
 	m_Shader->Set();
@@ -158,12 +156,10 @@ void ArcNote::Draw()
 	Renderer::GetDeviceContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	Renderer::SetDepthEnable(false); // 前後は描く順番で決める
 
-	XMFLOAT3 normal(0.0f, 1.0f, 0.0f); // 上向き(unlit なので使われない)
 
 	for (const ArcData &arc : m_Arcs)
 	{
-		Layout L = m_Layout;
-		L.height = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
+		m_Layout.height = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
 		D3D11_MAPPED_SUBRESOURCE msr;
 		Renderer::GetDeviceContext()->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
@@ -173,21 +169,44 @@ void ArcNote::Draw()
 		for (size_t i = 0; i < arc.samples.size(); i++)
 		{
 			const ArcSample &s = arc.samples[i];
-			float z = ((float)s.time - now) * speed;
+			float z = ((float)s.time - now) * Settings::noteSpeed;
 
-			// 次の点まで通り過ぎていたら、この点は要らない(その区間は全部見えない)
-			if (i + 1 < arc.samples.size() && ((float)arc.samples[i + 1].time - now) * speed < -60.0f)
+			// 判定ラインを過ぎた点は使わない
+			if (z < 0.0f)
 				continue;
-			if (count >= BAND_MAX_POINTS)
-				break; // バッファがいっぱい
+			if (count >= BAND_MAX_POINTS - 1)
+				break; // バッファがいっぱい(先頭に1点足すぶん空けておく)
+
+			// アークが始まってる(手前に捨てた点がある)なら、
+			// 最初に判定ライン上の点を1つ足す
+			if (count == 0 && i > 0)
+			{
+				vertex[0].Position = m_Layout.World(XAt(arc, now) + 0.3f, 0.0f);
+				vertex[0].Normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+				vertex[0].Diffuse = XMFLOAT4 (1.0f, 1.0f, 1.0f, 1.0f);
+				vertex[0].TexCoord = XMFLOAT2(1.0f, 0.5f);
+
+				vertex[1].Position = m_Layout.World(XAt(arc, now) - 0.3f, 0.0f);
+				vertex[1].Normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+				vertex[1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+				vertex[1].TexCoord = XMFLOAT2(0.0f, 0.5f);
+
+				count++;
+			}
 
 			// 奥ほど薄く(TapNote と同じ式)
 			float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
-			XMFLOAT4 color(1.0f, 1.0f, 1.0f, fade);
 
 			// 右 → 左の順(時計回りが表)。画像は真ん中の1行だけ貼る(帯の「断面」を引き伸ばす)
-			vertex[count * 2 + 0] = {L.World(s.x + W, z), normal, color, XMFLOAT2(1.0f, 0.5f)};
-			vertex[count * 2 + 1] = {L.World(s.x - W, z), normal, color, XMFLOAT2(0.0f, 0.5f)};
+			vertex[count * 2 + 0].Position = m_Layout.World(s.x + 0.3f, z);
+			vertex[count * 2 + 0].Normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+			vertex[count * 2 + 0].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, fade);
+			vertex[count * 2 + 0].TexCoord = XMFLOAT2(1.0f, 0.5f);
+
+			vertex[count * 2 + 1].Position = m_Layout.World(s.x - 0.3f, z);
+			vertex[count * 2 + 1].Normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
+			vertex[count * 2 + 1].Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, fade);
+			vertex[count * 2 + 1].TexCoord = XMFLOAT2(0.0f, 0.5f);
 			count++;
 
 			if (z > Z_FAR)
@@ -211,22 +230,21 @@ void ArcNote::Draw()
 	ScaleMatrix = XMMatrixScaling(0.8f * m_Layout.laneWidth, 0.8f * m_Layout.laneWidth, 1.0f);
 	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
 
-	for (const ArcData &arc : m_Arcs)
+	for (const ArcData& arc : m_Arcs)
 	{
 		if (now < arc.samples.front().time || now > arc.samples.back().time)
 			continue;
+		if (!arc.OnCursor)
+			continue; // 乗ってないときは印を出さない
 
-		float x = XAt(arc, now); // 今の時刻のアークの位置(レーン単位)
-		float y = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
-		Layout L = m_Layout;
-		L.height = y;
-		TransMatrix = XMMatrixTranslation((x - LANE_COUNT * 0.5f) * L.laneWidth, y, 0.0f);
+		m_Layout.height = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
+		TransMatrix = XMMatrixTranslation((XAt(arc, now) - LANE_COUNT * 0.5f) * m_Layout.laneWidth, m_Layout.height, 0.0f);
 		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
 		Renderer::SetWorldMatrix(WorldMatrix);
 
-		// マテリアル設定(乗ってなければ薄く)
+		// マテリアル設定(ここに来るのは乗ってるときだけなので、いつも不透明)
 		MATERIAL material{};
-		material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, arc.OnCursor ? 1.0f : 0.4f);
+		material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 		material.TextureEnable = true;
 		Renderer::SetMaterial(material);
 
@@ -253,7 +271,7 @@ void ArcNote::Load(const Chart &chart)
 
 			for (int k = 0; k < DIVISION; k++)
 			{
-				float t = (float)k / DIVISION;
+				float t = (float)k / DIVISION; //floatにしないと曲線が直線になるから
 				int tick = a.tick + (int)std::lround((b.tick - a.tick) * t);
 
 				ArcSample s;

@@ -161,8 +161,8 @@ void FlickNote::Draw()
     Renderer::SetDepthEnable(false); // 前後は描く順番で決める
 
     // ----- 向きごとに描く -----
-    DrawDir(1, now, speed);  // 右(ゴールド)
-    DrawDir(-1, now, speed); // 左(コーラル)
+    DrawDir(1, now, speed);  // 右
+    DrawDir(-1, now, speed); // 左
 
     Renderer::SetDepthEnable(true);
 }
@@ -172,14 +172,6 @@ void FlickNote::DrawDir(int dir, float now, float speed)
     // 3スライスの区切り。右向きは「しっぽ・伸ばす・矢印」、左向きは「矢印・伸ばす・しっぽ」
     const float leftPart = (dir > 0) ? TAIL : HEAD;  // 左の区間の幅(レーン単位)
     const float rightPart = (dir > 0) ? HEAD : TAIL; // 右の区間の幅
-
-    // 画像の横の区切り(u)。0 / 区切り1 / 区切り2 / 1
-    const float u1 = (dir > 0) ? 1.0f / 6.0f : 2.0f / 3.0f;
-    const float u2 = (dir > 0) ? 1.0f / 3.0f : 5.0f / 6.0f;
-    const float u[4] = {0.0f, u1, u2, 1.0f};
-
-    // 厚み:表示 64px を 1レーン = 120px に合わせる(ホイールフリックと同じ厚みになる)
-    const float depth = m_Layout.laneWidth * (64.0f / 120.0f);
 
     // テクスチャ設定(この向きの画像。DrawDir の中では変わらないので最初に 1 回)
     ID3D11ShaderResourceView *texture = (dir > 0) ? m_RightTex : m_LeftTex;
@@ -196,12 +188,9 @@ void FlickNote::DrawDir(int dir, float now, float speed)
         if (z > Z_FAR || z < -60.0f)
             continue; // 遠すぎ・通り過ぎ
 
-        float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
-
         // 横の区切り(x、レーン単位)。左端・区切り1・区切り2・右端
-        float x0 = (float)n.lane;
-        float x3 = x0 + n.width;
-        float x[4] = {x0, x0 + leftPart, x3 - rightPart, x3};
+        float x3 = (float)n.lane + (float)n.width;
+        float x[4] = { (float)n.lane, (float)n.lane + leftPart, x3 - rightPart, x3};
 
         // マテリアル設定。色は画像に入っているので白、奥からふわっと(3 枚とも同じ)
         float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
@@ -216,6 +205,11 @@ void FlickNote::DrawDir(int dir, float now, float speed)
             if (x[i + 1] <= x[i])
                 continue; // 幅 0(1レーンのときの真ん中)は描かない
 
+            // 画像の横の区切り(u)。0 / 区切り1 / 区切り2 / 1
+            const float u1 = (dir > 0) ? 1.0f / 6.0f : 2.0f / 3.0f;
+            const float u2 = (dir > 0) ? 1.0f / 3.0f : 5.0f / 6.0f;
+            const float u[4] = { 0.0f, u1, u2, 1.0f };
+
             // UV 設定(Polygon2D の SetUV と同じ。縦は画像全部 0〜1)
             m_Vertex[0].TexCoord = XMFLOAT2(u[i], 0.0f);     // 左上
             m_Vertex[1].TexCoord = XMFLOAT2(u[i + 1], 0.0f); // 右上
@@ -225,13 +219,12 @@ void FlickNote::DrawDir(int dir, float now, float speed)
 
             // スライスの真ん中(レーン全体の真ん中が x = 0)と、幅(ピクセル)
             float centerX = ((x[i] + x[i + 1]) * 0.5f - LANE_COUNT * 0.5f) * m_Layout.laneWidth;
-            float width = (x[i + 1] - x[i]) * m_Layout.laneWidth;
 
-            // マトリックス設定(床に寝かせる)
+            // マトリックス設定
             XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
-            ScaleMatrix = XMMatrixScaling(width, depth, 1.0f);
+            ScaleMatrix = XMMatrixScaling((x[i + 1] - x[i]) * m_Layout.laneWidth, m_Layout.laneWidth * (64.0f / 120.0f), 1.0f);
             RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
-            TransMatrix = XMMatrixTranslation(centerX, y, z);
+            TransMatrix = XMMatrixTranslation(centerX, (n.layer == 1) ? UPPER_HEIGHT : 0.0f, z);
             WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
             Renderer::SetWorldMatrix(WorldMatrix);
 

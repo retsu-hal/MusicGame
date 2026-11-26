@@ -11,7 +11,6 @@ class JudgeLine : public GameObject
 {
 private:
 	Layout m_play;
-	Layout m_upper;
 	ID3D11ShaderResourceView *m_WhiteTex = nullptr;
 	ID3D11ShaderResourceView *m_CursorTex = nullptr;
 

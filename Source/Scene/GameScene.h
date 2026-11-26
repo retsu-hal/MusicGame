@@ -18,7 +18,6 @@ private:
 	Combo* m_Combo = nullptr;
 	Lane* m_Lane = nullptr;
 	JudgeLine* m_JudgeLine = nullptr;
-	Polygon2D* m_Progress = nullptr;
 	PauseMenu m_Pause;
 	TutorialWindow m_TutorialWindow;
 

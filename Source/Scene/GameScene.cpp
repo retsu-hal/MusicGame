@@ -27,7 +27,6 @@
 
 #include "GameScene.h"
 #include "ResultScene.h"
-#include "TitleScene.h"
 #include "SelectScene.h"		
 
 //==============================================================================
@@ -45,9 +44,8 @@ void GameScene::Init()
 	bg->SetUV(0.0556f, 0.0f, 0.8889f, 1.0f);
 	bg->SetLayer(0);
 
-	// カメラ:今のレーンの見た目(Project)と同じに合わせる
+	// カメラ
 	CAMERA* camera = Manager::AddGameObject<CAMERA>();
-	Layout layout;                                            // 判定ラインの高さなどの初期値
 	camera->SetPosition(Vector3(0.0f, 805.0f, -CAMERA_DIST));   // 判定ラインの手前
 	camera->SetTarget(Vector3(0.0f, 805.0f, 0.0f));                     // 床と平行に、真っすぐ奥
 	camera->SetFocalLength(CAMERA_DIST);
@@ -57,11 +55,10 @@ void GameScene::Init()
 	m_JudgeLine = Manager::AddGameObject<JudgeLine>();
 	m_Score = Manager::AddGameObject<Score>();
 
-	// 進行バー:Score と同じレイヤー 3(ポーズの幕の下)。Score のあとに足すので枠の上に描かれる
-	m_Progress = Manager::AddGameObject<Polygon2D>();
-	m_Progress->Init(1362.0f, 164.0f, 504.0f, 8.0f, L"asset\\texture\\00_Common\\icon\\white_square.png");
-	m_Progress->SetPixelShader("shader\\progressPS.cso");
-	m_Progress->SetLayer(3);
+	// 左上のポーズボタン
+	Polygon2D* pauseButton = Manager::AddGameObject<Polygon2D>();
+	pauseButton->Init(44.0f, 44.0f, 96.0f, 96.0f, L"asset\\texture\\02_Play\\icon\\pause_button.png");
+	pauseButton->SetLayer(3);
 
 	m_Combo = Manager::AddGameObject<Combo>();
 	Manager::AddGameObject<SongPanel>();
@@ -136,13 +133,6 @@ void GameScene::Update()
 		return;
 	}
 
-	// 進行バー:曲の時間 / 曲の長さ。カウントイン中はマイナスなので 0〜1 に収める
-	double length = m_NoteManager ? m_NoteManager->GetLength() : 0.0;
-	if (length > 0.0)
-	{
-		float progress = (float)std::clamp(Conductor::GetSongTime() / length, 0.0, 1.0);
-		m_Progress->SetParam(XMFLOAT4(progress, 0.0f, 0.0f, 0.0f));
-	}
 
 	// 曲が終わったらリザルトへ（結果は NoteManager が GameSession に書いてある）
 	if (m_NoteManager && m_NoteManager->IsFinished())

@@ -223,10 +223,6 @@ void Score::Draw()
 
 	Renderer::GetDeviceContext()->Unmap(m_vertexBuffer, 0);
 
-	// 描画(使う文字の数だけ)
-	for (int i = 0; i < length; i++)
-		Renderer::GetDeviceContext()->Draw(4, i * 4);
-
 	// 1. 枠(いちばん下)
 	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_FrameTex);
 	Renderer::GetDeviceContext()->Draw(4, QUAD_FRAME * 4);

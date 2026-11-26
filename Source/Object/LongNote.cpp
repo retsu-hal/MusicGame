@@ -141,13 +141,11 @@ void LongNote::Draw()
 
 	Renderer::SetDepthEnable(false); // 前後は描く順番で決める
 
-	// 全部床に寝かせる(回転は全部同じなので 1 回だけ作る)
-	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
-	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
-
 	// ----- 1. 帯(加算)。黒いところは加算で消えて、光る帯になる -----
 	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_BodyTex);
 	Renderer::SetAddEnable(true);
+
+	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
 	for (const LongData &n : m_Notes)
 	{
 		if (n.endJudge != Judge::None)
@@ -167,6 +165,9 @@ void LongNote::Draw()
 		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
 		// マトリックス設定(帯の真ん中に、帯の長さで)
+
+
+		RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
 		ScaleMatrix = XMMatrixScaling(m_Layout.laneWidth * BODY_WIDTH, zEnd - zStart, 1.0f);
 		TransMatrix = XMMatrixTranslation(x, y, (zStart + zEnd) * 0.5f);
 		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
@@ -198,9 +199,6 @@ void LongNote::Draw()
 		if (holding)
 			zStart = 0.0f;
 
-		float x = (n.lane + 0.5f - LANE_COUNT * 0.5f) * m_Layout.laneWidth;
-		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
-
 		// マテリアル設定(段ごとの色。始点と終点は同じ色)
 		MATERIAL material{};
 		material.Diffuse = (n.layer == 1) ? XMFLOAT4(0.78f, 0.59f, 1.0f, 1.0f)	// 上段:紫 (200, 150, 255)
@@ -213,8 +211,10 @@ void LongNote::Draw()
 			if (z > Z_FAR || z < -60.0f)
 				continue;
 
-			// マトリックス設定(位置だけ変わる)
-			TransMatrix = XMMatrixTranslation(x, y, z);
+			XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
+			// マトリックス設定
+			TransMatrix = XMMatrixTranslation((n.lane + 0.5f - LANE_COUNT * 0.5f) * m_Layout.laneWidth, (n.layer == 1) ? UPPER_HEIGHT : 0.0f, z);
+			RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
 			WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
 			Renderer::SetWorldMatrix(WorldMatrix);
 

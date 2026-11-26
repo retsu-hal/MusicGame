@@ -54,8 +54,6 @@ void JudgeLine::Init()
 	m_WhiteTex = TextureManager::Load(L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_CursorTex = TextureManager::Load(L"asset\\texture\\02_Play\\icon\\cursor.png");
 
-
-	m_upper.height = UPPER_HEIGHT; // 上段は動かないので、最初に1回だけ
 }
 
 void JudgeLine::Uninit()
@@ -72,20 +70,15 @@ void JudgeLine::Update()
 void JudgeLine::Draw()
 {
 	NoteManager *noteManager = Manager::GetGameObject<NoteManager>();
-	if (!noteManager)
-		return;
+	if (!noteManager) return;
 
 	m_play.height = UPPER_HEIGHT * noteManager->GetPlayLayerAnim(); // 今いる面(上下する)
-
-	const float N = (float)LANE_COUNT;
-	const float lw = m_play.laneWidth;
 
 	// ----- 共通の設定(最初に 1 回) -----
 	Renderer::ClearDepth(); // 前のまま
 
 	// カメラ(3D のビュー・射影)
-	if (CAMERA *camera = Manager::GetGameObject<CAMERA>())
-		camera->Draw();
+	if (CAMERA *camera = Manager::GetGameObject<CAMERA>()) camera->Draw();
 
 	// 入力レイアウト・シェーダー設定
 	m_Shader->Set();
@@ -102,30 +95,27 @@ void JudgeLine::Draw()
 
 	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
 	MATERIAL material{};
-	material.TextureEnable = true;
+	material.TextureEnable = true;//true:テクスチャ使用　false:テクスチャ使用しない
 
-	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
 	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_WhiteTex);
 
-	// ----- 1. 判定ライン(上段の固定と、今いる面)。太さ 6 -----
-	ScaleMatrix = XMMatrixScaling(N * lw, 6.0f, 1.0f);
-	material.Diffuse = XMFLOAT4(1.0f, 0.78f, 0.96f, 1.0f); // (255, 200, 245)
+	// ----- 1. 判定ライン(上段の固定と、今いる面) -----
+	ScaleMatrix = XMMatrixScaling((float)LANE_COUNT * m_play.laneWidth, 6.0f, 1.0f);
+	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+	TransMatrix = XMMatrixTranslation(0.0f, m_play.height, 0.0f);
+	WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+	Renderer::SetWorldMatrix(WorldMatrix);
+
+	material.Diffuse = XMFLOAT4(1.0f, 0.78f, 0.96f, 1.0f);// ピンク
 	Renderer::SetMaterial(material);
-	for (const Layout &L : {m_upper, m_play})
-	{
-		TransMatrix = XMMatrixTranslation(0.0f, L.height, 0.0f);
-		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
-		Renderer::SetWorldMatrix(WorldMatrix);
 
-		Renderer::GetDeviceContext()->Draw(4, 0);
-	}
+	Renderer::GetDeviceContext()->Draw(4, 0);
 
-	// ----- 3. アークのカーソル(今いる面の判定ラインの上)。0.6 レーンの正方形 -----
+	// ----- 3. アークのカーソル(今いる面の判定ラインの上) -----
 	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_CursorTex);
 
-	const float x = noteManager->GetCursorX();
-	ScaleMatrix = XMMatrixScaling(0.6f * lw, 0.6f * lw, 1.0f);
-	TransMatrix = XMMatrixTranslation((x - N * 0.5f) * lw, m_play.height, 0.0f);
+	ScaleMatrix = XMMatrixScaling(m_play.laneWidth*0.6f,m_play.laneWidth*0.6f, 1.0f);
+	TransMatrix = XMMatrixTranslation((noteManager->GetCursorX() - (float)LANE_COUNT * 0.5f) * m_play.laneWidth, m_play.height, 0.0f);
 	WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
 	Renderer::SetWorldMatrix(WorldMatrix);
 
@@ -134,5 +124,5 @@ void JudgeLine::Draw()
 
 	Renderer::GetDeviceContext()->Draw(4, 0);
 
-	Renderer::SetDepthEnable(true);
+	Renderer::SetDepthEnable(true);// 元に戻す
 }

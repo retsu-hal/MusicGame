@@ -12,7 +12,7 @@ struct FlickData
 {
     double time = 0.0; // 振る時刻(秒)
     int lane = 0;      // 左端のレーン
-    int width = 1;     // 何レーンぶんか
+	int width = 1;     // 何レーン分の長さか
     int layer = 0;     // 見た目の高さ 0:下段 1:上段
     int dir = 0;       // 1:右 -1:左
     Judge judge = Judge::None;

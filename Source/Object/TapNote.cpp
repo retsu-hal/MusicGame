@@ -153,7 +153,7 @@ void TapNote::Draw()
 		// マトリックス設定
 		XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
 		ScaleMatrix = XMMatrixScaling(m_Layout.laneWidth * NOTE_WIDTH, NOTE_DEPTH, 1.0f); // 拡大縮小
-		RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);				  // 回転(床に寝かせる)
+		RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);				  // 回転
 		TransMatrix = XMMatrixTranslation(x, y, z);										  // 平行移動
 		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
 
