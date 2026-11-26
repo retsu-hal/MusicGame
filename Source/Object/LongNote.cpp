@@ -86,7 +86,7 @@ void LongNote::Update()
 	// 1. 押した瞬間:始点(タップと同じ。今いる段のノーツだけ)
 	for (const KeyEvent &e : Input::GetKeyEvents())
 	{
-		for (int lane = 0; lane < m_Layout.laneCount; lane++)
+		for (int lane = 0; lane < LANE_COUNT; lane++)
 		{
 			if (e.key == Lane::KEYS[lane])
 				JudgeStart(lane, layer, Conductor::CounterToSongTime(e.time));
@@ -96,7 +96,7 @@ void LongNote::Update()
 	// 2. レーンごとに「押している」「離した瞬間」を出す
 	bool held[LANE_COUNT];
 	bool released[LANE_COUNT];
-	for (int lane = 0; lane < m_Layout.laneCount; lane++)
+	for (int lane = 0; lane < LANE_COUNT; lane++)
 	{
 		held[lane] = Input::GetKeyPress(Lane::KEYS[lane]);
 		released[lane] = m_WasHeld[lane] && !held[lane]; // 前は押していて、今は押していない
@@ -163,7 +163,7 @@ void LongNote::Draw()
 			continue;				  // まだ遠い・通り過ぎ
 		zEnd = std::min(zEnd, Z_FAR); // 奥ははみ出さない
 
-		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+		float x = (n.lane + 0.5f - LANE_COUNT * 0.5f) * m_Layout.laneWidth;
 		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
 		// マトリックス設定(帯の真ん中に、帯の長さで)
@@ -198,7 +198,7 @@ void LongNote::Draw()
 		if (holding)
 			zStart = 0.0f;
 
-		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+		float x = (n.lane + 0.5f - LANE_COUNT * 0.5f) * m_Layout.laneWidth;
 		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
 		// マテリアル設定(段ごとの色。始点と終点は同じ色)

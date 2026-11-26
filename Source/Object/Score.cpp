@@ -14,6 +14,7 @@
 #include "Renderer.h"
 #include "Manager.h"
 #include "Score.h"
+#include "TextureManager.h"
 #include <cmath>
 
 //==============================================================================
@@ -25,8 +26,20 @@
 #define DIGIT_HEIGHT 64.0f       // 1文字の高さ
 #define DIGIT_STEP   38.0f       // 次の文字までの送り幅
 #define NARROW_STEP  18.0f       // 「.」の送り幅(細い)
-#define SCORE_RIGHT  (SCREEN_WIDTH - 20.0f)   // 右端の位置
-#define SCORE_TOP    40.0f
+#define SCORE_RIGHT  1850.0f     
+#define SCORE_TOP    82.0f       
+
+// 枠(画面の位置)
+#define PANEL_X      1352.0f
+#define PANEL_Y      44.0f
+#define PANEL_W      524.0f
+#define PANEL_H      140.0f
+
+// 「ACHIEVEMENT」(画面の位置。大きさは画像のピクセル数そのまま)
+#define LABEL_X      1384.0f
+#define LABEL_Y      58.0f
+#define LABEL_W      174.0f
+#define LABEL_H      36.0f
 
 //==============================================================================
 //プロトタイプ宣言
@@ -60,12 +73,12 @@ void Score::Init()
 	m_Position = Vector3(SCORE_RIGHT, SCORE_TOP, 0.0f);
 
 	// 中身は Draw で毎回書くので、ここでは全部 0 でいい
-	VERTEX_3D vertex[4 * DIGIT_NUM] = {};
+	VERTEX_3D vertex[4 * QUAD_NUM] = {};
 
 	// 頂点バッファ生成
 	D3D11_BUFFER_DESC bd{};
 	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.ByteWidth = sizeof(VERTEX_3D) * 4 * DIGIT_NUM;
+	bd.ByteWidth = sizeof(VERTEX_3D) * 4 * QUAD_NUM;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
@@ -79,12 +92,9 @@ void Score::Init()
 	Renderer::CreatePixelShader(&m_PixelShader, "shader\\unlitTexturePS.cso");
 
 	//テクスチャ読み込み
-	TexMetadata metadata;
-	ScratchImage image;
-	LoadFromWICFile(L"asset\\texture\\00_Common\\number_atlas_512.png", WIC_FLAGS_NONE, &metadata, image);	// 背景が透明な数字アトラス
-	CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(),
-		image.GetImageCount(), metadata, &m_Texture);
-	assert(m_Texture);
+	m_Texture = TextureManager::Load(L"asset\\texture\\00_Common\\number_atlas_512.png");
+	m_FrameTex = TextureManager::Load(L"asset\\texture\\02_Play\\icon\\panel_frame.png");
+	m_LabelTex = TextureManager::Load(L"asset\\texture\\02_Play\\text\\label_achievement.png");
 }
 
 //==============================================================================
@@ -97,7 +107,6 @@ void Score::Uninit()
 	m_VertexLayout->Release();
 	m_VertexShader->Release();
 	m_PixelShader->Release();
-	m_Texture->Release();
 }
 
 //==============================================================================
@@ -202,11 +211,34 @@ void Score::Draw()
 				sizeX * (num % TEXTURE_NUM_WIDTH), sizeY * (num / TEXTURE_NUM_WIDTH), sizeX, sizeY);
 	}
 
+	// 8 枚目:枠。位置は「画面の位置 - m_Position」(頂点は m_Position から見た位置なので)
+	SetQuad(&vertex[QUAD_FRAME * 4],
+			PANEL_X - SCORE_RIGHT, PANEL_Y - SCORE_TOP, PANEL_W, PANEL_H,
+			0.0f, 0.0f, 1.0f, 1.0f);
+
+	// 9 枚目:「ACHIEVEMENT」
+	SetQuad(&vertex[QUAD_LABEL * 4],
+			LABEL_X - SCORE_RIGHT, LABEL_Y - SCORE_TOP, LABEL_W, LABEL_H,
+			0.0f, 0.0f, 1.0f, 1.0f);
+
 	Renderer::GetDeviceContext()->Unmap(m_vertexBuffer, 0);
 
 	// 描画(使う文字の数だけ)
 	for (int i = 0; i < length; i++)
 		Renderer::GetDeviceContext()->Draw(4, i * 4);
+
+	// 1. 枠(いちばん下)
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_FrameTex);
+	Renderer::GetDeviceContext()->Draw(4, QUAD_FRAME * 4);
+
+	// 2. 数字(使う文字の数だけ)。画像を数字に戻す
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_Texture);
+	for (int i = 0; i < length; i++)
+		Renderer::GetDeviceContext()->Draw(4, i * 4);
+
+	// 3. 「ACHIEVEMENT」
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_LabelTex);
+	Renderer::GetDeviceContext()->Draw(4, QUAD_LABEL * 4);
 }
 
 void Score::Reset()

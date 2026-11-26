@@ -14,10 +14,8 @@ private:
 	Layout m_upper;
 	ID3D11ShaderResourceView *m_WhiteTex = nullptr;
 	ID3D11ShaderResourceView *m_CursorTex = nullptr;
-	ID3D11ShaderResourceView *m_KeyTex[LANE_COUNT] = {};
-	const ShaderSet *m_Shader = nullptr;
-	float m_Glow[LANE_COUNT] = {};
 
+	const ShaderSet *m_Shader = nullptr;
 public:
 	void Init() override;
 	void Uninit() override;

@@ -11,6 +11,7 @@
 #include "Conductor.h"
 #include "Settings.h"
 #include "NoteManager.h"
+#include "Lane.h"
 #include <cmath>
 
 // staticメンバー変数はcppで定義する必要がある
@@ -352,6 +353,27 @@ void Manager::DrawDebugWindow()
 		double length = notes->GetLength();
 		ImGui::Text("再生位置  %.1f / %.1f 秒", now, length);
 
+		// 一時停止 / 再生。デバッグ画面で止めたときだけ、ここから再生できる
+		// (Esc のポーズメニューで止めているときは、メニュー側で再開する)
+		static bool debugPaused = false;
+		if (Conductor::IsPlaying())
+		{
+			debugPaused = false;						// ポーズメニューから再開された時のために戻す
+			if (ImGui::Button("一時停止"))
+			{
+				Conductor::Pause();
+				debugPaused = true;
+			}
+		}
+		else if (debugPaused)
+		{
+			if (ImGui::Button("再生"))
+			{
+				Conductor::ReStart();
+				debugPaused = false;
+			}
+		}
+
 		// ポーズ中に飛ぶと、ポーズメニューが出たまま曲が鳴り出すので止めておく
 		if (!Conductor::IsPlaying())
 		{
@@ -371,6 +393,57 @@ void Manager::DrawDebugWindow()
 			dragging = ImGui::IsItemActive();		// スライダーを触ってるか（次のフレーム用）
 			if (ImGui::IsItemDeactivatedAfterEdit())
 				notes->SeekTo(seekPos);
+		}
+	}
+
+	//---------------- レーン（プレイ画面だけ） ----------------
+	// Layout::laneWidth は static なので、床・ノーツ・判定ラインが全部この 1 個を見ている
+	if (GetGameObject<Lane>() && ImGui::CollapsingHeader("レーン"))
+	{
+		ImGui::SliderFloat("レーン幅(px)", &Layout::laneWidth, 80.0f, 250.0f, "%.1f");
+		if (ImGui::Button("150 に戻す"))
+			Layout::laneWidth = 150.0f;
+
+		// Lane.h の Layout にそのまま貼れる形でコピー
+		ImGui::SameLine();
+		if (ImGui::Button("コードとしてコピー##lane"))
+		{
+			char buf[128];
+			snprintf(buf, sizeof(buf),
+				"\tstatic inline float laneWidth = %.1ff; // レーン幅(全部の Layout で共通)\n",
+				Layout::laneWidth);
+			ImGui::SetClipboardText(buf);
+		}
+	}
+
+	//---------------- ネオン（プレイ画面だけ） ----------------
+	Lane* lane = GetGameObject<Lane>();
+	if (lane && ImGui::CollapsingHeader("レーンのネオン"))
+	{
+		NeonParam& n = lane->GetNeon();
+		ImGui::ColorEdit3("左の色", &n.left.x);
+		ImGui::ColorEdit3("右の色", &n.right.x);
+		ImGui::SliderFloat("にじみの幅(px)", &n.falloff, 1.0f, 40.0f, "%.1f");
+		ImGui::SliderFloat("光の強さ", &n.intensity, 0.0f, 2.0f, "%.2f");
+		ImGui::SliderFloat("芯の太さ(px)", &n.core, 0.0f, 6.0f, "%.2f");
+		if (ImGui::Button("初期値に戻す"))
+			n = NeonParam();
+
+		// 今の値を NeonParam の初期値の形でコピー。Lane.h に貼り付ければ固定できる
+		ImGui::SameLine();
+		if (ImGui::Button("コードとしてコピー"))
+		{
+			char buf[512];
+			snprintf(buf, sizeof(buf),
+				"\tXMFLOAT3 left = XMFLOAT3(%.2ff, %.2ff, %.2ff);\n"
+				"\tXMFLOAT3 right = XMFLOAT3(%.2ff, %.2ff, %.2ff);\n"
+				"\tfloat falloff = %.2ff;\n"
+				"\tfloat intensity = %.2ff;\n"
+				"\tfloat core = %.2ff;\n",
+				n.left.x, n.left.y, n.left.z,
+				n.right.x, n.right.y, n.right.z,
+				n.falloff, n.intensity, n.core);
+			ImGui::SetClipboardText(buf);
 		}
 	}
 

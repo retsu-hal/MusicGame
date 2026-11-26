@@ -224,7 +224,7 @@ void FlickNote::DrawDir(int dir, float now, float speed)
             Renderer::GetDeviceContext()->UpdateSubresource(m_vertexBuffer, 0, nullptr, m_Vertex, 0, 0);
 
             // スライスの真ん中(レーン全体の真ん中が x = 0)と、幅(ピクセル)
-            float centerX = ((x[i] + x[i + 1]) * 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+            float centerX = ((x[i] + x[i + 1]) * 0.5f - LANE_COUNT * 0.5f) * m_Layout.laneWidth;
             float width = (x[i + 1] - x[i]) * m_Layout.laneWidth;
 
             // マトリックス設定(床に寝かせる)

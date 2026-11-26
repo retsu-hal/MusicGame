@@ -171,7 +171,7 @@ void WheelNote::DrawDir(int dir, float now, float speed)
 	const float height = (dir > 0) ? 0.0f : UPPER_HEIGHT;
 
 	// バーの大きさ。幅 = レーン全体、厚み = 画像の縦横比(1440 × 128)を保つ
-	const float barW = m_Layout.laneWidth * m_Layout.laneCount;
+	const float barW = m_Layout.laneWidth * LANE_COUNT;
 	const float barD = barW * (128.0f / 1440.0f);
 
 	// 矢印の真ん中の高さ。上向きはバーの上に立てる、下向きはバーの下にぶら下げる

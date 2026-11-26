@@ -1,23 +1,11 @@
 #include "main.h"
 #include "Manager.h"
 #include "Renderer.h"
-#include "Input.h"
 #include "Camera.h"
 #include "NoteManager.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
 #include "JudgeLine.h"
-#include <algorithm>
-
-// キーの文字の画像と幅(高さはどれも 41)
-static const WCHAR *KEY_FILE[LANE_COUNT] = {
-	L"asset\\texture\\02_Play\\text\\lane_key\\key_a.png",
-	L"asset\\texture\\02_Play\\text\\lane_key\\key_s.png",
-	L"asset\\texture\\02_Play\\text\\lane_key\\key_d.png",
-	L"asset\\texture\\02_Play\\text\\lane_key\\key_f.png",
-	L"asset\\texture\\02_Play\\text\\lane_key\\key_space.png"};
-static const float KEY_W[LANE_COUNT] = {26.0f, 26.0f, 27.0f, 26.0f, 81.0f};
-static constexpr float KEY_Z = -50.0f; // キー枠の真ん中の奥行き
 
 void JudgeLine::Init()
 {
@@ -65,8 +53,7 @@ void JudgeLine::Init()
 	// テクスチャ読み込み
 	m_WhiteTex = TextureManager::Load(L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_CursorTex = TextureManager::Load(L"asset\\texture\\02_Play\\icon\\cursor.png");
-	for (int i = 0; i < LANE_COUNT; i++)
-		m_KeyTex[i] = TextureManager::Load(KEY_FILE[i]);
+
 
 	m_upper.height = UPPER_HEIGHT; // 上段は動かないので、最初に1回だけ
 }
@@ -80,16 +67,6 @@ void JudgeLine::Uninit()
 
 void JudgeLine::Update()
 {
-	float dt = Manager::GetDeltaTime();
-
-	// 押したキーの枠を濃くする(徐々に戻す)
-	for (int i = 0; i < LANE_COUNT; i++)
-	{
-		if (Input::GetKeyPress(Lane::KEYS[i]))
-			m_Glow[i] = 1.0f;
-		else
-			m_Glow[i] = std::max(0.0f, m_Glow[i] - dt * 6.0f);
-	}
 }
 
 void JudgeLine::Draw()
@@ -143,20 +120,6 @@ void JudgeLine::Draw()
 		Renderer::GetDeviceContext()->Draw(4, 0);
 	}
 
-	// ----- 2. キーの枠(今いる面)。押すと濃くなる。横はレーンの 0.12〜0.88、奥行きは -20〜-80 -----
-	ScaleMatrix = XMMatrixScaling(0.76f * lw, 60.0f, 1.0f);
-	for (int i = 0; i < LANE_COUNT; i++)
-	{
-		TransMatrix = XMMatrixTranslation((i + 0.5f - N * 0.5f) * lw, m_play.height, KEY_Z);
-		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
-		Renderer::SetWorldMatrix(WorldMatrix);
-
-		material.Diffuse = XMFLOAT4(0.59f, 0.47f, 1.0f, 0.10f + 0.35f * m_Glow[i]); // (150, 120, 255)
-		Renderer::SetMaterial(material);
-
-		Renderer::GetDeviceContext()->Draw(4, 0);
-	}
-
 	// ----- 3. アークのカーソル(今いる面の判定ラインの上)。0.6 レーンの正方形 -----
 	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_CursorTex);
 
@@ -170,25 +133,6 @@ void JudgeLine::Draw()
 	Renderer::SetMaterial(material);
 
 	Renderer::GetDeviceContext()->Draw(4, 0);
-
-	// ----- 4. キーの文字。キー枠の真ん中に立てる。押している間だけ白く -----
-	RotMatrix = XMMatrixRotationRollPitchYaw(0.0f, 0.0f, 0.0f); // 立てる
-	const float k = CAMERA_DIST / (CAMERA_DIST + KEY_Z);		// 奥行き -50 だと、この倍だけ大きく映る
-	for (int i = 0; i < LANE_COUNT; i++)
-	{
-		// 映ったときに、画像のピクセルどおりの大きさになるように k で割る
-		ScaleMatrix = XMMatrixScaling(KEY_W[i] / k, 41.0f / k, 1.0f);
-		TransMatrix = XMMatrixTranslation((i + 0.5f - N * 0.5f) * lw, m_play.height, KEY_Z);
-		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
-		Renderer::SetWorldMatrix(WorldMatrix);
-
-		material.Diffuse = Input::GetKeyPress(Lane::KEYS[i]) ? XMFLOAT4(0.949f, 0.941f, 0.980f, 1.0f)  // 押している #F2F0FA
-															 : XMFLOAT4(0.541f, 0.525f, 0.659f, 1.0f); // 押していない #8A86A8
-		Renderer::SetMaterial(material);
-
-		Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_KeyTex[i]); // キーごとに画像が違う
-		Renderer::GetDeviceContext()->Draw(4, 0);
-	}
 
 	Renderer::SetDepthEnable(true);
 }

@@ -89,7 +89,7 @@ void TapNote::Update()
 	// 1. キーが押されたレーンを判定(押された瞬間の時刻を使う)
 	for (const KeyEvent &e : Input::GetKeyEvents())
 	{
-		for (int lane = 0; lane < m_Layout.laneCount; lane++)
+		for (int lane = 0; lane < LANE_COUNT; lane++)
 		{
 			if (e.key == Lane::KEYS[lane])
 				JudgeLane(lane, layer, Conductor::CounterToSongTime(e.time));
@@ -147,7 +147,7 @@ void TapNote::Draw()
 		float fade = std::clamp((Z_FAR - z) / (Z_FAR * 0.3f), 0.0f, 1.0f);
 
 		// レーンの真ん中(レーン全体の真ん中が x = 0)、段の高さ、奥行き z
-		float x = (n.lane + 0.5f - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth;
+		float x = (n.lane + 0.5f - LANE_COUNT * 0.5f) * m_Layout.laneWidth;
 		float y = (n.layer == 1) ? UPPER_HEIGHT : 0.0f;
 
 		// マトリックス設定

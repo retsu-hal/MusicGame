@@ -13,26 +13,15 @@
 #include <cmath>
 #include <algorithm>
 
-// 奥行き方向の線(区切り線・両端)。床に寝た細長い板。手前の端から奥の端まで
-void Lane::DrawDepthLine(const Layout &L, float laneX, float width, const XMFLOAT4 &color)
-{
-	// マトリックス設定
-	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
-	ScaleMatrix = XMMatrixScaling(width, Z_FAR - Z_NEAR, 1.0f);
-	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
-	TransMatrix = XMMatrixTranslation((laneX - L.laneCount * 0.5f) * L.laneWidth, L.height, (Z_FAR + Z_NEAR) * 0.5f);
-	WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
-	Renderer::SetWorldMatrix(WorldMatrix);
-
-	// マテリアル設定
-	MATERIAL material{};
-	material.Diffuse = color;
-	material.TextureEnable = true;
-	Renderer::SetMaterial(material);
-
-	// 描画(画像は呼ぶ前に white をセットしておく)
-	Renderer::GetDeviceContext()->Draw(4, 0);
-}
+// キーの文字の画像と幅(高さはどれも 41)
+static const WCHAR* KEY_FILE[LANE_COUNT] = {
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_a.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_s.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_d.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_f.png",
+	L"asset\\texture\\02_Play\\text\\lane_key\\key_space.png" };
+static const float KEY_W[LANE_COUNT] = { 26.0f, 26.0f, 27.0f, 26.0f, 81.0f };
+static constexpr float KEY_Z = -50.0f; // キー枠の真ん中の奥行き
 
 // ===============================================================
 // Lane(床)
@@ -79,12 +68,16 @@ void Lane::Init()
 
 	// シェーダー読み込み
 	m_Shader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\unlitTexturePS.cso");
+	m_NeonShader = ShaderManager::Load("shader\\unlitTextureVS.cso", "shader\\LaneLinePS.cso");
 
 	// テクスチャ読み込み
 	m_WhiteTex = TextureManager::Load(L"asset\\texture\\00_Common\\icon\\white_square.png");
 	m_LaneTex = TextureManager::Load(L"asset\\texture\\02_Play\\lane.png");
 
-	m_upper.height = UPPER_HEIGHT;
+	for (int i = 0; i < LANE_COUNT; i++)
+		m_KeyTex[i] = TextureManager::Load(KEY_FILE[i]);
+
+	m_upperrow.height = UPPER_HEIGHT;
 }
 
 void Lane::Uninit()
@@ -120,7 +113,7 @@ void Lane::Draw()
 	const float speed = Settings::noteSpeed;
 	const float anim = noteManager->GetPlayLayerAnim(); // 0 = 下段、1 = 上段
 
-	m_play.height = UPPER_HEIGHT * anim; // 今いる面(上下する)
+	m_bottomrow.height = UPPER_HEIGHT * anim; // 今いる面(上下する)
 
 	// ----- 共通の設定(最初に 1 回) -----
 	Renderer::ClearDepth(); // 背景(2D)が書いた深度を消す(前のまま)
@@ -142,102 +135,127 @@ void Lane::Draw()
 
 	Renderer::SetDepthEnable(false); // 奥から順に描くので、深度は使わない
 
-	// ----- 床 -----
-	// 上段を先、今いる面を後に描く。後のほうが手前に重なるので、今いる面が隠れない
-	DrawFloor(m_upper, chart, now, speed, 0.0f);
-	DrawFloor(m_play, chart, now, speed, 1.0f);
-
-	// ----- 両端のネオン(加算) -----
-	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_WhiteTex);
-	Renderer::SetAddEnable(true);
-	DrawNeon(m_upper);
-	DrawNeon(m_play);
-	Renderer::SetAddEnable(false);
-
-	Renderer::SetDepthEnable(true);
-}
-
-void Lane::DrawFloor(const Layout &L, const Chart &chart, float now, float speed, float active)
-{
-	const float N = (float)L.laneCount;
-	const float lw = L.laneWidth;
-
-	// 全部床に寝かせる(回転は全部同じなので 1 回だけ作る)
 	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
-	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
 	MATERIAL material{};
-	material.TextureEnable = true;
 
-	// ----- 1. 床(lane.png)。今いる面は濃く(0.95)、上段の枠は薄く(0.2) -----
-	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_LaneTex);
-
-	ScaleMatrix = XMMatrixScaling(N * lw, Z_FAR - Z_NEAR, 1.0f);
-	TransMatrix = XMMatrixTranslation(0.0f, L.height, (Z_FAR + Z_NEAR) * 0.5f);
-	WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
-	Renderer::SetWorldMatrix(WorldMatrix);
-
-	material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.2f + 0.75f * active);
-	Renderer::SetMaterial(material);
-
-	Renderer::GetDeviceContext()->Draw(4, 0);
-
-	// ここから先は全部、真っ白な画像に色を付ける
-	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_WhiteTex);
-
-	// ----- 2. 押しているレーンの光(今いる面だけ)。判定ライン(0)から Z_FAR × 0.6 まで -----
-	ScaleMatrix = XMMatrixScaling(lw, Z_FAR * 0.6f, 1.0f);
-	for (int i = 0; i < L.laneCount; i++)
+		// ----- 1. 床(lane.png) -----
+	for (int i = 0; i < LANE_COUNT; i++)
 	{
-		float g = m_Glow[i] * active;
-		if (g <= 0.0f)
-			continue;
+		Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_LaneTex);
 
-		TransMatrix = XMMatrixTranslation((i + 0.5f - N * 0.5f) * lw, L.height, Z_FAR * 0.3f);
+		ScaleMatrix = XMMatrixScaling(Layout::laneWidth, Z_FAR - Z_NEAR, 1.0f);
+		RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+		TransMatrix = XMMatrixTranslation((i + 0.5f - LANE_COUNT * 0.5f) * m_bottomrow.laneWidth, m_bottomrow.height, (Z_FAR + Z_NEAR) * 0.5f);
+		
 		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
 		Renderer::SetWorldMatrix(WorldMatrix);
 
-		material.Diffuse = XMFLOAT4(0.59f, 0.47f, 1.0f, 0.45f * g); // (150, 120, 255) ★
+		material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.95f);
+		material.TextureEnable = true; //ture: テクスチャ使用する　false:テクスチャ使用しない
 		Renderer::SetMaterial(material);
 
 		Renderer::GetDeviceContext()->Draw(4, 0);
+
+		Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_WhiteTex);
 	}
 
-	// ----- 3. 拍の線 -----
-	int beat = (int)std::floor(chart.SecToTick(now) / TICKS_PER_BEAT);
-	for (int k = 0; k < 64; k++, beat++) // 念のため本数に上限を付ける
-	{
-		float z = ((float)chart.TickToSec(beat * TICKS_PER_BEAT) - now) * speed;
-		if (z > Z_FAR)
-			break;
-		if (z < 0.0f)
-			continue;
-		bool bar = (beat % 4 == 0);
-		float fade = 1.0f - z / Z_FAR;
+		// ----- 2. 押しているレーンの光 -----
+		ScaleMatrix = XMMatrixScaling(m_bottomrow.laneWidth, Z_FAR - Z_NEAR, 1.0f);
+		for (int i = 0; i < LANE_COUNT; i++)
+		{
+			if (m_Glow[i] <= 0.0f)
+				continue;
 
-		// 横いっぱいの細い板。太さは小節の頭 4、それ以外 2
-		ScaleMatrix = XMMatrixScaling(N * lw, bar ? 4.0f : 2.0f, 1.0f);
-		TransMatrix = XMMatrixTranslation(0.0f, L.height, z);
+			TransMatrix = XMMatrixTranslation((i + 0.5f - LANE_COUNT * 0.5f) * m_bottomrow.laneWidth, m_bottomrow.height, (Z_FAR + Z_NEAR) * 0.5f);			
+			WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+			Renderer::SetWorldMatrix(WorldMatrix);
+
+			material.Diffuse = XMFLOAT4(0.59f, 0.47f, 1.0f, 0.45f * m_Glow[i]);
+			Renderer::SetMaterial(material);
+
+			Renderer::GetDeviceContext()->Draw(4, 0);
+		}
+
+		// ----- 3. 拍の線 -----
+		int beat = (int)std::floor(chart.SecToTick(now) / TICKS_PER_BEAT);
+		for (int k = 0; k < 64; k++, beat++) // 念のため本数に上限を付ける
+		{
+			float z = ((float)chart.TickToSec(beat * TICKS_PER_BEAT) - now) * speed;
+			if (z > Z_FAR)break;
+			if (z < 0.0f)continue;
+			bool bar = (beat % 4 == 0);
+			float fade = 1.0f - z / Z_FAR;
+
+			// 横いっぱいの細い板。
+			ScaleMatrix = XMMatrixScaling(LANE_COUNT * m_bottomrow.laneWidth, bar ? 50.0f : 35.0f, 1.0f);
+			TransMatrix = XMMatrixTranslation(0.0f, m_bottomrow.height, z);
+			WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+			Renderer::SetWorldMatrix(WorldMatrix);
+
+			material.Diffuse = XMFLOAT4(0.67f, 0.59f, 1.0f, (bar ? 0.35f : 0.12f) * fade); // (170, 150, 255)
+			Renderer::SetMaterial(material);
+
+			Renderer::GetDeviceContext()->Draw(4, 0);
+		}
+
+		// ----- 両端のネオン(laneNeonPS。加算) -----
+		m_NeonShader->Set();
+		Renderer::SetAddEnable(true);
+
+		
+		ScaleMatrix = XMMatrixScaling(LANE_COUNT * m_bottomrow.laneWidth, Z_FAR - Z_NEAR, 1.0f);
+		TransMatrix = XMMatrixTranslation(0.0f, m_bottomrow.height, (Z_FAR + Z_NEAR) * 0.5f);
 		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
 		Renderer::SetWorldMatrix(WorldMatrix);
 
-		material.Diffuse = XMFLOAT4(0.67f, 0.59f, 1.0f, (bar ? 0.35f : 0.12f) * fade); // (170, 150, 255)
+		// シェーダーに渡す。MATERIAL の使ってない欄を借りる(ringPS と同じやり方)
+		material.Diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		material.Ambient = XMFLOAT4(m_Neon.left.x, m_Neon.left.y, m_Neon.left.z, 0.0f);     // 左の色
+		material.Specular = XMFLOAT4(m_Neon.right.x, m_Neon.right.y, m_Neon.right.z, 0.0f);  // 右の色
+		material.Emission = XMFLOAT4(m_Neon.falloff, m_Neon.intensity, m_Neon.core, LANE_COUNT * Layout::laneWidth);   // 太さ・強さ・芯
 		Renderer::SetMaterial(material);
 
 		Renderer::GetDeviceContext()->Draw(4, 0);
-	}
 
-	// ----- 4. 区切り線(今いる面だけ) -----
-	if (active > 0.0f)
-	{
-		const XMFLOAT4 divider(0.63f, 0.55f, 0.90f, 0.25f); // (160, 140, 230)
-		for (int i = 1; i < L.laneCount; i++)
-			DrawDepthLine(L, (float)i, 1.5f, divider);
-	}
+		Renderer::SetAddEnable(false);
+		m_Shader->Set(); // 元のシェーダーに戻す
+
+		// ----- 5. キーの枠。押すと濃くなる。横はレーンの 0.76、奥行き 60 -----
+		for (int i = 0; i < LANE_COUNT; i++)
+		{
+			ScaleMatrix = XMMatrixScaling(0.76f * m_bottomrow.laneWidth, 60.0f, 1.0f);
+			TransMatrix = XMMatrixTranslation((i + 0.5f - LANE_COUNT * 0.5f) * m_bottomrow.laneWidth, m_bottomrow.height, KEY_Z);
+			WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+			Renderer::SetWorldMatrix(WorldMatrix);
+
+			material.Diffuse = XMFLOAT4(0.59f, 0.47f, 1.0f, 0.10f + 0.35f * m_Glow[i]); 
+			Renderer::SetMaterial(material);
+
+			Renderer::GetDeviceContext()->Draw(4, 0);
+		}
+
+		// ----- 6. キーの文字。キー枠の真ん中に立てる。押している間だけ白く -----
+		for (int i = 0; i < LANE_COUNT; i++)
+		{
+			// 映ったときに、画像のピクセルどおりの大きさになるように k で割る
+			ScaleMatrix = XMMatrixScaling(KEY_W[i] * (CAMERA_DIST + KEY_Z) / CAMERA_DIST, 41.0f * (CAMERA_DIST + KEY_Z) / CAMERA_DIST, 1.0f);			TransMatrix = XMMatrixTranslation((i + 0.5f - LANE_COUNT * 0.5f) * m_bottomrow.laneWidth, m_bottomrow.height, KEY_Z);
+			WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+			Renderer::SetWorldMatrix(WorldMatrix);
+
+			material.Diffuse = Input::GetKeyPress(Lane::KEYS[i]) ? XMFLOAT4(0.949f, 0.941f, 0.980f, 1.0f)  // 押している #F2F0FA
+				: XMFLOAT4(0.541f, 0.525f, 0.659f, 1.0f); // 押していない #8A86A8
+			Renderer::SetMaterial(material);
+
+			Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_KeyTex[i]); // キーごとに画像が違う
+			Renderer::GetDeviceContext()->Draw(4, 0);
+		}
+
+		Renderer::SetDepthEnable(true); // 122行目で切った深度を戻す
 }
 
-void Lane::DrawNeon(const Layout &L)
+void Lane::DrawNeon(const Layout &Layout)
 {
-	const float N = (float)L.laneCount;
+	const float N = (float)LANE_COUNT;
 
 	const XMFLOAT4 left(0.75f, 0.35f, 1.0f, 0.15f);	 // 左:紫 (190, 90, 255)
 	const XMFLOAT4 right(1.0f, 0.27f, 0.75f, 0.15f); // 右:ピンク (255, 70, 190)
@@ -246,10 +264,32 @@ void Lane::DrawNeon(const Layout &L)
 	// 太い線から順に重ねて、にじんだ光にする(加算なので重なるほど明るい)
 	for (float w : {16.0f, 8.0f, 4.0f})
 	{
-		DrawDepthLine(L, 0.0f, w, left);
-		DrawDepthLine(L, N, w, right);
+		DrawDepthLine(Layout, 0.0f, w, left);
+		DrawDepthLine(Layout, N, w, right);
 	}
 	// 芯の白い線
-	DrawDepthLine(L, 0.0f, 2.0f, core);
-	DrawDepthLine(L, N, 2.0f, core);
+	DrawDepthLine(Layout, 0.0f, 2.0f, core);
+	DrawDepthLine(Layout, N, 2.0f, core);
+}
+
+
+// 奥行き方向の線(区切り線・両端)。床に寝た細長い板。手前の端から奥の端まで
+void Lane::DrawDepthLine(const Layout& Layout, float laneX, float width, const XMFLOAT4& color)
+{
+	// マトリックス設定
+	XMMATRIX WorldMatrix, ScaleMatrix, RotMatrix, TransMatrix;
+	ScaleMatrix = XMMatrixScaling(width, Z_FAR - Z_NEAR, 1.0f);
+	RotMatrix = XMMatrixRotationRollPitchYaw(XM_PIDIV2, 0.0f, 0.0f);
+	TransMatrix = XMMatrixTranslation((laneX - LANE_COUNT * 0.5f) * Layout.laneWidth, Layout.height, (Z_FAR + Z_NEAR) * 0.5f);
+	WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
+	Renderer::SetWorldMatrix(WorldMatrix);
+
+	// マテリアル設定
+	MATERIAL material{};
+	material.Diffuse = color;
+	material.TextureEnable = true;
+	Renderer::SetMaterial(material);
+
+	// 描画(画像は呼ぶ前に white をセットしておく)
+	Renderer::GetDeviceContext()->Draw(4, 0);
 }

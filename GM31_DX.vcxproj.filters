@@ -31,6 +31,9 @@
     <Filter Include="shader">
       <UniqueIdentifier>{8d9db4f3-cd2a-5706-89b8-165b4d38908e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Object\Note">
+      <UniqueIdentifier>{a62fbf69-e4a1-47c8-bf4a-74a72591c63c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Rhythm\Chart.cpp">
@@ -96,13 +99,7 @@
     <ClCompile Include="ThirdParty\imgui\backends\imgui_impl_win32.cpp">
       <Filter>ThirdParty\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Object\NoteManager.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Object\Lane.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Object\TapNote.cpp">
       <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Source\Object\Camera.cpp">
@@ -126,28 +123,40 @@
     <ClCompile Include="Source\Rhythm\SongList.cpp">
       <Filter>Rhythm</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Object\ArcNote.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Object\Combo.cpp">
       <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Source\Object\Effect.cpp">
       <Filter>Object</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Object\FlickNote.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Object\JudgeLine.cpp">
-      <Filter>Object</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Object\LongNote.cpp">
       <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Source\Object\Pause.cpp">
       <Filter>Object</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Object\TutorialWindow.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\ArcNote.cpp">
+      <Filter>Object\Note</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\LongNote.cpp">
+      <Filter>Object\Note</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\TapNote.cpp">
+      <Filter>Object\Note</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Object\WheelNote.cpp">
+      <Filter>Object\Note</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\NoteManager.cpp">
+      <Filter>Object\Note</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\FlickNote.cpp">
+      <Filter>Object\Note</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Object\SongPanel.cpp">
       <Filter>Object</Filter>
     </ClCompile>
   </ItemGroup>
@@ -233,13 +242,7 @@
     <ClInclude Include="ThirdParty\imgui\backends\imgui_impl_win32.h">
       <Filter>ThirdParty\imgui\backends</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Object\NoteManager.h">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Object\Lane.h">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Object\TapNote.h">
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\Camera.h">
@@ -263,16 +266,10 @@
     <ClInclude Include="Source\Rhythm\SongList.h">
       <Filter>Rhythm</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Object\ArcNote.h">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Object\Combo.h">
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Object\Effect.h">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Object\FlickNote.h">
       <Filter>Object</Filter>
     </ClInclude>
     <ClInclude Include="Source\Rhythm\Judge.h">
@@ -281,16 +278,34 @@
     <ClInclude Include="Source\Object\JudgeLine.h">
       <Filter>Object</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Object\LongNote.h">
-      <Filter>Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Object\NoteBase.h">
-      <Filter>Object</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Object\Pause.h">
       <Filter>Object</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Object\TutorialWindow.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\ArcNote.h">
+      <Filter>Object\Note</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\LongNote.h">
+      <Filter>Object\Note</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\NoteBase.h">
+      <Filter>Object\Note</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\TapNote.h">
+      <Filter>Object\Note</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Object\WheelNote.h">
+      <Filter>Object\Note</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\NoteManager.h">
+      <Filter>Object\Note</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\FlickNote.h">
+      <Filter>Object\Note</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Object\SongPanel.h">
       <Filter>Object</Filter>
     </ClInclude>
   </ItemGroup>
@@ -308,6 +323,12 @@
       <Filter>shader</Filter>
     </FxCompile>
     <FxCompile Include="shader\ringPS.hlsl">
+      <Filter>shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\progressPS.hlsl">
+      <Filter>shader</Filter>
+    </FxCompile>
+    <FxCompile Include="shader\LaneLinePS.hlsl">
       <Filter>shader</Filter>
     </FxCompile>
   </ItemGroup>

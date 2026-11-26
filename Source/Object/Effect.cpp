@@ -159,7 +159,7 @@ void Effect::Draw()
         float t = r.time / RING_TIME; // 0 → 1
 
         // 輪の中心:範囲の真ん中(レーン単位)を画面の x に
-        float x = centerX + (r.lane + r.width * 0.5f - L.laneCount * 0.5f) * L.laneWidth;
+        float x = centerX + (r.lane + r.width * 0.5f - LANE_COUNT * 0.5f) * L.laneWidth;
 
         // 大きさ:レーン幅の 0.6 倍 → 1.3 倍に広がる。横は範囲の幅ぶん伸ばす
         float s = 0.6f + 0.7f * t;

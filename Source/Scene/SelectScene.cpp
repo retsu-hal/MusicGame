@@ -492,6 +492,7 @@ void SelectScene::StartGame()
 	GameSession::songIndex = m_Select;
 	GameSession::difficulty = m_Difficulty;
 	GameSession::chartPath = SongList::songs[m_Select].chartPath[GetPlayDifficulty()];	// チュートリアルは EASY
+	GameSession::tutorial = IsTutorial();
 
 	m_DecideSE->Play();
 	Manager::ChangeScene<GameScene>(FADE_TIME);

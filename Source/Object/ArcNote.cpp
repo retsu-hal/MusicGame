@@ -218,9 +218,9 @@ void ArcNote::Draw()
 
 		float x = XAt(arc, now); // 今の時刻のアークの位置(レーン単位)
 		float y = (arc.layer == 1) ? UPPER_HEIGHT : 0.0f;
-
-		// マトリックス設定
-		TransMatrix = XMMatrixTranslation((x - m_Layout.laneCount * 0.5f) * m_Layout.laneWidth, y, 0.0f);
+		Layout L = m_Layout;
+		L.height = y;
+		TransMatrix = XMMatrixTranslation((x - LANE_COUNT * 0.5f) * L.laneWidth, y, 0.0f);
 		WorldMatrix = ScaleMatrix * RotMatrix * TransMatrix;
 		Renderer::SetWorldMatrix(WorldMatrix);
 

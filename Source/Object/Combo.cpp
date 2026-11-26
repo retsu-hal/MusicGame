@@ -14,6 +14,7 @@
 #include "Renderer.h"
 #include "Manager.h"
 #include "Combo.h"
+#include "TextureManager.h"
 #include <algorithm>
 
 //==============================================================================
@@ -23,10 +24,14 @@
 #define TEXTURE_NUM_HEIGHT 4
 #define DIGIT_WIDTH  112.0f      // play.png のコンボは大きい
 #define DIGIT_HEIGHT 112.0f
-#define DIGIT_STEP   66.0f
+#define DIGIT_STEP   56.0f
 #define COMBO_X      1560.0f     // 数字の真ん中(レーンの右)
 #define COMBO_Y      600.0f      // 数字の上端
 #define POP_TIME     0.15f
+
+#define LABEL_W      92.0f       // 「COMBO」の幅(label_combo.png のピクセル数そのまま)
+#define LABEL_H      38.0f       // 「COMBO」の高さ
+#define LABEL_GAP    4.0f        // 数字の上端と「COMBO」の下端のすき間
 
 //==============================================================================
 //プロトタイプ宣言
@@ -59,7 +64,7 @@ void Combo::Init()
 
 
 	// 中身は Draw で毎回書くので、ここでは全部 0 でいい
-	VERTEX_3D vertex[4 * DIGIT_NUM] = {};
+	VERTEX_3D vertex[4 * QUAD_NUM] = {};
 
 	for (int i = 0; i < DIGIT_NUM; i++)
 	{
@@ -89,7 +94,7 @@ void Combo::Init()
 	// 頂点バッファ生成
 	D3D11_BUFFER_DESC bd{};
 	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.ByteWidth = sizeof(VERTEX_3D) * 4 * DIGIT_NUM;
+	bd.ByteWidth = sizeof(VERTEX_3D) * 4 * QUAD_NUM;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
@@ -103,12 +108,10 @@ void Combo::Init()
 	Renderer::CreatePixelShader(&m_PixelShader, "shader\\unlitTexturePS.cso");
 
 	//テクスチャ読み込み
-	TexMetadata metadata;
-	ScratchImage image;
-	LoadFromWICFile(L"asset\\texture\\00_Common\\number_atlas_512.png", WIC_FLAGS_NONE, &metadata, image);	// 背景が透明な数字アトラス
-	CreateShaderResourceView(Renderer::GetDevice(), image.GetImages(),
-		image.GetImageCount(), metadata, &m_Texture);
-	assert(m_Texture);
+	m_Texture = TextureManager::Load(L"asset\\texture\\00_Common\\number_atlas_512.png");
+
+	// 「COMBO」の文字。
+	m_LabelTex = TextureManager::Load(L"asset\\texture\\02_Play\\text\\label_combo.png");
 }
 
 //==============================================================================
@@ -121,7 +124,6 @@ void Combo::Uninit()
 	m_VertexLayout->Release();
 	m_VertexShader->Release();
 	m_PixelShader->Release();
-	m_Texture->Release();
 }
 
 //==============================================================================
@@ -206,10 +208,19 @@ void Combo::Draw()
 				sizeX * (num % TEXTURE_NUM_WIDTH), sizeY * (num / TEXTURE_NUM_WIDTH), sizeX, sizeY);
 	}
 
+	// 5 枚目:数字の上の「COMBO」。1 回だけ書けばいいので for の外
+	// 位置は Combo の中心(x = 0)から見た位置。左右は真ん中そろえ、上下は数字の上端(y = 0)より上
+	SetQuad(&vertex[DIGIT_NUM * 4], -LABEL_W * 0.5f, -LABEL_GAP - LABEL_H, LABEL_W, LABEL_H,0.0f, 0.0f, 1.0f, 1.0f);   // UV は画像まるごと
+
 	Renderer::GetDeviceContext()->Unmap(m_vertexBuffer, 0);
 
 	for (int i = 0; i < length; i++)
 		Renderer::GetDeviceContext()->Draw(4, i * 4);
+
+
+	// 「COMBO」:画像を差し替えて 5 枚目を描く
+	Renderer::GetDeviceContext()->PSSetShaderResources(0, 1, &m_LabelTex);
+	Renderer::GetDeviceContext()->Draw(4, DIGIT_NUM * 4);
 }
 
 void Combo::Reset()

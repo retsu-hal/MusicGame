@@ -29,5 +29,5 @@ public:
 
 	static inline bool settingsFromSelect = false;	// true なら設定画面を選曲画面から開いた(戻り先が選曲画面)
 
-
+	static inline bool tutorial = false;	// true なら今の曲はチュートリアル(最初にヘルプを出す)
 };
